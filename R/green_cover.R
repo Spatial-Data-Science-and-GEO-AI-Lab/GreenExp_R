@@ -6,7 +6,7 @@
 #' @param class_raster A raster object representing a land cover classification map, where each pixel is assigned a land cover class
 #' @param buffer_distance a distance in meters to create a buffer or isochrone around the address location
 #' @param net an optional sfnetwork object representing a road network
-#' @param UID A character string representing a road network
+#' @param UID A character string representing a unique identifier for each point of interest
 #' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
