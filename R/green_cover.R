@@ -92,9 +92,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       lines <- lines[region_shp,]
 
       # Round coordinates to 0 digits
-      lines <- sf::st_snap(lines, tolerance = 0)
-
-      st_geometry(lines) <- sf::st_geometry(lines) %>%
+      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
         lapply(function(x) round(x, 0)) %>%
         sf::st_sfc(crs = sf::st_crs(lines))
 
