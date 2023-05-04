@@ -4,7 +4,7 @@
 #'
 #' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param class_raster A raster object representing a land cover classification map, where each pixel is assigned a land cover class
-#' @param buffer_distance a distance in meters to create a buffer or isochrone around the address location
+#' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param net an optional sfnetwork object representing a road network
 #' @param UID A character string representing a unique identifier for each point of interest
 #' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
@@ -29,17 +29,20 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
 
   # Check if the CRS is in longitude-latitude format
   if (sf::st_is_longlat(address_location)){
-    print("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
-    break
+    stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
+
   }
+
+
   # assign the projected crs to the variable projected_crs
   projected_crs <- sf::st_crs(address_location)
 
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
+      # Do nothing
     } else {
-      print('There are nonpoint geometries, they will be converted into centroids')
+      message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
     # Create a buffer or isochrone around the address location
@@ -48,11 +51,13 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       buffer_distance <- ifelse(missing(speed) || missing(time),
              stop("You didn't enter speed or time"),
              speed * 1000 / 60 * time)
+
+
     ### Check, do we use a entered network or loading a new one
     if (missing(net)) {
       ### Extracting OSM road structure to build isochrone polygon
       iso_area <- sf::st_buffer(sf::st_convex_hull(
-        sf::st_union(sf::st_geometry(address_location))),
+        sf::st_combine(sf::st_geometry(address_location))),
         buffer_distance)
       iso_area <- sf::st_transform(iso_area, crs = 4326)
       bbox <- sf::st_bbox(iso_area)
@@ -127,7 +132,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
         # If the CRS of the network data set is geographic, tranfrom it to the project CRS
         if (sf::st_crs(address_location) != sf::st_crs(net))
         {
-          print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
+          message("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
           net <- sf::st_transform(net, projected_crs)
         }
       }
@@ -152,7 +157,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
         # filter the network object to include nodes that meet certain criteria
         # the code finds the set of nodes within.a certain travel time of each input point,
         # and stores it in a separate isochrone polygons
-        iso_list[[i]] <- tidygraph::filter(net, tidy_graph::node_distance_from(
+        iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
           sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
       }
 
@@ -172,7 +177,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       # dataframe with the polygons as the geometry column
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly))
     }else {
-      print("Buffer distance is used for calculations")
+      message("Buffer distance is used for calculations")
       calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
     }
   } else {

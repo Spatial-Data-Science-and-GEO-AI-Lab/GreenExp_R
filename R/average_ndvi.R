@@ -22,8 +22,8 @@ calc_ndvi <- function(address_location, raster, buffer_distance, net, UID, addre
 
   # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
-    print("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
-    break
+    stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
+
   }
   projected_crs <- sf::st_crs(address_location)
 
@@ -32,7 +32,7 @@ calc_ndvi <- function(address_location, raster, buffer_distance, net, UID, addre
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     } else {
-      print('There are nonpoint geometries, they will be converted into centroids')
+      message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
     if (missing(buffer_distance)) {
