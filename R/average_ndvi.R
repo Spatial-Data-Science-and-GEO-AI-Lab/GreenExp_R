@@ -37,9 +37,15 @@ calc_ndvi <- function(address_location, raster, buffer_distance, net, UID, addre
     }
     if (missing(buffer_distance)) {
       # Check for speed and time + Count buffer for bbox of initial set
-      buffer_distance <- ifelse(missing(speed) || missing(time),
-                                stop("You didn't enter speed or time"),
-                                speed * 1000 / 60 * time)
+      if(missing(speed)||missing(time)){
+        stop("You didn't enter speed or time")
+      } else if (!speed > 0) {
+        stop("Speed must be a positive integer bigger than 0")
+      } else if (!time > 0) {
+        stop("Time must be a positive integer bigger than 0")
+      } else{
+        buffer_distance <- speed * 1000/ 60 * time
+      }
       ### Check, do we use a entered network or loading a new one
       if (missing(net)) {
         ### Extracting OSM road structure to build isochrone polygon
