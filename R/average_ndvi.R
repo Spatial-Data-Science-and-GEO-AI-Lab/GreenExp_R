@@ -15,7 +15,7 @@
 #'
 #' @examples
 #'
-calc_ndvi <- function(address_location, raster, buffer_distance, net, UID, address_calculation = TRUE, speed, time) {
+calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL) {
   ### Preparation
   # Takes name of field for future calculations and find projection
   rast_value_name <- names(raster)
@@ -31,7 +31,11 @@ calc_ndvi <- function(address_location, raster, buffer_distance, net, UID, addre
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
-    } else {
+    }else if (missing(buffer_distance)) {
+      stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
+    }
+
+    else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }

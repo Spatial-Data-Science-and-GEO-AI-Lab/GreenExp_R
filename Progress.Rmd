@@ -1,0 +1,56 @@
+---
+title: "Progress"
+author: "Martijn Koster"
+date: "2023-05-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 1
+
+### Goal
+
+The goal of this week was to write 2 functions for the package
+
+* Function 1: Average NDVI in the buffer around the point/polygon (house) given coordinates 
+* Function 2: Land cover percentage in the buffer around the point/polygon (house) given coordinates
+
+### Approach
+
+A large part of the code is already written by Karen, this code needs to be understood and written in a package form using `devtools` and `roxygen2`
+
+* Run the code provided and understand what is done and why
+* Adapt this code if necessary, and put it in a devtools package. 
+
+### Feedback
+
+* Make no data is lost when returning the function (i.e., the geometries etc should be returned also)
+* make sure that when a polygon is given as input data, they also provide a buffer. (Use a `else if` statement)
+
+
+## Week 2: 
+
+### Goal
+
+* make sure the feedback is handled with
+* Create a function for vector on vector. What percentage of for example parks in the polygon of the house
+* Figrure out how to make `GVI` package part of this package
+* If time over start with the accessibility function
+
+### Approach
+
+* start with the feedback of last week
+* make the function for vector on vector, most of the code that is already written can be used. make use of the test data to test the code
+* Investigate with help of chatGPT, stackoverflow/stack exchange how to incorporate the `GVI` package in this package. Start with reading the documentation
+
+### Difficulties
+
+### Feedback
+
+## Week 3
+
+
+

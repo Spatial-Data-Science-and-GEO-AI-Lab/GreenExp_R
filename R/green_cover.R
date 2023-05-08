@@ -24,6 +24,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   # replace the NA values to <NA>
   codes <- replace(codes, is.na(codes), "<NA>")
 
+
   # assign the name of class_Raster to the variable rast_value_name
   rast_value_name <- names(class_raster)
 
@@ -41,7 +42,8 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
       # Do nothing
-    } else {
+    }
+       else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
@@ -207,7 +209,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
   missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
   missings_df <- replace(missings_df, is.na(missings_df), 0)
-  landcover_values_perc <- cbind(class_raster_values_perc, missings_df)
+  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address_location[2], calculation_area)
 
   # return the result
   return(landcover_values_perc)
