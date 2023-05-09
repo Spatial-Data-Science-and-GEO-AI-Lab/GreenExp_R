@@ -50,6 +50,52 @@ A large part of the code is already written by Karen, this code needs to be unde
 
 * Still have some troubles with the crs of the buffer around the address points. 
 * regarding the polygons, how do we want the coordinates, with or without decimals
+* Code I am not 100% certain of: 
+
+
+
+
+```{r, include=FALSE}
+landcover_test <- terra::rast("Data/Landcover_data_test.tif")
+address_test <- sf::st_read("Data/Test_multiple_home_locations.gpkg")
+address_test$id <- nrow(address_test):1
+area_test <- sf::st_read("Data/TestArea.gpkg")
+buffer_distance <- 500
+source("R/green_cover.R")
+source("R/average_ndvi.R")
+library(tidyverse)
+
+
+
+```
+
+
+*This code I am using to set the crs to the projected crs (otherwise the polygon did not have the crs when returned in the function)*
+
+`calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)`
+
+```{r, include=FALSE}
+
+# I am using the second column in this buffer to get the coordinates, otherwise I would get the ID as well.
+calculation_area <- sf::st_buffer(address_test, dist = buffer_distance)[2]
+address <- address_test[2]
+# This is how I gave the variables a name when returning the df
+names(address) <- "address"
+names(calculation_area) <- "buffer"
+```
+
+### Progress
+
+```{r}
+result1 <- land_cover(address_test, landcover_test, speed=5, time = 10)
+result1 
+```
+```{r}
+result2 <- land_cover(address_test, landcover_test, buffer_distance=500, UID = address_test$id)
+result2
+```
+
+
 
 ### Feedback
 

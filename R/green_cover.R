@@ -20,7 +20,7 @@
 land_cover <- function(address_location, class_raster, buffer_distance, net, UID, address_calculation = TRUE, speed, time) {
   ### Preparation
   # Create full class set vector
-  codes <- c("UID", unique(values(class_raster)))
+  codes <- c("UID", unique(terra::values(class_raster)))
   # replace the NA values to <NA>
   codes <- replace(codes, is.na(codes), "<NA>")
   # assign the name of class_Raster to the variable rast_value_name
@@ -185,7 +185,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
 
       # Create a simple feature collection (sf) with sthe st_sf function and use st_as_sf to convert the sf object to an sf
       # dataframe with the polygons as the geometry column
-      calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% st_set_crs(projected_crs)
+      calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
     }else {
       message("Buffer distance is used for calculations")
       calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)[2]
@@ -212,9 +212,10 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
   missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
   missings_df <- replace(missings_df, is.na(missings_df), 0)
-
-  names(calculation_area) <- "Buffer"
-  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address_location[2], calculation_area)
+  address <- address_location[2]
+  names(address) <- "address"
+  names(calculation_area) <- "buffer"
+  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address, calculation_area)
 
   # return the result
   return(landcover_values_perc)
