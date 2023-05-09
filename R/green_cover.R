@@ -42,6 +42,8 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
       # Do nothing
+    } else if (missing(buffer_distance)) {
+      stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
     }
        else {
       message('There are nonpoint geometries, they will be converted into centroids')
@@ -104,9 +106,9 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       lines <- lines[region_shp,]
 
       # Round coordinates to 0 digits
-      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-        lapply(function(x) round(x, 0)) %>%
-        sf::st_sfc(crs = sf::st_crs(lines))
+      # sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+      #   lapply(function(x) round(x, 0)) %>%
+      #   sf::st_sfc(crs = sf::st_crs(lines))
 
       net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
       net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
@@ -182,7 +184,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
 
       # Create a simple feature collection (sf) with sthe st_sf function and use st_as_sf to convert the sf object to an sf
       # dataframe with the polygons as the geometry column
-      calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly))
+      calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% st_set_crs(projected_crs)
     }else {
       message("Buffer distance is used for calculations")
       calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)

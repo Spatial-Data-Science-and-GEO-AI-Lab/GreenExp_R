@@ -48,6 +48,9 @@ A large part of the code is already written by Karen, this code needs to be unde
 
 ### Difficulties
 
+* Still have some troubles with the crs of the buffer around the address points. 
+* regarding the polygons, how do we want the coordinates, with or without decimals
+
 ### Feedback
 
 ## Week 3
