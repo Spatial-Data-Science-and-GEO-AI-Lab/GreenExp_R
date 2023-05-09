@@ -188,7 +188,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% st_set_crs(projected_crs)
     }else {
       message("Buffer distance is used for calculations")
-      calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
+      calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)[2]
     }
   } else {
     calculation_area <- address_location
@@ -212,7 +212,9 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
   missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
   missings_df <- replace(missings_df, is.na(missings_df), 0)
-  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address_location, calculation_area)
+
+  names(calculation_area) <- "Buffer"
+  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address_location[2], calculation_area)
 
   # return the result
   return(landcover_values_perc)
