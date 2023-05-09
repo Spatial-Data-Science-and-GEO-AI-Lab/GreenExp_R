@@ -23,20 +23,17 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   codes <- c("UID", unique(values(class_raster)))
   # replace the NA values to <NA>
   codes <- replace(codes, is.na(codes), "<NA>")
-
-
   # assign the name of class_Raster to the variable rast_value_name
   rast_value_name <- names(class_raster)
-
   # Check if the CRS is in longitude-latitude format
   if (sf::st_is_longlat(address_location)){
     stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
 
   }
-
-
   # assign the projected crs to the variable projected_crs
   projected_crs <- sf::st_crs(address_location)
+
+  ### address vs area
 
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
@@ -66,9 +63,12 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
     if (missing(net)) {
       ### Extracting OSM road structure to build isochrone polygon
       iso_area <- sf::st_buffer(sf::st_convex_hull(
-        sf::st_combine(sf::st_geometry(address_location))),
+        sf::st_union(sf::st_geometry(address_location))),
         buffer_distance)
       iso_area <- sf::st_transform(iso_area, crs = 4326)
+
+
+
       bbox <- sf::st_bbox(iso_area)
       q <- osmdata::opq(bbox) %>%
         osmdata::add_osm_feature(key = "highway") %>%
@@ -85,6 +85,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       # Remove invalid polygons
       polys <- polys[!is.na(polys$highway),]
       polys <- polys[is.na(polys$area),]
+      rm(bbox,q)
 
       #convert the polygons to lines
       polys <- sf::st_cast(polys, "LINESTRING")
@@ -106,9 +107,9 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       lines <- lines[region_shp,]
 
       # Round coordinates to 0 digits
-      # sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-      #   lapply(function(x) round(x, 0)) %>%
-      #   sf::st_sfc(crs = sf::st_crs(lines))
+      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+        lapply(function(x) round(x, 0)) %>%
+        sf::st_sfc(crs = sf::st_crs(lines))
 
       net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
       net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
@@ -211,7 +212,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
   missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
   missings_df <- replace(missings_df, is.na(missings_df), 0)
-  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address_location[2], calculation_area)
+  landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address_location, calculation_area)
 
   # return the result
   return(landcover_values_perc)

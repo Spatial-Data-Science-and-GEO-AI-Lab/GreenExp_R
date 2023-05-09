@@ -184,7 +184,7 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
       }
 
       # Final assignment
-      calculation_area <- st_as_sf(st_sfc(iso_poly))
+      calculation_area <- st_as_sf(st_sfc(iso_poly)) %>% st_set_crs(projected_crs)
 
     } else {
       print("Buffer distance is used for calculations")
@@ -201,10 +201,12 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
   # Calculate the average NDVI
   average_rast <- dplyr::summarise(group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
   # Update UID
+
   names(average_rast)[1] <- "UID"
   if (!missing(UID)){
     average_rast$UID <- UID
   }
+  ndvi_avg <- cbind(average_rast, address_location, calculation_area)
   # Return the result
-  return(average_rast)
+  return(ndvi_avg)
 }
