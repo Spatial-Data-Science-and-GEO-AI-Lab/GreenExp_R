@@ -433,14 +433,43 @@ without decimals</li>
 (otherwise the polygon did not have the crs when returned in the
 function)</em></p>
 <p><code>calculation_area &lt;- sf::st_as_sf(sf::st_sfc(iso_poly)) %&gt;% sf::st_set_crs(projected_crs)</code></p>
-</div>
-<div id="progress" class="section level3">
-<h3>Progress</h3>
-<pre class="r"><code>result1 &lt;- land_cover(address_test, landcover_test, speed=5, time = 10)</code></pre>
+<ul>
+<li>How can I use the data frame created with the <code>calc_ndvi</code>
+function as input for <code>address_location</code> in the
+<code>land_cover</code> function and the other way around?</li>
+</ul>
+<p>example:</p>
+<pre class="r"><code>address_test</code></pre>
+<pre><code>## Simple feature collection with 3 features and 1 field
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+## Projected CRS: OSGB36 / British National Grid
+##   id                      geom
+## 1  3 POINT (388644.2 392861.6)
+## 2  2 POINT (385981.9 393805.5)
+## 3  1 POINT (388631.2 395322.2)</code></pre>
+<pre class="r"><code>a &lt;- calc_ndvi(address_test, ndvi_test, speed=5, time = 10)</code></pre>
 <pre><code>## Warning in st_cast.sf(polys, &quot;LINESTRING&quot;): repeating attributes for all
 ## sub-geometries for which they may not be constant</code></pre>
 <pre><code>## Warning: to_spatial_subdivision assumes attributes are constant over geometries</code></pre>
-<pre class="r"><code>result1 </code></pre>
+<pre class="r"><code>a</code></pre>
+<pre><code>##   UID mean_NDVI                   address                         buffer
+## 1   1 0.3771171 POINT (388644.2 392861.6) POLYGON ((388727 391348, 38...
+## 2   2 0.3775469 POINT (385981.9 393805.5) POLYGON ((385566 391671, 38...
+## 3   3 0.3773992 POINT (388631.2 395322.2) POLYGON ((388523 392904, 38...</code></pre>
+</div>
+<div id="progress" class="section level3">
+<h3>Progress</h3>
+<pre class="r"><code>result1 &lt;- calc_ndvi(address_test, ndvi_test, speed=5, time=10)</code></pre>
+<pre><code>## Warning in st_cast.sf(polys, &quot;LINESTRING&quot;): repeating attributes for all
+## sub-geometries for which they may not be constant</code></pre>
+<pre><code>## Warning: to_spatial_subdivision assumes attributes are constant over geometries</code></pre>
+<pre class="r"><code>result2 &lt;- land_cover(address_test, landcover_test, speed=5, time = 10)</code></pre>
+<pre><code>## Warning in st_cast.sf(polys, &quot;LINESTRING&quot;): repeating attributes for all
+## sub-geometries for which they may not be constant</code></pre>
+<pre><code>## Warning: to_spatial_subdivision assumes attributes are constant over geometries</code></pre>
+<pre class="r"><code>result2 </code></pre>
 <pre><code>##   UID 1001 1002 1003 1004 1005 1101 1102 1103 1104 1105 1201 1202 1203 1204
 ## 1   1 0.26    0 0.03 0.02 0.05 0.01    0 0.04 0.07 0.06 0.02    0 0.01 0.02
 ## 2   2 0.24    0 0.03 0.01 0.05 0.02    0 0.04 0.05 0.06 0.01    0 0.00 0.01
@@ -457,25 +486,25 @@ function)</em></p>
 ## 1 POLYGON ((388727 391348, 38...
 ## 2 POLYGON ((385566 391671, 38...
 ## 3 POLYGON ((388523 392904, 38...</code></pre>
-<pre class="r"><code>result2 &lt;- land_cover(address_test, landcover_test, buffer_distance=500, UID = address_test$id)</code></pre>
-<pre><code>## Buffer distance is used for calculations</code></pre>
-<pre class="r"><code>result2</code></pre>
-<pre><code>##   UID 1001 1002 1003 1004 1005 1101 1103 1104 1105 1201 1202 1203 1204 1205
-## 1   3 0.16    0 0.03 0.01 0.03 0.00 0.02 0.03 0.02 0.01    0 0.01 0.05 0.02
-## 2   2 0.27    0 0.03 0.02 0.06 0.07 0.07 0.02 0.01 0.01    0 0.00 0.01 0.02
-## 3   1 0.19    0 0.02 0.03 0.03 0.01 0.06 0.09 0.03 0.01    0 0.01 0.04 0.02
-##   1301 1302 1303 1304 1305 1401 1403 1404 1405 1501 1502 1503 1504 2001 2003
-## 1 0.22    0 0.13 0.10 0.13 0.01 0.01 0.00 0.01    0    0    0    0 0.00    0
-## 2 0.12    0 0.04 0.03 0.09 0.03 0.01 0.01 0.06    0    0    0    0 0.01    0
-## 3 0.23    0 0.03 0.09 0.06 0.02 0.00 0.01 0.01    0    0    0    0 0.00    0
-##   2004 2005 &lt;NA&gt; 1102 1505 2002 1402                   address
-## 1    0    0    0    0    0    0    0 POINT (388644.2 392861.6)
-## 2    0    0    0    0    0    0    0 POINT (385981.9 393805.5)
-## 3    0    0    0    0    0    0    0 POINT (388631.2 395322.2)
-##                           buffer
-## 1 POLYGON ((389144.2 392861.6...
-## 2 POLYGON ((386481.9 393805.5...
-## 3 POLYGON ((389131.2 395322.2...</code></pre>
+<pre class="r"><code>result3 &lt;- inner_join(result1, result2)</code></pre>
+<pre><code>## Joining with `by = join_by(UID, address, buffer)`</code></pre>
+<pre class="r"><code>result3</code></pre>
+<pre><code>##   UID mean_NDVI                   address                         buffer 1001
+## 1   1 0.3771171 POINT (388644.2 392861.6) POLYGON ((388727 391348, 38... 0.26
+## 2   2 0.3775469 POINT (385981.9 393805.5) POLYGON ((385566 391671, 38... 0.24
+## 3   3 0.3773992 POINT (388631.2 395322.2) POLYGON ((388523 392904, 38... 0.27
+##   1002 1003 1004 1005 1101 1102 1103 1104 1105 1201 1202 1203 1204 1205 1301
+## 1    0 0.03 0.02 0.05 0.01    0 0.04 0.07 0.06 0.02    0 0.01 0.02 0.03 0.15
+## 2    0 0.03 0.01 0.05 0.02    0 0.04 0.05 0.06 0.01    0 0.00 0.01 0.03 0.16
+## 3    0 0.02 0.02 0.04 0.01    0 0.05 0.07 0.07 0.01    0 0.01 0.03 0.03 0.16
+##   1302 1303 1304 1305 1401 1402 1403 1404 1405 1501 1502 1503 1504 1505 2001
+## 1    0 0.06 0.05 0.09 0.01    0 0.01 0.01 0.01 0.01    0    0    0    0    0
+## 2    0 0.06 0.05 0.10 0.02    0 0.01 0.01 0.02 0.00    0    0    0    0    0
+## 3    0 0.04 0.05 0.06 0.01    0 0.00 0.01 0.00 0.00    0    0    0    0    0
+##   2002 2003 2004 2005 &lt;NA&gt;
+## 1    0    0    0    0 0.00
+## 2    0    0    0    0 0.01
+## 3    0    0    0    0 0.00</code></pre>
 </div>
 <div id="feedback-1" class="section level3">
 <h3>Feedback</h3>

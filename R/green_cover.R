@@ -25,6 +25,9 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   codes <- replace(codes, is.na(codes), "<NA>")
   # assign the name of class_Raster to the variable rast_value_name
   rast_value_name <- names(class_raster)
+  # create the address from the address_location
+
+
   # Check if the CRS is in longitude-latitude format
   if (sf::st_is_longlat(address_location)){
     stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
@@ -122,7 +125,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       touching_list <- sf::st_touches(net_sf)
       # create a graph from the touching list
       graph_list <- igraph::graph.adjlist(touching_list)
-      # Identify the cpnnected components of the graph
+      # Identify the connected components of the graph
       roads_group <- igraph::components(graph_list)
       # cont the number of edges in each component
       roads_table <- table(roads_group$membership)
@@ -183,8 +186,8 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
           sf::st_convex_hull()
       }
 
-      # Create a simple feature collection (sf) with sthe st_sf function and use st_as_sf to convert the sf object to an sf
-      # dataframe with the polygons as the geometry column
+      # Create a simple feature collection (sf) with the st_sf function and use st_as_sf to convert the sf object to an sf
+      # data frame with the polygons as the geometry column
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
     }else {
       message("Buffer distance is used for calculations")
@@ -196,7 +199,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   ### Calculations
   # Extract the landcover values within the buffer
   class_raster_values <- terra::extract(class_raster, calculation_area)
-  # count the amount of landcover values per polygon
+  # count the amount of land cover values per polygon
   class_raster_values <- dplyr::count(class_raster_values, ID, N = get(rast_value_name))
   # Convert to wide format + replacing NA
   class_raster_values_wide <- tidygraph::mutate_all(tidyr::spread(class_raster_values, N, n), ~replace_na(.,0))
@@ -213,6 +216,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
   missings_df <- replace(missings_df, is.na(missings_df), 0)
   address <- address_location[2]
+  # address <- address_location$geom
   names(address) <- "address"
   names(calculation_area) <- "buffer"
   landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address, calculation_area)

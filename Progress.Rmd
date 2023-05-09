@@ -51,10 +51,6 @@ A large part of the code is already written by Karen, this code needs to be unde
 * Still have some troubles with the crs of the buffer around the address points. 
 * regarding the polygons, how do we want the coordinates, with or without decimals
 * Code I am not 100% certain of: 
-
-
-
-
 ```{r, include=FALSE}
 landcover_test <- terra::rast("Data/Landcover_data_test.tif")
 address_test <- sf::st_read("Data/Test_multiple_home_locations.gpkg")
@@ -64,11 +60,10 @@ buffer_distance <- 500
 source("R/green_cover.R")
 source("R/average_ndvi.R")
 library(tidyverse)
-
+ndvi_test <- terra::rast("data/NDVI_data_test.tif")
 
 
 ```
-
 
 *This code I am using to set the crs to the projected crs (otherwise the polygon did not have the crs when returned in the function)*
 
@@ -84,16 +79,36 @@ names(address) <- "address"
 names(calculation_area) <- "buffer"
 ```
 
+* How can I use the data frame created with the `calc_ndvi` function as input for `address_location` in the `land_cover` function and the other way around? 
+
+example: 
+```{r}
+address_test
+```
+
+```{r}
+a <- calc_ndvi(address_test, ndvi_test, speed=5, time = 10)
+a
+```
+
+
 ### Progress
 
 ```{r}
-result1 <- land_cover(address_test, landcover_test, speed=5, time = 10)
-result1 
+result1 <- calc_ndvi(address_test, ndvi_test, speed=5, time=10)
 ```
+
+
 ```{r}
-result2 <- land_cover(address_test, landcover_test, buffer_distance=500, UID = address_test$id)
-result2
+result2 <- land_cover(address_test, landcover_test, speed=5, time = 10)
+result2 
 ```
+
+```{r}
+result3 <- inner_join(result1, result2)
+result3
+```
+
 
 
 
