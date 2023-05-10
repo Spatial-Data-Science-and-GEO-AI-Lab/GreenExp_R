@@ -509,6 +509,28 @@ function as input for <code>address_location</code> in the
 ## 1    0    0    0    0 0.00
 ## 2    0    0    0    0 0.01
 ## 3    0    0    0    0 0.00</code></pre>
+<pre class="r"><code>source(&quot;R/canopy_coverage.R&quot;)
+canopy_perc(area_test, canopy, buffer_distance = 500)</code></pre>
+<pre><code>## There are nonpoint geometries, they will be converted into centroids</code></pre>
+<pre><code>## Warning: st_centroid assumes attributes are constant over geometries</code></pre>
+<pre><code>## Buffer distance is used for calculations</code></pre>
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
+## geometries</code></pre>
+<pre><code>##   UID canopy_pct                geometry                         buffer
+## 1   1   14.83881 POINT (387700.4 393832) POLYGON ((388200.4 393832, ...</code></pre>
+<pre class="r"><code>canopy_perc(address_test, canopy, buffer_distance = 500)</code></pre>
+<pre><code>## Buffer distance is used for calculations</code></pre>
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
+## geometries</code></pre>
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
+## geometries
+
+## Warning: attribute variables are assumed to be spatially constant throughout all
+## geometries</code></pre>
+<pre><code>##   UID canopy_pct                  geometry                         buffer
+## 1   1   14.42063 POINT (388644.2 392861.6) POLYGON ((389144.2 392861.6...
+## 2   2   19.27852 POINT (385981.9 393805.5) POLYGON ((386481.9 393805.5...
+## 3   3   10.67145 POINT (388631.2 395322.2) POLYGON ((389131.2 395322.2...</code></pre>
 </div>
 <div id="feedback-1" class="section level3">
 <h3>Feedback</h3>

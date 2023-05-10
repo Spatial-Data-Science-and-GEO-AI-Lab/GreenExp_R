@@ -56,6 +56,7 @@ landcover_test <- terra::rast("Data/Landcover_data_test.tif")
 address_test <- sf::st_read("Data/Test_multiple_home_locations.gpkg")
 address_test$id <- nrow(address_test):1
 area_test <- sf::st_read("Data/TestArea.gpkg")
+canopy <- sf::st_read("Data/CanopyTestArea.gpkg")
 buffer_distance <- 500
 source("R/green_cover.R")
 source("R/average_ndvi.R")
@@ -110,6 +111,12 @@ result3 <- inner_join(result1, result2)
 result3
 ```
 
+
+```{r}
+source("R/canopy_coverage.R")
+canopy_perc(area_test, canopy, buffer_distance = 500)
+canopy_perc(address_test, canopy, buffer_distance = 500)
+```
 
 
 

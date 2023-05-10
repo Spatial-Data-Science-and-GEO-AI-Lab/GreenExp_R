@@ -178,10 +178,11 @@ canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, ne
   ### Make the calculations here
   canopy_pct <- list()
 
-  if (nrow(calculation_area) > 1){
+  # if (nrow(calculation_area) > 1){
+
     for (i in 1:nrow(calculation_area)) {
       # Clip tree canopy to polygon
-      canopy_clip <- sf::st_intersection(canopy, calculation_area[i,])
+      canopy_clip <- sf::st_intersection(vector_layer, calculation_area[i,])
       # Calculate area of clipped tree canopy
       canopy_area <- sf::st_area(canopy_clip)
       total_area <- sum(canopy_area)
@@ -194,29 +195,32 @@ canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, ne
     }
     buffer <- calculation_area
     names(buffer) <- "buffer"
-    df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)), sf::st_geometry(address_test), buffer)
+    df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)), sf::st_geometry(address_location), buffer)
     df$UID <- seq.int(nrow(df))
     if (!missing(UID)){
-      df$UID <- UID}}
-  else{
-
-      # Clip tree canopy to polygon
-      canopy_clip <- sf::st_intersection(canopy, calculation_area)
-      # Calculate area of clipped tree canopy
-      canopy_area <- sf::st_area(canopy_clip)
-      total_area <- sum(canopy_area)
-      # Calculate area of polygon
-      polygon_area <- sf::st_area(calculation_area)
-      # Calculate tree canopy percentage
-      canopy_pct <- total_area / polygon_area * 100
-      buffer <- calculation_area
-      names(buffer) <- "buffer"
-      df <- data.frame(UID = nrow(calculation_area), canopy_pct = as.numeric(canopy_pct), sf::st_geometry(address_test), buffer)
-      df$UID <- nrow(df)
-      if (!missing(UID)){
-        df$UID <- UID}
-    }
-
+      df$UID <- UID}
+  # else{
+  #
+  #   # Clip tree canopy to polygon
+  #   canopy_clip <- sf::st_intersection(canopy, calculation_area)
+  #   # Calculate area of clipped tree canopy
+  #   canopy_area <- sf::st_area(canopy_clip)
+  #   total_area <- sum(canopy_area)
+  #   # Calculate area of polygon
+  #   polygon_area <- sf::st_area(calculation_area)
+  #   # Calculate tree canopy percentage
+  #   canopy_pct <- total_area / polygon_area * 100
+  #   buffer <- calculation_area
+  #   names(buffer) <- "buffer"
+  #   print(nrow(calculation_area))
+  #   print(as.numeric(canopy_pct))
+  #   df <- data.frame(UID = nrow(calculation_area), canopy_pct = as.numeric(canopy_pct), sf::st_geometry(address_location), buffer)
+  #
+  #   df$UID <- nrow(df)
+  #   if (!missing(UID)){
+  #     df$UID <- UID}
+  # }
+  #
 
 
 
