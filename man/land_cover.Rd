@@ -20,7 +20,7 @@ land_cover(
 
 \item{class_raster}{A raster object representing a land cover classification map, where each pixel is assigned a land cover class}
 
-\item{buffer_distance}{a distance in meters to create a buffer or isochrone around the address location}
+\item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
 \item{net}{an optional sfnetwork object representing a road network}
 

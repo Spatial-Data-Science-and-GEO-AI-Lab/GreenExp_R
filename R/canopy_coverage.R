@@ -1,4 +1,19 @@
 
+#' Calculate the percentage of a canopy within a given buffer distance or location
+#'
+#' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param vector_layer # A vector layer that represnets a canopy, the layer should be in projected coordinates
+#' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
+#' @param net an optional sfnetwork object representing a road network
+#' @param UID A character string representing a unique identifier for each point of interest
+#' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
+#' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
+#' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
+#'
+#' @return The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
+#' @export
+#'
+#' @examples
 canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL){
   #Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
