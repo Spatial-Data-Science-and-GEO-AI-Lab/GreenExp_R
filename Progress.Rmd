@@ -91,6 +91,7 @@ a <- calc_ndvi(address_test, ndvi_test, speed=5, time = 10)
 a
 ```
 
+* **Discuss how the variables in the function should be returned **
 
 ### Progress
 

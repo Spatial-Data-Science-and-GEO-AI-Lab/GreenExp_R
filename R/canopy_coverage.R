@@ -1,45 +1,25 @@
 
-#' Creating average NDVI values per location
-#'
-#' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param raster raster file with NDVI values
-#' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param net An optional sfnetwork object representing a road network
-#' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_calculation  A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
-#' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
-#' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
-#'
-#' @return the mean NDVI score within a given buffer or isochrone around a set of locations is printed
-#' @export
-#'
-#' @examples
-#'
-calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL) {
-  ### Preparation
-  # Takes name of field for future calculations and find projection
-
-  rast_value_name <- names(raster)
-
-  # Make sure main data set has projected CRS and save it
+canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL){
+  #Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
 
   }
+  # Save the crs
   projected_crs <- sf::st_crs(address_location)
 
-  ### Address vs area
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
-    }else if (missing(buffer_distance)) {
+      # Do nothing
+    } else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
     }
-
     else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
+    # Create a buffer or isochrone around the address location
     if (missing(buffer_distance)) {
       # Check for speed and time + Count buffer for bbox of initial set
       if(missing(speed)||missing(time)){
@@ -51,7 +31,6 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
       } else{
         buffer_distance <- speed * 1000/ 60 * time
       }
-      ### Check, do we use a entered network or loading a new one
       if (missing(net)) {
         ### Extracting OSM road structure to build isochrone polygon
         iso_area <- sf::st_buffer(sf::st_convex_hull(
@@ -62,8 +41,6 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
         q <- osmdata::opq(bbox) %>%
           osmdata::add_osm_feature(key = "highway") %>%
           osmdata::osmdata_sf()
-
-        # extract lines and polygons from the OSM data
         lines <- q$osm_lines
         polys <- q$osm_polygons
 
@@ -131,22 +108,16 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
         net <- net %>%
           tidygraph::activate("nodes") %>%
           sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
-      }
-      else  {
+      } else  {
         # If the CRS of the network data set is geographic, tranfrom it to the project CRS
         if (sf::st_crs(address_location) != sf::st_crs(net))
         {
-          print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
+          message("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
           net <- sf::st_transform(net, projected_crs)
         }
       }
-
-
-
-      # Compute the edge weights bsased on their length
       net <- tidygraph::mutate(tidygraph::activate(net, "edges"),
                                weight = sfnetworks::edge_length())
-
       # Convert speed to m/s
       net <- net %>%
         tidygraph::activate("edges") %>%
@@ -154,14 +125,11 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
         tidygraph::mutate(duration = weight / speed) %>%
         tidygraph::ungroup()
 
-      net <- tidygraph::activate(net, "nodes")
-
       ### Building isochrone polygon
       # activate the node layer of the network object
       net <- tidygraph::activate(net, "nodes")
       # Initialize an empty list to store isochrone polygons
       iso_list <- list()
-
       # loop through the input points
       for (i in 1:nrow(address_location)) {
         # assign the output of each iteration to the iso_list
@@ -183,35 +151,45 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
           # computes the smallest convex polygon that contains the geometry
           sf::st_convex_hull()
       }
-
-      # Final assignment
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
-
-    } else {
-      print("Buffer distance is used for calculations")
+    }else {
+      message("Buffer distance is used for calculations")
       calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)[2]
     }
   } else {
     calculation_area <- address_location
   }
 
-  ### Calculation
-  # Extract the NDVI values within the buffer
-  raster_values <- terra::extract(raster, calculation_area)
-  raster_values <- replace(raster_values, is.na(raster_values), 0)
-  # Calculate the average NDVI
-  average_rast <- dplyr::summarise(group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
-  # Update UID
+  ### Make the calculations here
+  canopy_pct <- list()
 
-  names(average_rast)[1] <- "UID"
-  if (!missing(UID)){
-    average_rast$UID <- UID
+  for (i in 1:nrow(calculation_area)) {
+    # Clip tree canopy to polygon
+    canopy_clip <- sf::st_intersection(canopy, calculation_area[i,])
+    # Calculate area of clipped tree canopy
+    canopy_area <- sf::st_area(canopy_clip)
+    total_area <- sum(canopy_area)
+    # Calculate area of polygon
+    polygon_area <- sf::st_area(calculation_area[i,])
+    # Calculate tree canopy percentage
+    canopy_pct[i] <- total_area / polygon_area * 100
+
+
   }
-  address <- sf::st_geometry(address_location)
 
   buffer <- calculation_area
   names(buffer) <- "buffer"
-  ndvi_avg <- cbind(average_rast, address, buffer)
-  # Return the result
-  return(ndvi_avg)
+  df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)), sf::st_geometry(address_test), buffer)
+  df$UID <- seq.int(nrow(df))
+  if (!missing(UID)){
+    df$UID <- UID}
+  return(df)
+
+
+
+
+
+
+
+
 }
