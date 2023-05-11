@@ -299,23 +299,17 @@ overflow-y: auto;
 border: 1px solid #ddd;
 border-radius: 4px;
 }
-.tabset-dropdown > .nav-tabs > li.active:before {
-content: "";
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+content: "\e259";
 font-family: 'Glyphicons Halflings';
 display: inline-block;
 padding: 10px;
 border-right: 1px solid #ddd;
 }
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
-content: "";
-border: none;
-}
-.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
-content: "";
+content: "\e258";
 font-family: 'Glyphicons Halflings';
-display: inline-block;
-padding: 10px;
-border-right: 1px solid #ddd;
+border: none;
 }
 .tabset-dropdown > .nav-tabs > li.active {
 display: block;
@@ -454,7 +448,13 @@ function as input for <code>address_location</code> in the
 ## sub-geometries for which they may not be constant</code></pre>
 <pre><code>## Warning: to_spatial_subdivision assumes attributes are constant over geometries</code></pre>
 <pre class="r"><code>a</code></pre>
-<pre><code>##   UID mean_NDVI                  geometry                         buffer
+<pre><code>## Simple feature collection with 3 features and 2 fields
+## Active geometry column: geometry
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+## Projected CRS: OSGB36 / British National Grid
+##   UID mean_NDVI                  geometry                         buffer
 ## 1   1 0.3771171 POINT (388644.2 392861.6) POLYGON ((388727 391348, 38...
 ## 2   2 0.3775469 POINT (385981.9 393805.5) POLYGON ((385566 391671, 38...
 ## 3   3 0.3773992 POINT (388631.2 395322.2) POLYGON ((388523 392904, 38...</code></pre>
@@ -493,44 +493,67 @@ function as input for <code>address_location</code> in the
 <pre class="r"><code>result3 &lt;- inner_join(result1, result2)</code></pre>
 <pre><code>## Joining with `by = join_by(UID, geometry, buffer)`</code></pre>
 <pre class="r"><code>result3</code></pre>
-<pre><code>##   UID mean_NDVI                  geometry                         buffer 1001
-## 1   1 0.3771171 POINT (388644.2 392861.6) POLYGON ((388727 391348, 38... 0.26
-## 2   2 0.3775469 POINT (385981.9 393805.5) POLYGON ((385566 391671, 38... 0.24
-## 3   3 0.3773992 POINT (388631.2 395322.2) POLYGON ((388523 392904, 38... 0.27
-##   1002 1003 1004 1005 1101 1102 1103 1104 1105 1201 1202 1203 1204 1205 1301
-## 1    0 0.03 0.02 0.05 0.01    0 0.04 0.07 0.06 0.02    0 0.01 0.02 0.03 0.15
-## 2    0 0.03 0.01 0.05 0.02    0 0.04 0.05 0.06 0.01    0 0.00 0.01 0.03 0.16
-## 3    0 0.02 0.02 0.04 0.01    0 0.05 0.07 0.07 0.01    0 0.01 0.03 0.03 0.16
-##   1302 1303 1304 1305 1401 1402 1403 1404 1405 1501 1502 1503 1504 1505 2001
-## 1    0 0.06 0.05 0.09 0.01    0 0.01 0.01 0.01 0.01    0    0    0    0    0
-## 2    0 0.06 0.05 0.10 0.02    0 0.01 0.01 0.02 0.00    0    0    0    0    0
-## 3    0 0.04 0.05 0.06 0.01    0 0.00 0.01 0.00 0.00    0    0    0    0    0
-##   2002 2003 2004 2005 &lt;NA&gt;
-## 1    0    0    0    0 0.00
-## 2    0    0    0    0 0.01
-## 3    0    0    0    0 0.00</code></pre>
+<pre><code>## Simple feature collection with 3 features and 38 fields
+## Active geometry column: geometry
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+## Projected CRS: OSGB36 / British National Grid
+##   UID mean_NDVI 1001 1002 1003 1004 1005 1101 1102 1103 1104 1105 1201 1202
+## 1   1 0.3771171 0.26    0 0.03 0.02 0.05 0.01    0 0.04 0.07 0.06 0.02    0
+## 2   2 0.3775469 0.24    0 0.03 0.01 0.05 0.02    0 0.04 0.05 0.06 0.01    0
+## 3   3 0.3773992 0.27    0 0.02 0.02 0.04 0.01    0 0.05 0.07 0.07 0.01    0
+##   1203 1204 1205 1301 1302 1303 1304 1305 1401 1402 1403 1404 1405 1501 1502
+## 1 0.01 0.02 0.03 0.15    0 0.06 0.05 0.09 0.01    0 0.01 0.01 0.01 0.01    0
+## 2 0.00 0.01 0.03 0.16    0 0.06 0.05 0.10 0.02    0 0.01 0.01 0.02 0.00    0
+## 3 0.01 0.03 0.03 0.16    0 0.04 0.05 0.06 0.01    0 0.00 0.01 0.00 0.00    0
+##   1503 1504 1505 2001 2002 2003 2004 2005 &lt;NA&gt;                  geometry
+## 1    0    0    0    0    0    0    0    0 0.00 POINT (388644.2 392861.6)
+## 2    0    0    0    0    0    0    0    0 0.01 POINT (385981.9 393805.5)
+## 3    0    0    0    0    0    0    0    0 0.00 POINT (388631.2 395322.2)
+##                           buffer
+## 1 POLYGON ((388727 391348, 38...
+## 2 POLYGON ((385566 391671, 38...
+## 3 POLYGON ((388523 392904, 38...</code></pre>
 <pre class="r"><code>source(&quot;R/canopy_coverage.R&quot;)
 canopy_perc(area_test, canopy, buffer_distance = 500)</code></pre>
 <pre><code>## There are nonpoint geometries, they will be converted into centroids</code></pre>
 <pre><code>## Warning: st_centroid assumes attributes are constant over geometries</code></pre>
 <pre><code>## Buffer distance is used for calculations</code></pre>
-<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries</code></pre>
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout
+## all geometries</code></pre>
 <pre><code>##   UID canopy_pct                geometry                         buffer
 ## 1   1   14.83881 POINT (387700.4 393832) POLYGON ((388200.4 393832, ...</code></pre>
 <pre class="r"><code>canopy_perc(address_test, canopy, buffer_distance = 500)</code></pre>
 <pre><code>## Buffer distance is used for calculations</code></pre>
-<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries</code></pre>
-<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout
+## all geometries</code></pre>
+<pre><code>## Warning: attribute variables are assumed to be spatially constant throughout
+## all geometries
 
-## Warning: attribute variables are assumed to be spatially constant throughout all
-## geometries</code></pre>
+## Warning: attribute variables are assumed to be spatially constant throughout
+## all geometries</code></pre>
 <pre><code>##   UID canopy_pct                  geometry                         buffer
 ## 1   1   14.42063 POINT (388644.2 392861.6) POLYGON ((389144.2 392861.6...
 ## 2   2   19.27852 POINT (385981.9 393805.5) POLYGON ((386481.9 393805.5...
 ## 3   3   10.67145 POINT (388631.2 395322.2) POLYGON ((389131.2 395322.2...</code></pre>
+<pre class="r"><code>source(&quot;R/accessibility.R&quot;)
+result &lt;- parks_access(address_test, buffer_distance)</code></pre>
+<pre><code>## Warning in st_cast.sf(polys, &quot;LINESTRING&quot;): repeating attributes for all
+## sub-geometries for which they may not be constant</code></pre>
+<pre><code>## Warning: to_spatial_subdivision assumes attributes are constant over geometries</code></pre>
+<pre><code>## Warning: st_centroid assumes attributes are constant over geometries</code></pre>
+<pre><code>## Warning: st_network_blend assumes attributes are constant over geometries</code></pre>
+<pre class="r"><code>result</code></pre>
+<pre><code>## Simple feature collection with 3 features and 4 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+## Projected CRS: OSGB36 / British National Grid
+##   UID id closest_park parks_in_buffer                      geom
+## 1   1  3     264.9838            TRUE POINT (388644.2 392861.6)
+## 2   2  2     334.9009            TRUE POINT (385981.9 393805.5)
+## 3   3  1     302.8359            TRUE POINT (388631.2 395322.2)</code></pre>
 </div>
 <div id="feedback-1" class="section level3">
 <h3>Feedback</h3>

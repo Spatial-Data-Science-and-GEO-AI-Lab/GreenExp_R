@@ -54,6 +54,7 @@ A large part of the code is already written by Karen, this code needs to be unde
 ```{r, include=FALSE}
 landcover_test <- terra::rast("Data/Landcover_data_test.tif")
 address_test <- sf::st_read("Data/Test_multiple_home_locations.gpkg")
+single_home <- sf::st_read("Data/Test_single_home_location.gpkg")
 address_test$id <- nrow(address_test):1
 area_test <- sf::st_read("Data/TestArea.gpkg")
 canopy <- sf::st_read("Data/CanopyTestArea.gpkg")
@@ -119,6 +120,11 @@ canopy_perc(address_test, canopy, buffer_distance = 500)
 ```
 
 
+```{r}
+source("R/accessibility.R")
+result <- parks_access(address_test, buffer_distance)
+result
+```
 
 ### Feedback
 

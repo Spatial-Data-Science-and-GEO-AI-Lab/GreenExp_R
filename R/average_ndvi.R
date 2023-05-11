@@ -212,6 +212,8 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
   buffer <- calculation_area
   names(buffer) <- "buffer"
   ndvi_avg <- cbind(average_rast, address, buffer)
+  ndvi_avg <- sf::st_as_sf(ndvi_avg)
+
   # Return the result
   return(ndvi_avg)
 }

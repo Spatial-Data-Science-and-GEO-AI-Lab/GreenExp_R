@@ -1,7 +1,21 @@
 
 
-parks_access <- function(address_location, buffer_distance = 300, net, parks, UID) {
+#'
+#'
+#' @param address_location
+#' @param buffer_distance
+#' @param net
+#' @param parks
+#' @param UID
+#'
+#' @return
+#' @export
+#'
+#' @examples
+parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
   ### Make sure main data set has projected CRS and save it
+
+  address_location <- sf::st_geometry(address)
   if (sf::st_is_longlat(address_location)){
     stop("The CRS your main data set is geographic, please transform it into your local projected CRS and rerun function")
 
@@ -112,13 +126,13 @@ parks_access <- function(address_location, buffer_distance = 300, net, parks, UI
 
 
   ### Adding edge length for future calculations
-  net <- mutate(activate(net, "edges"), weight = edge_length())
+  net <- tidygraph::mutate(tidygraph::activate(net, "edges"), weight = sfnetworks::edge_length())
 
   ### Creating parks set if not given
   if (missing(parks)) {
     ### Building area polygon and loading parks
     # Area assignment
-    calculation_area <- st_buffer(address_location, dist = buffer_distance)
+    calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
 
     # Initial load of parks
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
@@ -168,14 +182,21 @@ parks_access <- function(address_location, buffer_distance = 300, net, parks, UI
   parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
 
   if (missing(UID)) {
-    UID <- 1:nrow(address_location)
+    UID <- 1:nrow(address)
   }
 
-  address <- sf::st_geometry(address_location)
+  if ("UID" %in% colnames(address)) {
+    df <- data.frame(address, closest_park, parks_in_buffer)
+    df <- sf::st_as_sf(df)
+  } else{
+    df <- data.frame(UID, address, closest_park, parks_in_buffer)
+    df <- sf::st_as_sf(df)
+  }
+
+
 
   ### Finalizing the output
 
-  df <- data.frame(UID, sf::st_geometry(address_location), closest_park, parks_in_buffer)
 
   return(df)
 }
