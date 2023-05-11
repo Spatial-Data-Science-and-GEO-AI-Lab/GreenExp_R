@@ -3,3 +3,4 @@
 export(calc_ndvi)
 export(canopy_perc)
 export(land_cover)
+export(parks_access)

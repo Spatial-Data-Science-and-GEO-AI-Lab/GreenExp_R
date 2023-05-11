@@ -18,7 +18,7 @@ canopy_perc(
 \arguments{
 \item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
 
-\item{vector_layer}{A vector layer that represnets a canopy, the layer should be in projected coordinates}
+\item{vector_layer}{A vector layer that represents a canopy, the layer should be in projected coordinates}
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 

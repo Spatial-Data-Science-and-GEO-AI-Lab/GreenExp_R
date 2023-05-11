@@ -1,14 +1,12 @@
-
-
+#' Calculating the distance to the nearest park access given a location.
 #'
+#' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
+#' @param net An optional sfnetwork object representing a road network
+#' @param parks A spatial object representing parks
+#' @param UID A character string representing a unique identifier for each point of interest
 #'
-#' @param address_location
-#' @param buffer_distance
-#' @param net
-#' @param parks
-#' @param UID
-#'
-#' @return
+#' @return A sf data frame with the spatial object that was used as input, the nearest park in meters, and whether or not there is a park within the buffer distance
 #' @export
 #'
 #' @examples
