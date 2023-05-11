@@ -20,7 +20,7 @@
 land_cover <- function(address_location, class_raster, buffer_distance, net, UID, address_calculation = TRUE, speed, time) {
   ### Preparation
   # Create full class set vector
-  library(tidyverse)
+
   codes <- c("UID", unique(terra::values(class_raster)))
   # replace the NA values to <NA>
   codes <- replace(codes, is.na(codes), "<NA>")
@@ -223,8 +223,10 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   names(buffer) <- "buffer"
   landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address, buffer)
 
+  df <- sf::st_as_sf(landcover_values_perc)
+
   # return the result
-  return(landcover_values_perc)
+  return(df)
 
 
   }

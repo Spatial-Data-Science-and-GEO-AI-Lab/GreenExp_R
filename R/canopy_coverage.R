@@ -2,7 +2,7 @@
 #' Calculate the percentage of a canopy within a given buffer distance or location
 #'
 #' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param vector_layer # A vector layer that represnets a canopy, the layer should be in projected coordinates
+#' @param vector_layer # A vector layer that represents a canopy, the layer should be in projected coordinates
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param net an optional sfnetwork object representing a road network
 #' @param UID A character string representing a unique identifier for each point of interest
@@ -195,10 +195,13 @@ canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, ne
     }
     buffer <- calculation_area
     names(buffer) <- "buffer"
-    df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)), sf::st_geometry(address_location), buffer)
+    df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)),
+                     sf::st_geometry(address_location), buffer)
     df$UID <- seq.int(nrow(df))
     if (!missing(UID)){
       df$UID <- UID}
+
+    df <- sf::st_as_sf(df)
   # else{
   #
   #   # Clip tree canopy to polygon
