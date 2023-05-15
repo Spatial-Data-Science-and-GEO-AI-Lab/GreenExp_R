@@ -1,5 +1,3 @@
-
-
 #' Calculate the percentage of area covered by each land cover class within a given buffer distance or location
 #'
 #' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
@@ -14,9 +12,8 @@
 #' @return The percentage of each land cover type within a given buffer or isochrone around a set of locations is printed.
 #' @export
 #'
+#'
 #' @examples
-#'
-#'
 land_cover <- function(address_location, class_raster, buffer_distance, net, UID, address_calculation = TRUE, speed, time) {
   ### Preparation
   # Create full class set vector
@@ -46,7 +43,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
     } else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
     }
-       else {
+    else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
@@ -63,85 +60,85 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
         buffer_distance <- speed * 1000/ 60 * time
       }
 
-    ### Check, do we use a entered network or loading a new one
-    if (missing(net)) {
-      ### Extracting OSM road structure to build isochrone polygon
-      iso_area <- sf::st_buffer(sf::st_convex_hull(
-        sf::st_union(sf::st_geometry(address_location))),
-        buffer_distance)
-      iso_area <- sf::st_transform(iso_area, crs = 4326)
+      ### Check, do we use a entered network or loading a new one
+      if (missing(net)) {
+        ### Extracting OSM road structure to build isochrone polygon
+        iso_area <- sf::st_buffer(sf::st_convex_hull(
+          sf::st_union(sf::st_geometry(address_location))),
+          buffer_distance)
+        iso_area <- sf::st_transform(iso_area, crs = 4326)
 
 
 
-      bbox <- sf::st_bbox(iso_area)
-      q <- osmdata::opq(bbox) %>%
-        osmdata::add_osm_feature(key = "highway") %>%
-        osmdata::osmdata_sf()
+        bbox <- sf::st_bbox(iso_area)
+        q <- osmdata::opq(bbox) %>%
+          osmdata::add_osm_feature(key = "highway") %>%
+          osmdata::osmdata_sf()
 
-      # extract lines and polygons from the OSM data
-      lines <- q$osm_lines
-      polys <- q$osm_polygons
+        # extract lines and polygons from the OSM data
+        lines <- q$osm_lines
+        polys <- q$osm_polygons
 
-      # make the coordinates numeric
-      lines$osm_id <- as.numeric(lines$osm_id)
-      polys$osm_id <- as.numeric(polys$osm_id)
+        # make the coordinates numeric
+        lines$osm_id <- as.numeric(lines$osm_id)
+        polys$osm_id <- as.numeric(polys$osm_id)
 
-      # Remove invalid polygons
-      polys <- polys[!is.na(polys$highway),]
-      polys <- polys[is.na(polys$area),]
-      rm(bbox,q)
+        # Remove invalid polygons
+        polys <- polys[!is.na(polys$highway),]
+        polys <- polys[is.na(polys$area),]
+        rm(bbox,q)
 
-      #convert the polygons to lines
-      polys <- sf::st_cast(polys, "LINESTRING")
-      lines <- sf::st_cast(lines, "LINESTRING")
-
-
-      #remove invalid geometries
-      polys <- polys[sf::st_is_valid(polys) %in% TRUE,]
-
-      # Combine the lines and polygons
-      lines <- rbind(lines,polys)
-
-      #convert back to the user projection
-      lines <- sf::st_transform(lines, projected_crs)
-      lines <- tidygraph::select(lines, "osm_id",  "name")
-      region_shp <- sf::st_transform(iso_area, projected_crs)
-
-      # Trim to exact boundary
-      lines <- lines[region_shp,]
-
-      # Round coordinates to 0 digits
-      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-        lapply(function(x) round(x, 0)) %>%
-        sf::st_sfc(crs = sf::st_crs(lines))
-
-      net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-      net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
+        #convert the polygons to lines
+        polys <- sf::st_cast(polys, "LINESTRING")
+        lines <- sf::st_cast(lines, "LINESTRING")
 
 
-      #convert network to an sf object of edge
-      net_sf <- net %>% tidygraph::activate("edges") %>%
-        sf::st_as_sf()
-      # Find which edges are touching each other
-      touching_list <- sf::st_touches(net_sf)
-      # create a graph from the touching list
-      graph_list <- igraph::graph.adjlist(touching_list)
-      # Identify the connected components of the graph
-      roads_group <- igraph::components(graph_list)
-      # cont the number of edges in each component
-      roads_table <- table(roads_group$membership)
-      #order the components by size, largest to smallest
-      roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
-      # get the name of the largest component
-      biggest_group <- names(roads_table_order[1])
+        #remove invalid geometries
+        polys <- polys[sf::st_is_valid(polys) %in% TRUE,]
+
+        # Combine the lines and polygons
+        lines <- rbind(lines,polys)
+
+        #convert back to the user projection
+        lines <- sf::st_transform(lines, projected_crs)
+        lines <- tidygraph::select(lines, "osm_id",  "name")
+        region_shp <- sf::st_transform(iso_area, projected_crs)
+
+        # Trim to exact boundary
+        lines <- lines[region_shp,]
+
+        # Round coordinates to 0 digits
+        sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+          lapply(function(x) round(x, 0)) %>%
+          sf::st_sfc(crs = sf::st_crs(lines))
+
+        net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+        net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
 
 
-      # Subset the edges corresponding to the biggest connected component
-      osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
-      # Filter nodes that are not connected to the biggest connected component
-      net <- net %>%
-        tidygraph::activate("nodes") %>%
-        sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
+        #convert network to an sf object of edge
+        net_sf <- net %>% tidygraph::activate("edges") %>%
+          sf::st_as_sf()
+        # Find which edges are touching each other
+        touching_list <- sf::st_touches(net_sf)
+        # create a graph from the touching list
+        graph_list <- igraph::graph.adjlist(touching_list)
+        # Identify the connected components of the graph
+        roads_group <- igraph::components(graph_list)
+        # cont the number of edges in each component
+        roads_table <- table(roads_group$membership)
+        #order the components by size, largest to smallest
+        roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
+        # get the name of the largest component
+        biggest_group <- names(roads_table_order[1])
+
+
+        # Subset the edges corresponding to the biggest connected component
+        osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+        # Filter nodes that are not connected to the biggest connected component
+        net <- net %>%
+          tidygraph::activate("nodes") %>%
+          sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
       } else  {
         # If the CRS of the network data set is geographic, tranfrom it to the project CRS
         if (sf::st_crs(address_location) != sf::st_crs(net))
@@ -229,4 +226,4 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   return(df)
 
 
-  }
+}

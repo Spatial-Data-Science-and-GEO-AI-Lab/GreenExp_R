@@ -10,6 +10,8 @@
 #' @export
 #'
 #' @examples
+#'
+
 parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
   ### Make sure main data set has projected CRS and save it
 
