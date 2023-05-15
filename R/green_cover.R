@@ -28,8 +28,8 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
 
   # Check if the CRS is in longitude-latitude format
   if (sf::st_is_longlat(address_location)){
-    stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
-
+    warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
+    st_crs(address_location) <- 3395
   }
   # assign the projected crs to the variable projected_crs
   projected_crs <- sf::st_crs(address_location)

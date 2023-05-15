@@ -6,7 +6,7 @@
 \usage{
 canopy_perc(
   address_location,
-  vector_layer,
+  park_layer,
   buffer_distance = NULL,
   net = NULL,
   UID = NULL,
@@ -17,8 +17,6 @@ canopy_perc(
 }
 \arguments{
 \item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
-
-\item{vector_layer}{A vector layer that represents a canopy, the layer should be in projected coordinates}
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
@@ -31,6 +29,8 @@ canopy_perc(
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+
+\item{canopy_layer}{A canopy layer that represents a canopy, the layer should be in projected coordinates}
 }
 \value{
 The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.

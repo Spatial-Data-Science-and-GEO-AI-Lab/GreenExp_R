@@ -107,10 +107,7 @@ result2 <- land_cover(address_test, landcover_test, speed=5, time = 10)
 result2 
 ```
 
-```{r}
-result3 <- inner_join(result1, result2)
-result3
-```
+
 
 
 ```{r}
@@ -127,6 +124,16 @@ result
 ```
 
 ### Feedback
+
+- make park function, use canopy function (give error message, when input is a point)
+- Use park entrance to calculate the distance to the park (create a boundary around the park polygon for around 20 meters and use intersection with the edges and the roads ) --> than calculate the shortest distance to the nodes 
+- if the CRS is not given, give code 3395. --> give project parameter. 
+- Consider demand supply of parks? look at 
+- accessibility 2: 
+  figure out how to get population within R. --> make temp file use 
+- gravity model, enhance 2 step floating catchment 
+
+
 
 ## Week 3
 

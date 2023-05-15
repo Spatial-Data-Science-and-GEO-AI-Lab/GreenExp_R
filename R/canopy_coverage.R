@@ -2,7 +2,7 @@
 #' Calculate the percentage of a canopy within a given buffer distance or location
 #'
 #' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param vector_layer  A vector layer that represents a canopy, the layer should be in projected coordinates
+#' @param canopy_layer  A canopy layer that represents a canopy, the layer should be in projected coordinates
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param net an optional sfnetwork object representing a road network
 #' @param UID A character string representing a unique identifier for each point of interest
@@ -16,14 +16,22 @@
 #' @examples
 
 
-canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL){
+canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL){
   #Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
-    stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
-
+    warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
+    st_crs(address_location) <- 3395
   }
   # Save the crs
   projected_crs <- sf::st_crs(address_location)
+
+  # Make sure the canopy layer are polygons and no points
+  if ("MULTIPOLYGON" %in% sf::st_geometry_type(canopy_layer) | "POLYGON" %in% sf::st_geometry_type(canopy_layer)){
+    # Do nothing
+  } else {
+    stop("The canopy layer provided has the wrong geometry type, please input a (multi)polygon geometry   ")
+  }
+
 
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
@@ -184,7 +192,7 @@ canopy_perc <- function(address_location, vector_layer, buffer_distance=NULL, ne
 
     for (i in 1:nrow(calculation_area)) {
       # Clip tree canopy to polygon
-      canopy_clip <- sf::st_intersection(vector_layer, calculation_area[i,])
+      canopy_clip <- sf::st_intersection(canopy_layer, calculation_area[i,])
       # Calculate area of clipped tree canopy
       canopy_area <- sf::st_area(canopy_clip)
       total_area <- sum(canopy_area)

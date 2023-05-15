@@ -1,21 +1,8 @@
-#' Calculating the distance to the nearest park access given a location.
-#'
-#' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param net An optional sfnetwork object representing a road network
-#' @param parks A spatial object representing parks
-#' @param UID A character string representing a unique identifier for each point of interest
-#'
-#' @return A sf data frame with the spatial object that was used as input, the nearest park in meters, and whether or not there is a park within the buffer distance
-#' @export
-#'
-#' @examples
-#'
 
-parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
+park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
   ### Make sure main data set has projected CRS and save it
 
-  address_location <- sf::st_geometry(address)
+
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     st_crs(address_location) <- 3395
@@ -126,78 +113,83 @@ parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
 
 
   ### Adding edge length for future calculations
-  net <- tidygraph::mutate(tidygraph::activate(net, "edges"), weight = sfnetworks::edge_length())
+  net <- tidygraph::mutate(tidygraph::activate(net, "edges"),
+                           weight = sfnetworks::edge_length())
 
-  ### Creating parks set if not given
-  if (missing(parks)) {
-    ### Building area polygon and loading parks
+
+  ### Creating park_layer set if not given
+  if (missing(park_layer)) {
+    ### Building area polygon and loading park_layer
     # Area assignment
     calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
 
-    # Initial load of parks
+    # Initial load of park_layer
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "landuse",
-                                value = c('allotments','forest',
-                                          'greenfield','village_green')) %>%
+                               value = c('allotments','forest',
+                                         'greenfield','village_green')) %>%
       osmdata::osmdata_sf()
 
     q2 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "leisure",
-                                value = c('garden','fitness_station',
-                                          'nature_reserve','park','playground')) %>%
+                               value = c('garden','fitness_station',
+                                         'nature_reserve','park','playground')) %>%
       osmdata::osmdata_sf()
 
     q3 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "natural",
-                                value = c('grassland')) %>%
+                               value = c('grassland')) %>%
       osmdata::osmdata_sf()
     res <- c(q1, q2, q3)
 
-    # Parks cleaning
-    parks <- res$osm_polygons
-    parks <- tidygraph::select(parks, "osm_id", "name")
-    parks <- sf::st_make_valid(parks)
-    parks <- sf::st_centroid(parks)
-    parks <- sf::st_transform(parks, projected_crs)
+    # park_layer cleaning
+    park_layer <- res$osm_polygons
+    park_layer <- tidygraph::select(park_layer, "osm_id", "name")
+    park_layer <- sf::st_make_valid(park_layer)
+    park_layer <- sf::st_transform(park_layer, projected_crs)
   } else {
-    if (sf::st_crs(address_location) != sf::st_crs(parks))
+    if (sf::st_crs(address_location) != sf::st_crs(park_layer))
     {
-      print("The CRS of your parks data set is geographic, CRS of main data set will be used to transform")
-      parks <- sf::st_transform(parks, original_pr)
-    }
+      print("The CRS of your park_layer data set is geographic, CRS of main data set will be used to transform")
+      park_layer <- sf::st_transform(park_layer, original_pr)
+    }}
 
-    if ("POINT" %in% sf::st_geometry_type(parks)){
-      # Do nothing
-    } else {
-      parks <- sf::st_centroid(parks)
-    }
+
+
+  # Make sure the park layer are polygons and no points
+  if ("MULTIPOLYGON" %in% sf::st_geometry_type(park_layer) | "POLYGON" %in% sf::st_geometry_type(park_layer)){
+    # Do nothing
+  } else {
+    stop("The park layer provided has the wrong geometry type, please input a (multi)polygon geometry   ")
   }
 
-  ### Parks connection
-  net_parks <- sfnetworks::st_network_blend(net, parks)
+  park_pct <- list()
 
-  ### Calculations
-  add_park_dist <- as.data.frame(sfnetworks::st_network_cost(net, from = address_location, to = parks, weights = "weight"))
-  closest_park <- apply(add_park_dist, 1, FUN = min)
-  parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
+  # if (nrow(calculation_area) > 1){
 
-  if (missing(UID)) {
-    UID <- 1:nrow(address)
+  for (i in 1:nrow(calculation_area)) {
+    # Clip tree park to polygon
+    park_clip <- sf::st_intersection(park_layer, calculation_area[i,])
+    # Calculate area of clipped tree park
+    park_area <- sf::st_area(park_clip)
+    total_area <- sum(park_area)
+    # Calculate area of polygon
+    polygon_area <- sf::st_area(calculation_area[i,])
+    # Calculate tree park percentage
+    park_pct[i] <- total_area / polygon_area * 100
+
+
   }
+  buffer <- calculation_area
+  names(buffer) <- "buffer"
+  df <- data.frame(UID = nrow(calculation_area), park_pct = cbind(unlist(park_pct)),
+                   sf::st_geometry(address_location))
+  df$UID <- seq.int(nrow(df))
+  if (!missing(UID)){
+    df$UID <- UID}
 
-  if ("UID" %in% colnames(address)) {
-    df <- data.frame(address, closest_park, parks_in_buffer)
-    df <- sf::st_as_sf(df)
-  } else{
-
-    df <- data.frame(UID, address, closest_park, parks_in_buffer)
-    df <- sf::st_as_sf(df)
-  }
-
-
-
-  ### Finalizing the output
-
+  df <- sf::st_as_sf(df)
 
   return(df)
+
 }
