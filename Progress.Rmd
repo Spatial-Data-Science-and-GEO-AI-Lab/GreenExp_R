@@ -137,5 +137,17 @@ result
 
 ## Week 3
 
+### Goal
+
+* make sure the feedback is handled with
+* Create a function for vector on vector. What percentage of for example parks in the polygon of the house
+* Use park entrance to calculate the distance to the park
+* Look 
+
+### Approach
+
+* start with the feedback of last week
+* make the function for vector on vector, most of the code that is already written can be used. make use of the test data to test the code
+* Investigate with help of chatGPT, stackoverflow/stack exchange how to incorporate the `GVI` package in this package. Start with reading the documentation
 
 
