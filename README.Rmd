@@ -1,3 +1,12 @@
+---
+title: "README"
+output: html_document
+date: "2023-05-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 # GreenExp
 
