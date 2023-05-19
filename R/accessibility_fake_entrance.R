@@ -1,3 +1,15 @@
+#' Distance to the nearest fake entries of parks
+#'
+#' @param address A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
+#' @param net An optional \code{sfnetworks} object representing a road network
+#' @param parks A spatial object representing parks
+#' @param UID A character string representing a unique identifier for each point of interest
+#'
+#' @return The distance to the nearest fake entries of parks and whether the parks are within the buffer distance that is given
+#' @export
+#'
+#' @examples
 parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UID) {
   ### Make sure main data set has projected CRS and save it
 
@@ -169,14 +181,16 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
       UID <- 1:nrow(address)
     }
 
-    if ("UID" %in% colnames(address)) {
-      df <- data.frame(address, closest_park, parks_in_buffer)
-      df <- sf::st_as_sf(df)
-    } else{
-
-      df <- data.frame(UID, address, closest_park, parks_in_buffer)
-      df <- sf::st_as_sf(df)
-    }
+    # if ("UID" %in% colnames(address)) {
+    #   df <- data.frame(address, closest_park, parks_in_buffer)
+    #   df <- sf::st_as_sf(df)
+    # } else{
+    #
+    #   df <- data.frame(UID, address, closest_park, parks_in_buffer)
+    #   df <- sf::st_as_sf(df)
+    # }
+    df <- data.frame(UID, address_location, closest_park, parks_in_buffer)
+    df <- sf::st_as_sf(df)
 
 
 

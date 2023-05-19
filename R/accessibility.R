@@ -185,14 +185,17 @@ parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
     UID <- 1:nrow(address)
   }
 
-  if ("UID" %in% colnames(address)) {
-    df <- data.frame(address, closest_park, parks_in_buffer)
-    df <- sf::st_as_sf(df)
-  } else{
+  df <- data.frame(UID, address_location, closest_park, parks_in_buffer)
+  df <- sf::st_as_sf(df)
 
-    df <- data.frame(UID, address, closest_park, parks_in_buffer)
-    df <- sf::st_as_sf(df)
-  }
+  # if ("UID" %in% colnames(address)) {
+  #   df <- data.frame(address, closest_park, parks_in_buffer)
+  #   df <- sf::st_as_sf(df)
+  # } else{
+  #
+  #   df <- data.frame(UID, address, closest_park, parks_in_buffer)
+  #   df <- sf::st_as_sf(df)
+  # }
 
 
 

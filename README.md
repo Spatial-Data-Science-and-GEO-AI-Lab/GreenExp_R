@@ -47,12 +47,12 @@ This is a simple feature collection with 3 features and 2 fields. The details of
 The feature collection includes the following features:
 
 | UID | mean_NDVI |                  geometry                  |                       buffer                       |
-|-----|-----------|--------------------------------------------|--------------------------------------------------|
+|:-----:|:-----------:|:--------------------------------------------:|:--------------------------------------------------:|
 | 1   | 0.3912100 | POINT (388644.2 392861.6)                  | POLYGON ((389044.2 392861.6, ...                   |
 | 2   | 0.3373851 | POINT (385981.9 393805.5)                  | POLYGON ((386381.9 393805.5, ...                   |
 | 3   | 0.3896356 | POINT (388631.2 395322.2)                  | POLYGON ((389031.2 395322.2, ...                   |
 
-
+---
 
 ### Land Cover
 
@@ -85,6 +85,7 @@ The feature collection includes the following fields:
 | 2   | 0.24 | 0    | 0.03 | 0.01 | 0.05 | 0.02 | 0    | 0.04 | 0.05 | 0.06 | 0.01 | 0    | 0    | 0.01 | 0.03 | 0.16 | 0    | 0.06 | 0.05 | 0.10 | 0.02 | 0    | 0.01 | 0.01 | 0.02 | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0| 0    | 0.01 | POINT (385981.9 393805.5) | POLYGON ((385566 391671, ...
 | 3   | 0.27 | 0    | 0.02 | 0.02 | 0.04 | 0.01 | 0    | 0.05 | 0.07 | 0.07 | 0.01 | 0    | 0.01 | 0.03 | 0.03 | 0.16 | 0    | 0.04 | 0.05 | 0.06 | 0.01 | 0    | 0    | 0.01 | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0.00 |POINT (388631.2 395322.2) | POLYGON ((388523 392904, ...
 
+---
 
 ### Canopy coverage
 
@@ -108,10 +109,12 @@ class(canopy_values)
 - Projected CRS: OSGB36 / British National Grid
 
 | UID | canopy_pct |                  geometry                  |                       buffer                       |
-|-----|------------|--------------------------------------------|--------------------------------------------------|
+|:-----:|------------:|:--------------------------------------------:|:--------------------------------------------------:|
 | 1   | 14.42063   | POINT (388644.2 392861.6)                  | POLYGON ((389144.2 392861.6, ...                   |
 | 2   | 19.27852   | POINT (385981.9 393805.5)                  | POLYGON ((386481.9 393805.5, ...                   |
 | 3   | 10.67145   | POINT (388631.2 395322.2)                  | POLYGON ((389131.2 395322.2, ...                   |
+
+---
 
 ### Park percentage
 
@@ -135,9 +138,68 @@ So the park percentage in a buffer of 300 meters is:
 - Projected CRS: OSGB36 / British National Grid
 
 | UID | park_pct   |                  geometry                  |
-|-----|------------|--------------------------------------------|
+|:-----:|:------------:|:--------------------------------------------:|
 | 1   | 3.6795963  | POINT (388644.2 392861.6)                  |
 | 2   | 10.9080537 | POINT (385981.9 393805.5)                  |
 | 3   | 0.1408044  | POINT (388631.2 395322.2)                  |
 
+---
 
+## Examples accessibility functions
+
+### Park access
+
+The first accessibility function returns the closest park from a certain point. 
+In the `parks_access` function the centroids of the parks will be used to calculate the distance. The parks can be give as a layer, when the parks file is missing [osmdata](https://www.openstreetmap.org) will be used to retrieve the parks. 
+
+
+``` r
+
+parks_distance <- parks_access(address = address_test, buffer_distance = 400)
+parks_distance
+class(parks_distance)
+#[1] "sf"         "data.frame"
+```
+
+- Simple feature collection with 3 features and 2 fields
+- Active geometry column: geometry
+- Geometry type: POINT
+- Dimension:     XY
+- Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+- Projected CRS: OSGB36 / British National Grid
+
+| UID | closest_park | parks_in_buffer |                  geometry                  |
+|:-----:|:--------------:|:-----------------:|:--------------------------------------------:|
+| 1   | 264.9838     | TRUE            | POINT (388644.2 392861.6)                  |
+| 2   | 334.9009     | TRUE            | POINT (385981.9 393805.5)                  |
+| 3   | 302.8359     | TRUE            | POINT (388631.2 395322.2)                  |
+
+
+
+---
+
+
+### Parks access fake entrance
+
+In the next accessibility function, instead of the centroids, fake entrances will be used to calculate the distance to. These fake entrances are created by making a buffer of 20 meter around the park polygon. this buffer is intersected with the intersection nodes which is created by intersecting the network points created with the `OnlineStreetMap` data and the `parks` data. 
+
+
+``` r
+parks_distance_fake_entrance <- parks_access_entrance(address = address_test, buffer_distance = 400)
+parks_distance_fake_entrance
+class(parks_distance_fake_entrance)
+#[1] "sf"         "data.frame"
+```
+
+- Simple feature collection with 3 features and 2 fields
+- Active geometry column: geometry
+- Geometry type: POINT
+- Dimension:     XY
+- Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+- Projected CRS: OSGB36 / British National Grid
+
+| UID | closest_park | parks_in_buffer |      geometry      |
+|:---:|:------------:|:--------------:|:------------------:|
+|  1  |   264.9838   |      TRUE      |  POINT (388644.2 392861.6)  |
+|  2  |    129.0000  |      TRUE      |  POINT (385981.9 393805.5)  |
+|  3  |   279.2987   |      TRUE      |  POINT (388631.2 395322.2)  |
