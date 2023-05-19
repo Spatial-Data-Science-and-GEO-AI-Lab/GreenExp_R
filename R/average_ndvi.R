@@ -200,7 +200,7 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
   raster_values <- terra::extract(raster, calculation_area)
   raster_values <- replace(raster_values, is.na(raster_values), 0)
   # Calculate the average NDVI
-  average_rast <- dplyr::summarise(group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
+  average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
   # Update UID
 
   names(average_rast)[1] <- "UID"

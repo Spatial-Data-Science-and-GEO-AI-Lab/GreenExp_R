@@ -15,12 +15,17 @@ You can install the development version of GreenExp from [GitHub](https://github
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenEx_R")
 ```
 
-## Example
+## Examples
 
-This is a basic example which shows you how to solve a common problem:
+### Calc NDVI 
 
 ``` r
 library(GreenExp)
 ## basic example code
+address_test <- sf::st_read("Data/Test_multiple_home_locations.gpkg")
+ndvi_test <- terra::rast("data/NDVI_data_test.tif")
+a <- calc_ndvi(address_test, ndvi_test, speed=5, time = 10)
+a
+
 ```
 
