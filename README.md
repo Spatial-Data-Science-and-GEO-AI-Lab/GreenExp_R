@@ -80,7 +80,7 @@ This is a simple feature collection with 3 features and 37 fields. The details o
 The feature collection includes the following fields:
 
 | UID | 1001 | 1002 | 1003 | 1004 | 1005 | 1101 | 1102 | 1103 | 1104 | 1105 | 1201 | 1202 | 1203 | 1204 | 1205 | 1301 | 1302 | 1303 | 1304 | 1305 | 1401 | 1402 | 1403 | 1404 | 1405 | 1501 | 1502 | 1503 | 1504 | 1505 | 2001 | 2002 | 2003 | 2004 | 2005 | NA | geometry| buffer |
-|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------------------------|------------------------|
+|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------------------------------------|-------------------------------------------|
 | 1   | 0.26 | 0    | 0.03 | 0.02 | 0.05 | 0.01 | 0    | 0.04 | 0.07 | 0.06 | 0.02 | 0    | 0.01 | 0.02 | 0.03 | 0.15 | 0    | 0.06 | 0.05 | 0.09 | 0.01 | 0    | 0.01 | 0.01 | 0.01 | 0.01    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0.00 | POINT (388644.2 392861.6) | POLYGON ((388727 391348, ...
 | 2   | 0.24 | 0    | 0.03 | 0.01 | 0.05 | 0.02 | 0    | 0.04 | 0.05 | 0.06 | 0.01 | 0    | 0    | 0.01 | 0.03 | 0.16 | 0    | 0.06 | 0.05 | 0.10 | 0.02 | 0    | 0.01 | 0.01 | 0.02 | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0| 0    | 0.01 | POINT (385981.9 393805.5) | POLYGON ((385566 391671, ...
 | 3   | 0.27 | 0    | 0.02 | 0.02 | 0.04 | 0.01 | 0    | 0.05 | 0.07 | 0.07 | 0.01 | 0    | 0.01 | 0.03 | 0.03 | 0.16 | 0    | 0.04 | 0.05 | 0.06 | 0.01 | 0    | 0    | 0.01 | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0.00 |POINT (388631.2 395322.2) | POLYGON ((388523 392904, ...
@@ -203,3 +203,90 @@ class(parks_distance_fake_entrance)
 |  1  |   264.9838   |      TRUE      |  POINT (388644.2 392861.6)  |
 |  2  |    129.0000  |      TRUE      |  POINT (385981.9 393805.5)  |
 |  3  |   279.2987   |      TRUE      |  POINT (388631.2 395322.2)  |
+
+---
+
+### Population 
+
+This function is in progress. I am trying to get the [Google Earth Engine](https://earthengine.google.com) in the package to retrieve the world population.
+This will be used to make a cost analysis for people to go to a park. 
+
+
+To use the [Google Earth Engine](https://earthengine.google.com) you need to follow the following steps or the steps given in this [intruction movie](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
+
+
+#### Step 1: 
+
+make an account on  [Google Earth Engine](https://earthengine.google.com)
+
+
+#### Step 2:
+``` r
+install.packages(c("sf", "reticulate", "remotes"))
+```
+afterwards install the [rgee](https://github.com/r-spatial/rgee) package from github
+
+``` r
+# Install the rgee package from the r spatial GitHub
+remotes::install_github("r-spatial/rgee")
+
+# load the reticulate and rgee package
+library(reticulate)
+library(rgee)
+```
+
+Running `reticulate::py_discover_config()` will install `Miniconda`
+
+``` r
+# Use the py_discover_config() function to see what version of Python will be used
+# without actually loading pythong
+reticulate::py_discover_config()
+
+# python:         /Users/martijn/.virtualenvs/rgee/bin/python
+# libpython:      /Users/martijn/anaconda3/lib/libpython3.10.dylib
+# pythonhome:     /Users/martijn/.virtualenvs/rgee:/Users/martijn/.virtualenvs/rgee
+# version:        3.10.9 (main, Mar  1 2023, 12:20:14) [Clang 14.0.6 ]
+# numpy:          /Users/martijn/.virtualenvs/rgee/lib/python3.10/site-packages/numpy
+# numpy_version:  1.24.3
+
+# Verify the current Python path
+import('sys')$executable
+# [1] "/Users/martijn/.virtualenvs/rgee/bin/python"
+
+
+# Create an isolated Python venv with all rgee dependencies
+ee_install()
+# look at the path to the rgee env
+```
+
+#### Step 3:
+After this bit, please restart your pc/laptop and launch R again. 
+
+
+#### Step 4:
+
+
+initializing 
+``` r
+# Set python version to use
+reticulate::use_python("/Users/martijn/.virtualenvs/rgee/bin/python")
+reticulate::py_config()
+
+library(rgee)
+
+#Initialize the Earth Engine
+ee_Initialize()
+
+```
+
+Enter the email you used to sign-up for GEE 
+
+copy the code into R 
+
+── rgee 1.1.6.9999 ───────────────────────────────────── earthengine-api 0.1.354 ── 
+
+ ✔ user: not_defined 
+ 
+ ✔ Initializing Google Earth Engine:  DONE!
+ 
+ ✔ Earth Engine account: users/ee-greenexp 
