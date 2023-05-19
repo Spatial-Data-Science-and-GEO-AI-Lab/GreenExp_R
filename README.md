@@ -4,9 +4,26 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of GreenExp is to ...
+- [Installation](#installation)
+- [Functions](#functions)
+  * [Availability](#availability)
+    + [Calc NDVI](#calc-ndvi)
+    + [Land Cover](#land-cover)
+    + [Canopy coverage](#canopy-coverage)
+    + [Park percentage](#park-percentage)
+  * [Accessibility](#accessibility)
+    + [Installation](#installation-1)
+    + [Park access](#park-access)
+    + [Parks access fake entrance](#parks-access-fake-entrance)
+    + [Population](#population)
+  * [Visibility](#visibility)
+    + [Installation](#installation-2)
+    + [Viewshed](#viewshed)
 
-## Installation
+
+  
+
+# Installation
 
 You can install the development version of GreenExp from [GitHub](https://github.com/) with:
 
@@ -15,7 +32,9 @@ You can install the development version of GreenExp from [GitHub](https://github
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenEx_R")
 ```
 
-## Examples availability functions
+# Functions
+
+## Availability
 
 ### Calc NDVI 
 
@@ -145,7 +164,92 @@ So the park percentage in a buffer of 300 meters is:
 
 ---
 
-## Examples accessibility functions
+## Accessibility
+
+
+
+### Installation 
+
+**Step 1:**
+
+To use the [Google Earth Engine](https://earthengine.google.com) you need to follow the following steps or the steps given in this [intruction movie](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
+
+make an account on  [Google Earth Engine](https://earthengine.google.com)
+
+
+``` r
+install.packages(c("sf", "reticulate", "remotes"))
+```
+afterwards install the [rgee](https://github.com/r-spatial/rgee) package from github
+
+``` r
+# Install the rgee package from the r spatial GitHub
+remotes::install_github("r-spatial/rgee")
+
+# load the reticulate and rgee package
+library(reticulate)
+library(rgee)
+```
+
+**Step 2:**
+
+Running `reticulate::py_discover_config()` will install `Miniconda`
+
+``` r
+# Use the py_discover_config() function to see what version of Python will be used
+# without actually loading pythong
+reticulate::py_discover_config()
+
+# python:         /Users/martijn/.virtualenvs/rgee/bin/python
+# libpython:      /Users/martijn/anaconda3/lib/libpython3.10.dylib
+# pythonhome:     /Users/martijn/.virtualenvs/rgee:/Users/martijn/.virtualenvs/rgee
+# version:        3.10.9 (main, Mar  1 2023, 12:20:14) [Clang 14.0.6 ]
+# numpy:          /Users/martijn/.virtualenvs/rgee/lib/python3.10/site-packages/numpy
+# numpy_version:  1.24.3
+
+# Verify the current Python path
+import('sys')$executable
+# [1] "/Users/martijn/.virtualenvs/rgee/bin/python"
+
+
+# Create an isolated Python venv with all rgee dependencies
+ee_install()
+# look at the path to the rgee env
+```
+
+**Step 3:**
+
+After this bit, please restart your pc/laptop and launch R again. 
+
+**Step 4:**
+
+Initializing
+
+``` r
+# Set python version to use
+reticulate::use_python("/Users/martijn/.virtualenvs/rgee/bin/python")
+reticulate::py_config()
+
+library(rgee)
+
+#Initialize the Earth Engine
+ee_Initialize()
+
+```
+
+Enter the email you used to sign-up for GEE 
+
+copy the code into R 
+
+── rgee 1.1.6.9999 ───────────────────────────────────── earthengine-api 0.1.354 ── 
+
+ ✔ user: not_defined 
+ 
+ ✔ Initializing Google Earth Engine:  DONE!
+ 
+ ✔ Earth Engine account: users/ee-greenexp 
+ 
+---
 
 ### Park access
 
@@ -212,88 +316,9 @@ This function is in progress. I am trying to get the [Google Earth Engine](https
 This will be used to make a cost analysis for people to go to a park. 
 
 
-To use the [Google Earth Engine](https://earthengine.google.com) you need to follow the following steps or the steps given in this [intruction movie](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
-
-
-#### Step 1: 
-
-make an account on  [Google Earth Engine](https://earthengine.google.com)
-
-
-#### Step 2:
-``` r
-install.packages(c("sf", "reticulate", "remotes"))
-```
-afterwards install the [rgee](https://github.com/r-spatial/rgee) package from github
-
-``` r
-# Install the rgee package from the r spatial GitHub
-remotes::install_github("r-spatial/rgee")
-
-# load the reticulate and rgee package
-library(reticulate)
-library(rgee)
-```
-
-Running `reticulate::py_discover_config()` will install `Miniconda`
-
-``` r
-# Use the py_discover_config() function to see what version of Python will be used
-# without actually loading pythong
-reticulate::py_discover_config()
-
-# python:         /Users/martijn/.virtualenvs/rgee/bin/python
-# libpython:      /Users/martijn/anaconda3/lib/libpython3.10.dylib
-# pythonhome:     /Users/martijn/.virtualenvs/rgee:/Users/martijn/.virtualenvs/rgee
-# version:        3.10.9 (main, Mar  1 2023, 12:20:14) [Clang 14.0.6 ]
-# numpy:          /Users/martijn/.virtualenvs/rgee/lib/python3.10/site-packages/numpy
-# numpy_version:  1.24.3
-
-# Verify the current Python path
-import('sys')$executable
-# [1] "/Users/martijn/.virtualenvs/rgee/bin/python"
-
-
-# Create an isolated Python venv with all rgee dependencies
-ee_install()
-# look at the path to the rgee env
-```
-
-#### Step 3:
-After this bit, please restart your pc/laptop and launch R again. 
-
-
-#### Step 4:
-
-
-initializing 
-``` r
-# Set python version to use
-reticulate::use_python("/Users/martijn/.virtualenvs/rgee/bin/python")
-reticulate::py_config()
-
-library(rgee)
-
-#Initialize the Earth Engine
-ee_Initialize()
-
-```
-
-Enter the email you used to sign-up for GEE 
-
-copy the code into R 
-
-── rgee 1.1.6.9999 ───────────────────────────────────── earthengine-api 0.1.354 ── 
-
- ✔ user: not_defined 
- 
- ✔ Initializing Google Earth Engine:  DONE!
- 
- ✔ Earth Engine account: users/ee-greenexp 
- 
 ---
 
-## Examples visibility functions
+## Visibility
  
 The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
 
@@ -308,7 +333,8 @@ Furthermore you have to make a Makevars file if the cpp files are not working.
 go to terminal and do the following:
 
 ```
-mkdir .R 
+mkdir .R
+cd .R 
 touch Makevars
 open Makevars
 
@@ -317,10 +343,50 @@ FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
 F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
 FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 ```
+---
+
+### Viewshed
+
+The viewshed function computes a binary viewshed of a single point on a Digital Surface Model (DSM) raster. A radial buffer is applied on the observer position, and visibility is being calculated usig a C++ implementation of Bresenham’s line algorithm [Bresenham 1965](https://ieeexplore.ieee.org/document/5388473) & [Bresenham 1977](https://doi.org/10.1145/359423.359432) and simple geometry. The
+result of the `viewshed` function is a radial raster where 0 =
+no-visible and 1 = visible area.
+
+For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) package.
+
+**EXAMPLE**
+
+The data is also used from the GitHub of [Brinkmann](https://github.com/STBrinkmann)
+
+```r
+# Download DEM
+DEM_tmp <- tempfile(fileext = ".tif")
+download.file(url = "https://github.com/STBrinkmann/data/raw/main/GVI_Data/GVI_DEM.tif",
+              destfile = DEM_tmp, mode="wb")
+
+# Download DSM
+DSM_tmp <- tempfile(fileext = ".tif")
+download.file(url = "https://github.com/STBrinkmann/data/raw/main/GVI_Data/GVI_DSM.tif",
+              destfile = DSM_tmp, mode="wb")
+
+# Download GreenSpace
+GS_tmp <- tempfile(fileext = ".tif")
+download.file(url = "https://github.com/STBrinkmann/data/raw/main/GVI_Data/GVI_GreenSpace.tif",
+              destfile = GS_tmp, mode="wb")
+```
+
+```r
+
+DEM <- terra::rast(DEM_tmp)
+DSM <- terra::rast(DSM_tmp)
+GreenSpace <- terra::rast(GS_tmp)
 
 
+observer <- sf::st_sf(sfheaders::sf_point(c(492243.3, 5454231.4)), crs = sf::st_crs(26910))
+```
 
+```r
+vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
+               max_distance = 200, observer_height = 1.7, plot = TRUE)
+```
 
-
-
- 
+![](RplotViewshed.png)
