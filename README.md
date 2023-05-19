@@ -290,3 +290,37 @@ copy the code into R
  ✔ Initializing Google Earth Engine:  DONE!
  
  ✔ Earth Engine account: users/ee-greenexp 
+ 
+---
+
+## Examples visibility functions
+ 
+The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
+
+---
+
+### Installation 
+
+Make sure the [Rcpp package](https://cran.r-project.org/web/packages/Rcpp/index.html) is installed.
+If you are using mac, make sure you have [Xcode](https://apps.apple.com/nl/app/xcode/id497799835?mt=12) installed. 
+
+Furthermore you have to make a Makevars file if the cpp files are not working. 
+go to terminal and do the following:
+
+```
+mkdir .R 
+touch Makevars
+open Makevars
+
+## copy and paste:
+FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
+F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
+FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
+```
+
+
+
+
+
+
+ 
