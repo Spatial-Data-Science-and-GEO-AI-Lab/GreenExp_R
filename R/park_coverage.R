@@ -1,4 +1,16 @@
 
+#' Park Coverage
+#'
+#' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param park_layer A park layer, the layer should be in projected coordinates
+#' @param buffer_distance  A distance in meters to create a buffer or isochrone around the address location
+#' @param net an optional \code{sfnetworks} object representing a road network
+#' @param UID A character string representing a unique identifier for each point of interest
+#'
+#' @return Returns the percentage of park coverage given a certain buffer.
+#' @export
+#'
+#' @examples
 park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
   ### Make sure main data set has projected CRS and save it
 
