@@ -200,7 +200,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   # count the amount of land cover values per polygon
   class_raster_values <- dplyr::count(class_raster_values, ID, N = get(rast_value_name))
   # Convert to wide format + replacing NA
-  class_raster_values_wide <- tidygraph::mutate_all(tidyr::spread(class_raster_values, N, n), ~replace_na(.,0))
+  class_raster_values_wide <- tidygraph::mutate_all(tidyr::spread(class_raster_values, N, n), ~tidyr::replace_na(.,0))
   # Calculate the %
   class_raster_values_perc <- round(cbind(class_raster_values_wide$ID, class_raster_values_wide[,-1]/rowSums(class_raster_values_wide[,-1])), 2)
 
