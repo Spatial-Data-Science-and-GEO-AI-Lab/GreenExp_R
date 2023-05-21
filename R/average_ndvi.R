@@ -194,6 +194,7 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
   }
 
   if (missing(raster)){
+    rgee::ee_Initialize()
     calculation_area <- sf::st_geometry(calculation_area)
     calculation_area <- sf::st_transform(calculation_area, 4326)
     cal <- calculation_area %>% rgee::sf_as_ee()
@@ -206,8 +207,8 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
 
     s2_NDVI <- s2$
       filterBounds(region)$
-      filter(ee$Filter$lte("CLOUDY_PIXEL_PERCENTAGE", 10))$
-      filter(ee$Filter$date('2020-01-01', '2021-01-01'))$map(getNDVI)$mean()
+      filter(rgee::ee$Filter$lte("CLOUDY_PIXEL_PERCENTAGE", 10))$
+      filter(rgee::ee$Filter$date('2020-01-01', '2021-01-01'))$map(getNDVI)$mean()
 
     s2_NDVI <- s2_NDVI$select('NDVI')
     average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
