@@ -71,6 +71,29 @@ The feature collection includes the following features:
 | 2   | 0.3373851 | POINT (385981.9 393805.5)                  | POLYGON ((386381.9 393805.5, ...                   |
 | 3   | 0.3896356 | POINT (388631.2 395322.2)                  | POLYGON ((389031.2 395322.2, ...                   |
 
+
+---
+
+When the NDVI file is not given, the NDVI will be calculated using the [Google Earth Engine](https://earthengine.google.com). 
+
+```r
+GreenExp::calc_ndvi(address_location = address_test, buffer_distance = 400)
+#[1] "Buffer distance is used for calculations"
+#The image scale is set to 1000.
+#Simple feature collection with 3 features and 2 fields
+#Active geometry column: geometry
+#Geometry type: POINT
+#Dimension:     XY
+#Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+#Projected CRS: OSGB36 / British National Grid
+#  id      NDVI                  geometry                     geometry.1
+#1  1 0.4026307 POINT (388644.2 392861.6) POLYGON ((389044.2 392861.6...
+#2  2 0.4907173 POINT (385981.9 393805.5) POLYGON ((386381.9 393805.5...
+#3  3 0.4494947 POINT (388631.2 395322.2) POLYGON ((389031.2 395322.2...
+```
+
+
+
 ---
 
 ### Land Cover
@@ -235,6 +258,10 @@ library(rgee)
 #Initialize the Earth Engine
 ee_Initialize()
 
+## 2. Install geemap in the same Python ENV that use rgee
+py_install("geemap")
+gm <- import("geemap")
+
 ```
 
 Enter the email you used to sign-up for GEE 
@@ -390,3 +417,30 @@ vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
 ```
 
 ![](man/figures/RplotViewshed.png)
+
+The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visibile area and gray is not visible. 
+
+### VGVI
+
+The Viewshed Greenness Visibility Index (VGVI) represents the proportion of visibile greeness to the total visible area based on the `viewshed`. The estimated VGVI values range between 0 and 1, where = no green cells and 1= all of the visible cells are green.
+
+Based on a viewshed and a binary greenspace raster, all visible points are classified as visible green and visible no-green. All values are summarized using a decay function, to account for the reducing visual prominence of an object in space with increasing distance from the observer. Currently two options are supported, a logistic and an exponential function.
+
+For more information about the VGVI please go to the [GVI](https://github.com/STBrinkmann/GVI) package. For more information about the algorithms look at the paper by [Brinkmann, 2022](https://doi.org/10.5194/agile-giss-3-27-2022)
+
+```r
+VGVI <- vgvi_from_sf(observer = observer,
+             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GreenSpace,
+             max_distance = 200, observer_height = 1.7,
+             m = 0.5, b = 8, mode = "logit")
+```
+
+Simple feature collection with 1 feature and 2 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 492243.3 ymin: 5454231 xmax: 492243.3 ymax: 5454231
+Projected CRS: NAD83 / UTM zone 10N
+  id      VGVI                 geometry
+1  1 0.5255536 POINT (492243.3 5454231)
+
+

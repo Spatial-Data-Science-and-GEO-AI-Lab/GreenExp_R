@@ -17,9 +17,7 @@
 #'
 calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL) {
   ### Preparation
-  # Takes name of field for future calculations and find projection
 
-  rast_value_name <- names(raster)
 
   # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
@@ -189,21 +187,46 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
 
     } else {
       print("Buffer distance is used for calculations")
-      calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)[2]
+      calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
     }
   } else {
     calculation_area <- address_location
   }
 
-  ### Calculation
-  # Extract the NDVI values within the buffer
-  raster_values <- terra::extract(raster, calculation_area)
-  raster_values <- replace(raster_values, is.na(raster_values), 0)
-  # Calculate the average NDVI
-  average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
+  if (missing(raster)){
+    calculation_area <- sf::st_geometry(calculation_area)
+    calculation_area <- sf::st_transform(calculation_area, 4326)
+    cal <- calculation_area %>% rgee::sf_as_ee()
+    region <- cal$geometry()$bounds()
+    s2 <- rgee::ee$ImageCollection("COPERNICUS/S2_SR")
+    getNDVI <- function(image) {
+      ndvi <- image$normalizedDifference(c("B8", "B4"))$rename('NDVI')
+      return(image$addBands(ndvi))
+    }
+
+    s2_NDVI <- s2$
+      filterBounds(region)$
+      filter(ee$Filter$lte("CLOUDY_PIXEL_PERCENTAGE", 10))$
+      filter(ee$Filter$date('2020-01-01', '2021-01-01'))$map(getNDVI)$mean()
+
+    s2_NDVI <- s2_NDVI$select('NDVI')
+    average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
+    calculation_area <- sf::st_transform(calculation_area, projected_crs)
+  } else{
+    ### Calculation
+    # Extract the NDVI values within the buffer
+
+    raster_values <- terra::extract(raster, calculation_area)
+    raster_values <- replace(raster_values, is.na(raster_values), 0)
+    # Calculate the average NDVI
+    average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
+
+  }
+
+
   # Update UID
 
-  names(average_rast)[1] <- "UID"
+
   if (!missing(UID)){
     average_rast$UID <- UID
   }
@@ -211,7 +234,7 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
 
   buffer <- calculation_area
   names(buffer) <- "buffer"
-  ndvi_avg <- cbind(average_rast, address, buffer)
+  ndvi_avg <- data.frame(average_rast, address, buffer)
   ndvi_avg <- sf::st_as_sf(ndvi_avg)
 
   # Return the result
