@@ -11,6 +11,8 @@
 #'
 #' @examples
 parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UID) {
+
+  start_function <- Sys.time()
   ### Make sure main data set has projected CRS and save it
 
   address_location <- sf::st_geometry(address)
@@ -31,6 +33,7 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
     else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)}
+    start <- Sys.time()
 
     iso_area <- sf::st_buffer(sf::st_convex_hull(
       sf::st_union(sf::st_geometry(address_location))),
@@ -40,6 +43,10 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
     q <- osmdata::opq(bbox) %>%
       osmdata::add_osm_feature(key = "highway") %>%
       osmdata::osmdata_sf()
+    print(Sys.time()-start)
+    print('Time to calculate the osmdata sf')
+
+    start <- Sys.time()
 
     # extract lines and polygons from the OSM data
     lines <- q$osm_lines
@@ -64,32 +71,48 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
     #Bind together
     lines <- rbind(lines,polys)
 
+    print(Sys.time()-start)
+    print('time to bind lines and polys together from osm data sf')
+
 
     #Change to user projection
+    start <- Sys.time()
     lines <- sf::st_transform(lines, projected_crs)
     lines <- tidygraph::select(lines, "osm_id", "name")
     region_shp <- sf::st_transform(iso_area, projected_crs)
+    print(Sys.time()-start)
+    print('time to change user projection')
 
     #Download osm used a square bounding box, now trim to the exact boundary
     #note that lines that that cross the boundary are still included
-    lines <- lines[region_shp,]
 
-    # Round coordinates to 0 digits.
+    start <- Sys.time()
+    lines <- lines[region_shp,]
+    print(Sys.time()-start)
+    print('time to trim the exact boundary')
+
     sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-      lapply(function(x) round(x, 0)) %>%
       sf::st_sfc(crs = sf::st_crs(lines))
 
 
 
+    start <- Sys.time()
     # Network
     net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
     net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
+    print(Sys.time()-start)
+    print('time to make the network and convert it into spatial subdivision')
 
 
 
+    start <-Sys.time()
     #convert network to an sf object of edge
     net_sf <- net %>% tidygraph::activate("edges") %>%
       sf::st_as_sf()
+    print(Sys.time()-start)
+    print('time to activate edges')
+
+    start <- Sys.time()
     # Find which edges are touching each other
     touching_list <- sf::st_touches(net_sf)
     # create a graph from the touching list
@@ -105,10 +128,16 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
 
     # Subset the edges corresponding to the biggest connected component
     osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+
+    print(Sys.time()-start)
+    print('Time to subset the edges corrsponding to the biggest connected component')
     # Filter nodes that are not connected to the biggest connected component
+    start <- Sys.time()
     net <- net %>%
       tidygraph::activate("nodes") %>%
       sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
+    print(Sys.time()-start)
+    print('Time to activate nodes that are connected to biggest compontnt')
 
 
     net_intersect <- sf::st_transform(net,  crs = 4326)
@@ -125,10 +154,15 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
 
 
   ### Adding edge length for future calculations
+  start <- Sys.time()
   net <- tidygraph::mutate(tidygraph::activate(net, "edges"), weight = sfnetworks::edge_length())
+  print(Sys.time()-start)
+  print('time to add edge length for future calc')
 
   ### Creating parks set if not given
+
   if (missing(parks)) {
+    start <- Sys.time()
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "landuse",
                                value = c('allotments','forest',
@@ -155,6 +189,8 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
 
     fake_entrance <- sf::st_intersection(net_points, parks_buffer)
     fake_entrance <- fake_entrance %>% sf::st_transform(crs=projected_crs)
+    print(Sys.time()-start)
+    print('time to calculate fake entrances parks')
   }
     else {
       if (sf::st_crs(address_location) != sf::st_crs(parks))
@@ -174,9 +210,14 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
     }
 
     ### Calculations
+  start <- Sys.time()
     add_park_dist <- as.data.frame(sfnetworks::st_network_cost(net, from = address_location, to = fake_entrance))
     closest_park <- apply(add_park_dist, 1, FUN = min)
     parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
+    print(Sys.time()-start)
+    print('time to do calculations')
+
+
     if (missing(UID)) {
       UID <- 1:nrow(address)
     }
@@ -191,6 +232,9 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
     # }
     df <- data.frame(UID, address_location, closest_park, parks_in_buffer)
     df <- sf::st_as_sf(df)
+
+    print(Sys.time()-start_function)
+    print('time to run the entire function')
 
 
 

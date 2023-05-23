@@ -14,6 +14,7 @@
 
 parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
   ### Make sure main data set has projected CRS and save it
+  start <- Sys.time()
 
   address_location <- sf::st_geometry(address)
   if (sf::st_is_longlat(address_location)){
@@ -132,6 +133,8 @@ parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
   if (missing(parks)) {
     ### Building area polygon and loading parks
     # Area assignment
+    start_parks <- Sys.time()
+
     calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
 
     # Initial load of parks
@@ -159,6 +162,9 @@ parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
     parks <- sf::st_make_valid(parks)
     parks <- sf::st_centroid(parks)
     parks <- sf::st_transform(parks, projected_crs)
+
+    print(Sys.time()-start_parks)
+    print('amount of time to calculate parks')
   } else {
     if (sf::st_crs(address_location) != sf::st_crs(parks))
     {
@@ -200,6 +206,8 @@ parks_access <- function(address, buffer_distance = 300, net, parks, UID) {
 
 
   ### Finalizing the output
+  print(Sys.time()-start)
+  print('time to run function')
 
 
   return(df)

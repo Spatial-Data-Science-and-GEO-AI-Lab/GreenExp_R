@@ -178,8 +178,22 @@ park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
   park_pct <- list()
 
   # if (nrow(calculation_area) > 1){
+  n_iter <- nrow(calculation_area)
 
-  for (i in 1:nrow(calculation_area)) {
+
+
+  pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                         total = n_iter,
+                         complete = "=",   # Completion bar character
+                         incomplete = "-", # Incomplete bar character
+                         current = ">",    # Current bar character
+                         clear = FALSE,    # If TRUE, clears the bar when finish
+                         width = 100)      # Width of the progress bar
+
+
+  for (i in 1:n_iter) {
+    pb$tick()
+
     # Clip tree park to polygon
     park_clip <- sf::st_intersection(park_layer, calculation_area[i,])
     # Calculate area of clipped tree park
@@ -192,6 +206,9 @@ park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
 
 
   }
+
+
+  #pb$close()
   buffer <- calculation_area
   names(buffer) <- "buffer"
   df <- data.frame(UID = nrow(calculation_area), park_pct = cbind(unlist(park_pct)),

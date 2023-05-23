@@ -21,6 +21,7 @@ Imports:
     sf,
     sfnetworks,
     terra,
+    progress,
     tidyr,
     graphics,
     methods,
