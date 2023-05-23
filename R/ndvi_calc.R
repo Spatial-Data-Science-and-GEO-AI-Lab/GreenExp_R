@@ -1,21 +1,22 @@
 
-#' Creating average NDVI values per location
+#'  Creating average NDVI values per location
 #'
-#' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param raster raster file with NDVI values
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param net An optional sfnetwork object representing a road network
+#' @param net An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_calculation  A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
+#' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
+#' @param engine When the raster is missing, users can choose whether they want to use Google Earth engine `gee` or Planetary Computer `pc` to calculate the ndvi
 #'
-#' @return the mean NDVI score within a given buffer or isochrone around a set of locations is printed
+#' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
 #'
 #' @examples
-#'
-calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL) {
+calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine=c('pc',
+                                                                                                                                                      'gee')) {
   ### Preparation
 
 
@@ -52,11 +53,6 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
       ### Check, do we use a entered network or loading a new one
       if (missing(net)) {
         ### Extracting OSM road structure to build isochrone polygon
-        iso_area <- sf::st_buffer(sf::st_convex_hull(
-          sf::st_union(sf::st_geometry(address_location))),
-          buffer_distance)
-        iso_area <- sf::st_transform(iso_area, crs = 4326)
-        bbox <- sf::st_bbox(iso_area)
 
         q <- osmdata::opq(bbox) %>%
           osmdata::add_osm_feature(key = "highway") %>%
@@ -195,25 +191,65 @@ calc_ndvi <- function(address_location, raster, buffer_distance=NULL, net=NULL, 
   }
 
   if (missing(raster)){
-    rgee::ee_Initialize()
-    calculation_area <- sf::st_geometry(calculation_area)
-    calculation_area <- sf::st_transform(calculation_area, 4326)
-    cal <- calculation_area %>% rgee::sf_as_ee()
-    region <- cal$geometry()$bounds()
-    s2 <- rgee::ee$ImageCollection("COPERNICUS/S2_SR")
-    getNDVI <- function(image) {
-      ndvi <- image$normalizedDifference(c("B8", "B4"))$rename('NDVI')
-      return(image$addBands(ndvi))
+    if (missing(engine)){
+      stop("You should enter whether you want to use Google Earth Engine (gee) or Planetary Computer (pc)")
+    }
+    else if (engine == 'pc'){
+      address <- address_test
+      projected_crs <- sf::st_crs(address)
+      address <- sf::st_transform(address, 4326)
+      calculation_area <- sf::st_geometry(sf::st_buffer(address, dist=buffer_distance))
+      calculation_area <- sf::st_as_sf(calculation_area)
+      bbox <- sf::st_bbox(address)
+
+      matches <- rstac::stac("https://planetarycomputer.microsoft.com/api/stac/v1/") %>%
+        rstac::stac_search(collections = "sentinel-2-l2a",
+                           bbox = bbox, datetime = "2019-06-01/2019-08-01") %>%
+        rstac::get_request() %>%   rstac::items_sign(sign_fn = rstac::sign_planetary_computer())
+      cloud_cover <- matches %>%
+        rstac::items_reap(field = c("properties", "eo:cloud_cover"))
+      selected_item <- matches$features[[which.min(cloud_cover)]]
+
+      red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href))
+
+      bbox_proj <- bbox %>%  sf::st_as_sfc() %>%  sf::st_transform(sf::st_crs(red)) %>% terra::vect()
+
+      red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href)) %>%  terra::crop(bbox_proj)
+      nir <- terra::rast( paste0("/vsicurl/", selected_item$assets$B08$href) ) %>%  terra::crop(bbox_proj)
+
+      ndvi <- (nir-red) / (red+nir)
+      calculation_area_proj <- sf::st_transform(calculation_area, terra::crs(ndvi))
+      ndvi_values <- terra::extract(ndvi, calculation_area_proj)
+
+      names(ndvi_values) <- c('ID', 'NDVI')
+
+      raster_values <- replace(ndvi_values, is.na(ndvi_values), 0)
+      # Calculate the average NDVI
+      average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI), .groups = 'drop')
+      calculation_area <- sf::st_transform(calculation_area, projected_crs)
+    } else {
+      rgee::ee_Initialize()
+      calculation_area <- sf::st_geometry(calculation_area)
+      calculation_area <- sf::st_transform(calculation_area, 4326)
+      cal <- calculation_area %>% rgee::sf_as_ee()
+      region <- cal$geometry()$bounds()
+      s2 <- rgee::ee$ImageCollection("COPERNICUS/S2_SR")
+      getNDVI <- function(image) {
+        ndvi <- image$normalizedDifference(c("B8", "B4"))$rename('NDVI')
+        return(image$addBands(ndvi))
+      }
+
+      s2_NDVI <- s2$
+        filterBounds(region)$
+        filter(rgee::ee$Filter$lte("CLOUDY_PIXEL_PERCENTAGE", 10))$
+        filter(rgee::ee$Filter$date('2020-01-01', '2021-01-01'))$map(getNDVI)$mean()
+
+      s2_NDVI <- s2_NDVI$select('NDVI')
+      average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
+      calculation_area <- sf::st_transform(calculation_area, projected_crs)
+
     }
 
-    s2_NDVI <- s2$
-      filterBounds(region)$
-      filter(rgee::ee$Filter$lte("CLOUDY_PIXEL_PERCENTAGE", 10))$
-      filter(rgee::ee$Filter$date('2020-01-01', '2021-01-01'))$map(getNDVI)$mean()
-
-    s2_NDVI <- s2_NDVI$select('NDVI')
-    average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
-    calculation_area <- sf::st_transform(calculation_area, projected_crs)
   } else{
     ### Calculation
     # Extract the NDVI values within the buffer
