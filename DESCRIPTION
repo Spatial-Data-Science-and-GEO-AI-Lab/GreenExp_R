@@ -19,6 +19,7 @@ Imports:
     raster,
     Rcpp (>= 1.0.10),
     sf,
+    sfnetworks,
     terra,
     tidyr,
     graphics,
@@ -28,7 +29,9 @@ Imports:
     scales,
     igraph,
     reticulate,
-    rgee
+    rgee,
+    rstac,
+    tidygraph
 Depends:
     R (>= 3.3.0)
 LinkingTo:
