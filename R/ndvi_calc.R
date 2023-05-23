@@ -53,6 +53,11 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
       ### Check, do we use a entered network or loading a new one
       if (missing(net)) {
         ### Extracting OSM road structure to build isochrone polygon
+        iso_area <- sf::st_buffer(sf::st_convex_hull(
+          sf::st_union(sf::st_geometry(address_location))),
+          buffer_distance)
+        iso_area <- sf::st_transform(iso_area, crs = 4326)
+        bbox <- sf::st_bbox(iso_area)
 
         q <- osmdata::opq(bbox) %>%
           osmdata::add_osm_feature(key = "highway") %>%
