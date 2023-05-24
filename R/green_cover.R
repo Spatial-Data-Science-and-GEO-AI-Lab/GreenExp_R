@@ -29,7 +29,7 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
   # Check if the CRS is in longitude-latitude format
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    st_crs(address_location) <- 3395
+    sf::st_crs(address_location) <- 3395
   }
   # assign the projected crs to the variable projected_crs
   projected_crs <- sf::st_crs(address_location)
@@ -162,19 +162,64 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
       net <- tidygraph::activate(net, "nodes")
       # Initialize an empty list to store isochrone polygons
       iso_list <- list()
-      # loop through the input points
-      for (i in 1:nrow(address_location)) {
-        # assign the output of each iteration to the iso_list
-        # filter the network object to include nodes that meet certain criteria
-        # the code finds the set of nodes within.a certain travel time of each input point,
-        # and stores it in a separate isochrone polygons
-        iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
-          sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
-      }
+
+      n_iter <- nrow(address_location)
+
+      print(Sys.time()-start)
+
+      pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                                       total = n_iter,
+                                       complete = "=",   # Completion bar character
+                                       incomplete = "-", # Incomplete bar character
+                                       current = ">",    # Current bar character
+                                       clear = FALSE,    # If TRUE, clears the bar when finish
+                                       width = 100)      # Width of the progress bar
+
+
+
+      # Calculate nearest features for all address locations
+      nearest_features <- sf::st_nearest_feature(address_location, net)
+      start <- Sys.time()
+      iso_list <- lapply(1:n_iter, function(i) {
+        pb$tick()
+        tidygraph::filter(net, tidygraph::node_distance_from(
+          nearest_features[i], weights = duration) <= time * 60)
+      })
+
+      # pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+      #                                  total = n_iter,
+      #                                  complete = "=",   # Completion bar character
+      #                                  incomplete = "-", # Incomplete bar character
+      #                                  current = ">",    # Current bar character
+      #                                  clear = FALSE,    # If TRUE, clears the bar when finish
+      #                                  width = 100)      # Width of the progress bar
+      #
+      #
+      # # loop through the input points
+      # for (i in 1:n_iter) {
+      #   pb$tick()
+      #   # assign the output of each iteration to the iso_list
+      #   # filter the network object to include nodes that meet certain criteria
+      #   # the code finds the set of nodes within.a certain travel time of each input point,
+      #   # and stores it in a separate isochrone polygons
+      #   iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
+      #     sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
+      # }
+      n_iter2 <- length(iso_list)
+
+      pb2 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                                        total = n_iter2,
+                                        complete = "=",   # Completion bar character
+                                        incomplete = "-", # Incomplete bar character
+                                        current = ">",    # Current bar character
+                                        clear = FALSE,    # If TRUE, clears the bar when finish
+                                        width = 100)      # Width of the progress bar
+
 
       # Building polygons
       iso_poly <- NULL
-      for (i in 1:length(iso_list)) {
+      for (i in 1:n_iter2) {
+        pb2$tick()
         iso_poly[i] <- iso_list[[i]] %>%
           # for each isochrone extract the geometry
           sf::st_geometry() %>%
@@ -183,6 +228,9 @@ land_cover <- function(address_location, class_raster, buffer_distance, net, UID
           # computes the smallest convex polygon that contains the geometry
           sf::st_convex_hull()
       }
+
+      # Final assignment
+
 
       # Create a simple feature collection (sf) with the st_sf function and use st_as_sf to convert the sf object to an sf
       # data frame with the polygons as the geometry column

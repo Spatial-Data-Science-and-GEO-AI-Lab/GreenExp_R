@@ -8,12 +8,13 @@ calc_ndvi_new(
   address_location,
   raster,
   buffer_distance = NULL,
-  net = NULL,
+  network_buffer = FALSE,
+  network_file = NULL,
   UID = NULL,
   address_calculation = TRUE,
   speed = NULL,
   time = NULL,
-  engine = c("pc", "gee")
+  engine = "pc"
 )
 }
 \arguments{
@@ -23,7 +24,9 @@ calc_ndvi_new(
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
-\item{net}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
+\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
@@ -34,6 +37,12 @@ calc_ndvi_new(
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
 
 \item{engine}{When the raster is missing, users can choose whether they want to use Google Earth engine \code{gee} or Planetary Computer \code{pc} to calculate the ndvi}
+
+\item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
+
+\item{start_date}{The start date from when the satellite images will be filtered \code{yyyy-mm-dd} default = \code{2020-01-01}}
+
+\item{end_date}{The end date from when the satellite images will be filtered. \code{yyyy-mm-dd} default = \code{2021-01-01}}
 }
 \value{
 A \code{sf} dataframe with the mean ndvi, the geometry and the buffer that was used

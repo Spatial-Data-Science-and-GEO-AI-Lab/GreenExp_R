@@ -4,30 +4,33 @@
 #' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param raster raster file with NDVI values
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param net An optional sfnetwork object representing a road network, If missing the road network will be created.
+#' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param UID A character string representing a unique identifier for each point of interest
 #' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param engine When the raster is missing, users can choose whether they want to use Google Earth engine `gee` or Planetary Computer `pc` to calculate the ndvi
+#' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
+#' @param city When using a network buffer, you can add a city where your address points are to speed up the process
+#' @param start_date The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
+#' @param end_date  The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
 #'
 #' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
 #'
 #' @examples
-calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc') {
+
+calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE,
+                           network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
+                           city=NULL, start_date='2020-01-01', end_date='2021-01-01') {
   ### Preparation
   start_function <- Sys.time()
-
-
-
   # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
-    stop("The CRS in your main data set has geographic coordinates, please transform it into your local projected CRS")
-
+    warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
+    sf::st_crs(address_location) <- 3395
   }
   projected_crs <- sf::st_crs(address_location)
-
   ### Address vs area
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
@@ -35,73 +38,60 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
     }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
     }
-
     else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
-    start=Sys.time()
-    if (missing(buffer_distance)) {
-      # Check for speed and time + Count buffer for bbox of initial set
+    if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
-        stop("You didn't enter speed or time")
+        stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
       } else if (!speed > 0) {
-        stop("Speed must be a positive integer bigger than 0")
+        stop("Speed must be a positive integer")
       } else if (!time > 0) {
-        stop("Time must be a positive integer bigger than 0")
+        stop("Time must be a positive integer")
       } else{
         buffer_distance <- speed * 1000/ 60 * time
       }
-      print(Sys.time()-start)
       print("To calculate buffer distance")
-      ### Check, do we use a entered network or loading a new one
-      if (missing(net)) {
+      print(Sys.time()-start)
+    }
+
+    # If people want to calculate the network buffer.
+    if (network_buffer) {
+      message('You will use a network to create a buffer around the address location(s)')
+      if(missing(network_file)){
+        message('You did not provide a network file, osm will be used to create a network file.')
+        # make sure that speed and time are given in the function.
+        if(missing(speed)||missing(time)){
+          stop("You didn't enter speed or time, please enter speed or time.")
+        } else if (!speed > 0) {
+          stop("Speed must be a positive integer")
+        } else if (!time > 0) {
+          stop("Time must be a positive integer")
+        }
+        # Now we know that the speed and time are given, calculations can be done.
         start <- Sys.time()
-        a <- Sys.time()
         ### Extracting OSM road structure to build isochrone polygon
-         iso_area <- sf::st_buffer(sf::st_convex_hull(
+        iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
         iso_area <- sf::st_transform(iso_area, crs = 4326)
+        # bbox might be redundant
         bbox <- sf::st_bbox(iso_area)
-
-        q <- osmdata::opq(bbox) %>%
-          osmdata::add_osm_feature(key = "highway") %>%
-          osmdata::osmdata_sf()
-
+        # Use the osmextract package to extract the lines in the area.
+        start<-Sys.time()
+        lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, boundary_type = 'spat')
         print(Sys.time()-start)
-        print("To calculate osmdata sf")
 
+        ## We might need the multilinestrings as well?
+        # start<-Sys.time()
+        # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
+        # print(Sys.time()-start)
 
-        # extract lines and polygons from the OSM data
-        lines <- q$osm_lines
-        polys <- q$osm_polygons
-
-
-        #Remove Factors
-        lines$osm_id <- as.numeric(as.character(lines$osm_id))
-        polys$osm_id <- as.numeric(as.character(polys$osm_id))
-
-        #remove the invalid polygons
-        polys <- polys[!is.na(polys$highway),]
-        polys <- polys[is.na(polys$area),]
-
-        #Change Polygons to Lines
-        polys <- sf::st_cast (polys, "LINESTRING")
-        lines <- sf::st_cast (lines, "LINESTRING")
-
-        # remove invalid geometry
-        #lines <- lines[st_is_valid(lines) %in% TRUE,] # %in% TRUE handles NA that occure with empty geometries
-        polys <- polys[sf::st_is_valid(polys) %in% TRUE,]
-        #points <- points[st_is_valid(points) %in% TRUE,]
-
-        #Bind together
-        lines <- rbind(lines,polys)
-
-
-        #Change to user projection
+        # now I have the lines I want.
         lines <- sf::st_transform(lines, projected_crs)
         lines <- tidygraph::select(lines, "osm_id", "name")
+
         region_shp <- sf::st_transform(iso_area, projected_crs)
 
         #Download osm used a square bounding box, now trim to the exact boundary
@@ -110,18 +100,15 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
 
         # Round coordinates to 0 digits.
         sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-          lapply(function(x) round(x, 0)) %>%
           sf::st_sfc(crs = sf::st_crs(lines))
 
         # Network
-        net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-        net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
-
-
+        network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+        network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
 
         #convert network to an sf object of edge
         start=Sys.time()
-        net_sf <- net %>% tidygraph::activate("edges") %>%
+        net_sf <- network_file %>% tidygraph::activate("edges") %>%
           sf::st_as_sf()
         print(Sys.time()-start)
         print('To activate edges')
@@ -141,51 +128,38 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
         # Subset the edges corresponding to the biggest connected component
         osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
         # Filter nodes that are not connected to the biggest connected component
-        net <- net %>%
+        network_file <- network_file %>%
           tidygraph::activate("nodes") %>%
           sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
 
-        print(Sys.time()-a)
-        print("To calculate network file")
-
       }
-
-
-      else  {
-        # If the CRS of the network data set is geographic, tranfrom it to the project CRS
-        if (sf::st_crs(address_location) != sf::st_crs(net))
+      else{
+        #Check if the address location and the network file that was given have the same CRS.
+        if (sf::st_crs(address_location) != sf::st_crs(network_file))
         {
           print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
-          net <- sf::st_transform(net, projected_crs)
+          network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
         }
-      }
 
+      }
       start <- Sys.time()
 
-
-
       # Compute the edge weights bsased on their length
-      net <- tidygraph::mutate(tidygraph::activate(net, "edges"),
-                               weight = sfnetworks::edge_length())
+      network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
+                                        weight = sfnetworks::edge_length())
 
-      # Convert speed to m/s
-      net <- net %>%
+      network_file <- network_file%>%
         tidygraph::activate("edges") %>%
         tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
         tidygraph::mutate(duration = weight / speed) %>%
         tidygraph::ungroup()
 
-      net <- tidygraph::activate(net, "nodes")
+      network_file<- tidygraph::activate(network_file, "nodes")
 
-      ### Building isochrone polygon
-      # activate the node layer of the network object
-      net <- tidygraph::activate(net, "nodes")
-      # Initialize an empty list to store isochrone polygons
       iso_list <- list()
 
       n_iter <- nrow(address_location)
 
-      print(Sys.time()-start)
 
       pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
                                        total = n_iter,
@@ -198,33 +172,13 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
 
 
       # Calculate nearest features for all address locations
-      nearest_features <- sf::st_nearest_feature(address_location, net)
+      nearest_features <- sf::st_nearest_feature(address_location, network_file)
       start <- Sys.time()
       iso_list <- lapply(1:n_iter, function(i) {
         pb$tick()
-        tidygraph::filter(net, tidygraph::node_distance_from(
+        tidygraph::filter(network_file, tidygraph::node_distance_from(
           nearest_features[i], weights = duration) <= time * 60)
       })
-
-      # pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
-      #                                  total = n_iter,
-      #                                  complete = "=",   # Completion bar character
-      #                                  incomplete = "-", # Incomplete bar character
-      #                                  current = ">",    # Current bar character
-      #                                  clear = FALSE,    # If TRUE, clears the bar when finish
-      #                                  width = 100)      # Width of the progress bar
-      #
-      #
-      # # loop through the input points
-      # for (i in 1:n_iter) {
-      #   pb$tick()
-      #   # assign the output of each iteration to the iso_list
-      #   # filter the network object to include nodes that meet certain criteria
-      #   # the code finds the set of nodes within.a certain travel time of each input point,
-      #   # and stores it in a separate isochrone polygons
-      #   iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
-      #     sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
-      # }
       n_iter2 <- length(iso_list)
 
       pb2 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
@@ -248,18 +202,24 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
           # computes the smallest convex polygon that contains the geometry
           sf::st_convex_hull()
       }
-
-      # Final assignment
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
 
-    } else {
-      print("Buffer distance is used for calculations")
+
+
+
+
+
+
+    }
+    else {
+      message('Euclidean distance will be used to calculate the buffers around the address location that is given')
       calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
     }
-  } else {
+
+  }
+  else {
     calculation_area <- address_location
   }
-
   if (missing(raster)){
     if (engine == 'pc'){
       address <- address_location
@@ -269,9 +229,11 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
       calculation_area <- sf::st_as_sf(calculation_area)
       bbox <- sf::st_bbox(address)
 
+
+
       matches <- rstac::stac("https://planetarycomputer.microsoft.com/api/stac/v1/") %>%
         rstac::stac_search(collections = "sentinel-2-l2a",
-                           bbox = bbox, datetime = "2019-06-01/2019-08-01") %>%
+                           bbox = bbox, datetime = paste0(start_date,'/',end_date)) %>%
         rstac::get_request() %>%   rstac::items_sign(sign_fn = rstac::sign_planetary_computer())
       cloud_cover <- matches %>%
         rstac::items_reap(field = c("properties", "eo:cloud_cover"))
@@ -310,7 +272,7 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
       s2_NDVI <- s2$
         filterBounds(region)$
         filter(rgee::ee$Filter$lte("CLOUDY_PIXEL_PERCENTAGE", 10))$
-        filter(rgee::ee$Filter$date('2020-01-01', '2021-01-01'))$map(getNDVI)$mean()
+        filter(rgee::ee$Filter$date(start_date, end_date))$map(getNDVI)$mean()
 
       s2_NDVI <- s2_NDVI$select('NDVI')
       average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
@@ -352,3 +314,8 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
   # Return the result
   return(ndvi_avg)
 }
+
+
+
+
+

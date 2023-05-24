@@ -31,7 +31,8 @@ Imports:
     reticulate,
     rgee,
     rstac,
-    tidygraph
+    tidygraph,
+    osmextract
 Depends:
     R (>= 3.3.0)
 LinkingTo:
