@@ -67,5 +67,5 @@ The CRS (\code{\link[sf]{st_crs}}) needs to have a metric unit!
 
 The type of function, used for calculating the distance decay weights, can be defined with the \code{mode} parameter.
 The argument 'logit' uses the logistic function, d = 1 / (1 + e^(b * (x - m))) and 'exponential' the exponential function d = 1 / (1 + (b * x^m)).
-The decay function can be visualized using the \code{\link[GVI]{visualizeWeights}} function.
+The decay function can be visualized using the \code{\link[GreenExp]{visualizeWeights}} function.
 }

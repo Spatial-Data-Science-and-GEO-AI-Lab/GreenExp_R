@@ -181,16 +181,24 @@ parks_access_entrance <- function(address, buffer_distance = 300, net, parks, UI
       osmdata::osmdata_sf()
     res <- c(q1, q2, q3)
 
+    print('Extract the parks')
+    print(Sys.time()-start)
+
+    start <- Sys.time()
+
     # Parks cleaning
     parks <- res$osm_polygons
     parks <- tidygraph::select(parks, "osm_id", "name")
     parks <- sf::st_make_valid(parks)
     parks_buffer <- sf::st_buffer(parks, 20)
+    print('Clean parks')
+    print(Sys.time()-start)
 
     fake_entrance <- sf::st_intersection(net_points, parks_buffer)
     fake_entrance <- fake_entrance %>% sf::st_transform(crs=projected_crs)
-    print(Sys.time()-start)
     print('time to calculate fake entrances parks')
+    print(Sys.time()-start)
+
   }
     else {
       if (sf::st_crs(address_location) != sf::st_crs(parks))

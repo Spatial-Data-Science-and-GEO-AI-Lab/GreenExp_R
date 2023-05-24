@@ -12,6 +12,7 @@
 #'
 #' @examples
 park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
+  start_function <- Sys.time()
   ### Make sure main data set has projected CRS and save it
 
 
@@ -133,6 +134,7 @@ park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
   if (missing(park_layer)) {
     ### Building area polygon and loading park_layer
     # Area assignment
+    start <- Sys.time()
     calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
 
     # Initial load of park_layer
@@ -153,12 +155,21 @@ park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
                                value = c('grassland')) %>%
       osmdata::osmdata_sf()
     res <- c(q1, q2, q3)
+    print('Time to extract parks'
+    )
+    print(Sys.time()-start)
+
+    start <- Sys.time()
 
     # park_layer cleaning
     park_layer <- res$osm_polygons
     park_layer <- tidygraph::select(park_layer, "osm_id", "name")
     park_layer <- sf::st_make_valid(park_layer)
     park_layer <- sf::st_transform(park_layer, projected_crs)
+
+    print('time to clean park layer')
+    print(Sys.time()-start)
+
   } else {
     if (sf::st_crs(address_location) != sf::st_crs(park_layer))
     {
@@ -179,7 +190,6 @@ park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
 
   # if (nrow(calculation_area) > 1){
   n_iter <- nrow(calculation_area)
-
 
 
   pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
@@ -218,6 +228,8 @@ park_pct <- function(address_location, park_layer, buffer_distance, net, UID) {
     df$UID <- UID}
 
   df <- sf::st_as_sf(df)
+  print('running the function took:')
+  print(Sys.time()-start_function)
 
   return(df)
 

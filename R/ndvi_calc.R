@@ -15,8 +15,7 @@
 #' @export
 #'
 #' @examples
-calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine=c('pc',
-                                                                                                                                                      'gee')) {
+calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc') {
   ### Preparation
   start_function <- Sys.time()
 
@@ -197,16 +196,35 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
                                        width = 100)      # Width of the progress bar
 
 
-      # loop through the input points
-      for (i in 1:n_iter) {
+
+      # Calculate nearest features for all address locations
+      nearest_features <- sf::st_nearest_feature(address_location, net)
+      start <- Sys.time()
+      iso_list <- lapply(1:n_iter, function(i) {
         pb$tick()
-        # assign the output of each iteration to the iso_list
-        # filter the network object to include nodes that meet certain criteria
-        # the code finds the set of nodes within.a certain travel time of each input point,
-        # and stores it in a separate isochrone polygons
-        iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
-          sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
-      }
+        tidygraph::filter(net, tidygraph::node_distance_from(
+          nearest_features[i], weights = duration) <= time * 60)
+      })
+
+      # pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+      #                                  total = n_iter,
+      #                                  complete = "=",   # Completion bar character
+      #                                  incomplete = "-", # Incomplete bar character
+      #                                  current = ">",    # Current bar character
+      #                                  clear = FALSE,    # If TRUE, clears the bar when finish
+      #                                  width = 100)      # Width of the progress bar
+      #
+      #
+      # # loop through the input points
+      # for (i in 1:n_iter) {
+      #   pb$tick()
+      #   # assign the output of each iteration to the iso_list
+      #   # filter the network object to include nodes that meet certain criteria
+      #   # the code finds the set of nodes within.a certain travel time of each input point,
+      #   # and stores it in a separate isochrone polygons
+      #   iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
+      #     sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
+      # }
       n_iter2 <- length(iso_list)
 
       pb2 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
@@ -243,10 +261,7 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
   }
 
   if (missing(raster)){
-    if (missing(engine)){
-      stop("You should enter whether you want to use Google Earth Engine (gee) or Planetary Computer (pc)")
-    }
-    else if (engine == 'pc'){
+    if (engine == 'pc'){
       address <- address_location
       projected_crs <- sf::st_crs(address)
       address <- sf::st_transform(address, 4326)
@@ -279,7 +294,8 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
       # Calculate the average NDVI
       average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI), .groups = 'drop')
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
-    } else {
+    }
+    else if (engine=='gee') {
       rgee::ee_Initialize()
       calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)
@@ -299,6 +315,9 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, net=NU
       s2_NDVI <- s2_NDVI$select('NDVI')
       average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
+
+    } else{
+      stop("You should enter whether you want to use Google Earth Engine (gee) or Planetary Computer (pc)")
 
     }
 
