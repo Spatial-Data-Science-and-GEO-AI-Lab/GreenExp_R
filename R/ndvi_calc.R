@@ -53,12 +53,13 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, networ
         buffer_distance <- speed * 1000/ 60 * time
       }
       print("To calculate buffer distance")
-      print(Sys.time()-start)
+
     }
 
     # If people want to calculate the network buffer.
     if (network_buffer) {
-      message('You will use a network to create a buffer around the address location(s)')
+      message('You will use a network to create a buffer around the address location(s),
+              Keep in mind that for large files it can take a while to run the funciton.')
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
         # make sure that speed and time are given in the function.
@@ -79,9 +80,17 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, networ
         # bbox might be redundant
         bbox <- sf::st_bbox(iso_area)
         # Use the osmextract package to extract the lines in the area.
-        start<-Sys.time()
-        lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, boundary_type = 'spat')
-        print(Sys.time()-start)
+        if (!missing(city)) {
+          warning('If a city is missing, it will take more time to run the function')
+          start<-Sys.time()
+          lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
+          print(Sys.time()-start)
+
+        } else{
+          start<-Sys.time()
+          lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
+          print(Sys.time()-start)
+          }
 
         ## We might need the multilinestrings as well?
         # start<-Sys.time()
@@ -286,7 +295,6 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, networ
   } else{
     ### Calculation
     # Extract the NDVI values within the buffer
-
     raster_values <- terra::extract(raster, calculation_area)
     raster_values <- replace(raster_values, is.na(raster_values), 0)
     # Calculate the average NDVI
