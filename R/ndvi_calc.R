@@ -234,8 +234,8 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, networ
       address <- address_location
       projected_crs <- sf::st_crs(address)
       address <- sf::st_transform(address, 4326)
-      calculation_area <- sf::st_geometry(sf::st_buffer(address, dist=buffer_distance))
-      calculation_area <- sf::st_as_sf(calculation_area)
+      #calculation_area <- sf::st_geometry(calculation_area)
+      calculation_area <- sf::st_transform(calculation_area, 4326)
       bbox <- sf::st_bbox(address)
 
 
@@ -311,9 +311,9 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, networ
   }
   address <- sf::st_geometry(address_location)
 
-  buffer <- calculation_area
-  names(buffer) <- "buffer"
-  ndvi_avg <- data.frame(average_rast, address, buffer)
+  #buffer <- calculation_area
+  #names(buffer) <- "buffer"
+  ndvi_avg <- data.frame(average_rast, address)
   ndvi_avg <- sf::st_as_sf(ndvi_avg)
 
   print(Sys.time()-start_function)

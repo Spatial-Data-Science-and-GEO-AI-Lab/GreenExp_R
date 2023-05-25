@@ -6,10 +6,9 @@
 #' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
-#' @param raster raster file with land cover values
+#' @param raster raster file with land cover values, if raster file is missing planetary computer will be used.
 #' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
 #' @param network_file n optional sfnetwork object representing a road network, If missing the road network will be created.
-#' @param engine  When the raster is missing, users can choose whether they want to use Google Earth engine `gee` or Planetary Computer `pc` to calculate the ndvi
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param year The year of the satellite images. The years 2020 and 2021 can be used for the time being.
 #'
@@ -20,7 +19,7 @@
 #' @examples
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE,
-                          network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
+                          network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL,
                           city=NULL, year='2021') {
   ### Preparation
   start_function <- Sys.time()
@@ -243,8 +242,8 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     }
     address <- address_location
     address <- sf::st_transform(address, 4326)
-    calculation_area <- sf::st_geometry(sf::st_buffer(address, dist=buffer_distance))
-    calculation_area <- sf::st_as_sf(calculation_area)
+    #calculation_area <- sf::st_geometry(calculation_area)
+    calculation_area <- sf::st_transform(calculation_area, 4326)
     bbox <- sf::st_bbox(address)
 
     # Search in the planetary computer and get the esa world cover collection
