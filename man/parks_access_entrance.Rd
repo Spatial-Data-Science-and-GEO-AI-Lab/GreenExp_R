@@ -4,16 +4,31 @@
 \alias{parks_access_entrance}
 \title{Distance to the nearest fake entries of parks}
 \usage{
-parks_access_entrance(address, buffer_distance = 300, net, parks, UID)
+parks_access_entrance(
+  address,
+  parks = NULL,
+  buffer_distance = NULL,
+  network_file = NULL,
+  speed = NULL,
+  time = NULL,
+  city = NULL,
+  UID = NULL
+)
 }
 \arguments{
 \item{address}{A spatial object representing the location of interest, the location should be in projected coordinates.}
 
+\item{parks}{A spatial object representing parks}
+
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
-\item{net}{An optional \code{sfnetworks} object representing a road network}
+\item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
 
-\item{parks}{A spatial object representing parks}
+\item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
+
+\item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+
+\item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 }
