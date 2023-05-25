@@ -4,11 +4,13 @@
 #' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param canopy_layer  A canopy layer that represents a canopy, the layer should be in projected coordinates
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param net an optional sfnetwork object representing a road network
 #' @param UID A character string representing a unique identifier for each point of interest
 #' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
+#' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
+#' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
+#' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #'
 #' @return The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
 #' @export
@@ -16,84 +18,86 @@
 #' @examples
 
 
-canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, net=NULL, UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL){
-  #Make sure main data set has projected CRS and save it
+canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
+                        UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, city=NULL){
+  start_function <- Sys.time()
+  # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    st_crs(address_location) <- 3395
+    sf::st_crs(address_location) <- 3395
   }
-  # Save the crs
   projected_crs <- sf::st_crs(address_location)
-
-  # Make sure the canopy layer are polygons and no points
-  if ("MULTIPOLYGON" %in% sf::st_geometry_type(canopy_layer) | "POLYGON" %in% sf::st_geometry_type(canopy_layer)){
-    # Do nothing
-  } else {
-    stop("The canopy layer provided has the wrong geometry type, please input a (multi)polygon geometry   ")
-  }
-
-
+  ### Address vs area
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
-      # Do nothing
-    } else if (missing(buffer_distance)) {
+    }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
     }
     else {
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
-    # Create a buffer or isochrone around the address location
-    if (missing(buffer_distance)) {
-      # Check for speed and time + Count buffer for bbox of initial set
+    if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
-        stop("You didn't enter speed or time")
+        stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
       } else if (!speed > 0) {
-        stop("Speed must be a positive integer bigger than 0")
+        stop("Speed must be a positive integer")
       } else if (!time > 0) {
-        stop("Time must be a positive integer bigger than 0")
+        stop("Time must be a positive integer")
       } else{
         buffer_distance <- speed * 1000/ 60 * time
       }
-      if (missing(net)) {
+      print("To calculate buffer distance")
+
+    }
+
+    # If people want to calculate the network buffer.
+    if (network_buffer) {
+      message('You will use a network to create a buffer around the address location(s),
+              Keep in mind that for large files it can take a while to run the funciton.')
+      if(missing(network_file)){
+        message('You did not provide a network file, osm will be used to create a network file.')
+        # make sure that speed and time are given in the function.
+        if(missing(speed)||missing(time)){
+          stop("You didn't enter speed or time, please enter speed or time.")
+        } else if (!speed > 0) {
+          stop("Speed must be a positive integer")
+        } else if (!time > 0) {
+          stop("Time must be a positive integer")
+        }
+        # Now we know that the speed and time are given, calculations can be done.
+        start <- Sys.time()
         ### Extracting OSM road structure to build isochrone polygon
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
         iso_area <- sf::st_transform(iso_area, crs = 4326)
+        # bbox might be redundant
         bbox <- sf::st_bbox(iso_area)
-        q <- osmdata::opq(bbox) %>%
-          osmdata::add_osm_feature(key = "highway") %>%
-          osmdata::osmdata_sf()
-        lines <- q$osm_lines
-        polys <- q$osm_polygons
+        # Use the osmextract package to extract the lines in the area.
+        if (!missing(city)) {
 
+          start<-Sys.time()
+          lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
+          print(Sys.time()-start)
 
-        #Remove Factors
-        lines$osm_id <- as.numeric(as.character(lines$osm_id))
-        polys$osm_id <- as.numeric(as.character(polys$osm_id))
+        } else{
+          message('If a city is missing, it will take more time to run the function')
+          start<-Sys.time()
+          lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
+          print(Sys.time()-start)
+        }
 
-        #remove the invalid polygons
-        polys <- polys[!is.na(polys$highway),]
-        polys <- polys[is.na(polys$area),]
+        ## We might need the multilinestrings as well?
+        # start<-Sys.time()
+        # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
+        # print(Sys.time()-start)
 
-        #Change Polygons to Lines
-        polys <- sf::st_cast (polys, "LINESTRING")
-        lines <- sf::st_cast (lines, "LINESTRING")
-
-        # remove invalid geometry
-        #lines <- lines[st_is_valid(lines) %in% TRUE,] # %in% TRUE handles NA that occure with empty geometries
-        polys <- polys[sf::st_is_valid(polys) %in% TRUE,]
-        #points <- points[st_is_valid(points) %in% TRUE,]
-
-        #Bind together
-        lines <- rbind(lines,polys)
-
-
-        #Change to user projection
+        # now I have the lines I want.
         lines <- sf::st_transform(lines, projected_crs)
         lines <- tidygraph::select(lines, "osm_id", "name")
+
         region_shp <- sf::st_transform(iso_area, projected_crs)
 
         #Download osm used a square bounding box, now trim to the exact boundary
@@ -102,18 +106,18 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
 
         # Round coordinates to 0 digits.
         sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-          lapply(function(x) round(x, 0)) %>%
           sf::st_sfc(crs = sf::st_crs(lines))
 
         # Network
-        net <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-        net <- tidygraph::convert(net, sfnetworks::to_spatial_subdivision)
-
-
+        network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+        network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
 
         #convert network to an sf object of edge
-        net_sf <- net %>% tidygraph::activate("edges") %>%
+        start=Sys.time()
+        net_sf <- network_file %>% tidygraph::activate("edges") %>%
           sf::st_as_sf()
+        print(Sys.time()-start)
+        print('To activate edges')
         # Find which edges are touching each other
         touching_list <- sf::st_touches(net_sf)
         # create a graph from the touching list
@@ -130,44 +134,72 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
         # Subset the edges corresponding to the biggest connected component
         osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
         # Filter nodes that are not connected to the biggest connected component
-        net <- net %>%
+        network_file <- network_file %>%
           tidygraph::activate("nodes") %>%
           sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
-      } else  {
-        # If the CRS of the network data set is geographic, tranfrom it to the project CRS
-        if (sf::st_crs(address_location) != sf::st_crs(net))
-        {
-          message("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
-          net <- sf::st_transform(net, projected_crs)
-        }
+
       }
-      net <- tidygraph::mutate(tidygraph::activate(net, "edges"),
-                               weight = sfnetworks::edge_length())
-      # Convert speed to m/s
-      net <- net %>%
+      else{
+        #Check if the address location and the network file that was given have the same CRS.
+        if (sf::st_crs(address_location) != sf::st_crs(network_file))
+        {
+          print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
+          network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
+        }
+
+      }
+      start <- Sys.time()
+
+      # Compute the edge weights bsased on their length
+      network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
+                                        weight = sfnetworks::edge_length())
+
+      network_file <- network_file%>%
         tidygraph::activate("edges") %>%
         tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
         tidygraph::mutate(duration = weight / speed) %>%
         tidygraph::ungroup()
 
-      ### Building isochrone polygon
-      # activate the node layer of the network object
-      net <- tidygraph::activate(net, "nodes")
-      # Initialize an empty list to store isochrone polygons
+      network_file<- tidygraph::activate(network_file, "nodes")
+
       iso_list <- list()
-      # loop through the input points
-      for (i in 1:nrow(address_location)) {
-        # assign the output of each iteration to the iso_list
-        # filter the network object to include nodes that meet certain criteria
-        # the code finds the set of nodes within.a certain travel time of each input point,
-        # and stores it in a separate isochrone polygons
-        iso_list[[i]] <- tidygraph::filter(net, tidygraph::node_distance_from(
-          sf::st_nearest_feature(address_location[i,], net), weights = duration) <= time * 60)
-      }
+
+      n_iter <- nrow(address_location)
+
+
+      pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                                       total = n_iter,
+                                       complete = "=",   # Completion bar character
+                                       incomplete = "-", # Incomplete bar character
+                                       current = ">",    # Current bar character
+                                       clear = FALSE,    # If TRUE, clears the bar when finish
+                                       width = 100)      # Width of the progress bar
+
+
+
+      # Calculate nearest features for all address locations
+      nearest_features <- sf::st_nearest_feature(address_location, network_file)
+      start <- Sys.time()
+      iso_list <- lapply(1:n_iter, function(i) {
+        pb$tick()
+        tidygraph::filter(network_file, tidygraph::node_distance_from(
+          nearest_features[i], weights = duration) <= time * 60)
+      })
+      n_iter2 <- length(iso_list)
+
+      pb2 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                                        total = n_iter2,
+                                        complete = "=",   # Completion bar character
+                                        incomplete = "-", # Incomplete bar character
+                                        current = ">",    # Current bar character
+                                        clear = FALSE,    # If TRUE, clears the bar when finish
+                                        width = 100)      # Width of the progress bar
+
 
       # Building polygons
       iso_poly <- NULL
-      for (i in 1:length(iso_list)) {
+      for (i in 1:n_iter2) {
+        pb2$tick()
         iso_poly[i] <- iso_list[[i]] %>%
           # for each isochrone extract the geometry
           sf::st_geometry() %>%
@@ -177,11 +209,21 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
           sf::st_convex_hull()
       }
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
-    }else {
-      message("Buffer distance is used for calculations")
-      calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)[2]
+
+
+
+
+
+
+
     }
-  } else {
+    else {
+      message('Euclidean distance will be used to calculate the buffers around the address location that is given')
+      calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
+    }
+
+  }
+  else {
     calculation_area <- address_location
   }
 

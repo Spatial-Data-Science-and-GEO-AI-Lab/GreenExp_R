@@ -8,11 +8,13 @@ canopy_perc(
   address_location,
   canopy_layer,
   buffer_distance = NULL,
-  net = NULL,
+  network_buffer = FALSE,
+  network_file = NULL,
   UID = NULL,
   address_calculation = TRUE,
   speed = NULL,
-  time = NULL
+  time = NULL,
+  city = NULL
 )
 }
 \arguments{
@@ -22,7 +24,9 @@ canopy_perc(
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
-\item{net}{an optional sfnetwork object representing a road network}
+\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
@@ -31,6 +35,8 @@ canopy_perc(
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+
+\item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 }
 \value{
 The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
