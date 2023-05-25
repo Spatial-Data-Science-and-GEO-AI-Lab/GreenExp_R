@@ -18,11 +18,7 @@ land_cover(
 \arguments{
 \item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
 
-\item{class_raster}{A raster object representing a land cover classification map, where each pixel is assigned a land cover class}
-
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
-
-\item{net}{an optional sfnetwork object representing a road network}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
@@ -31,6 +27,18 @@ land_cover(
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+
+\item{raster}{raster file with land cover values}
+
+\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{network_file}{n optional sfnetwork object representing a road network, If missing the road network will be created.}
+
+\item{engine}{When the raster is missing, users can choose whether they want to use Google Earth engine \code{gee} or Planetary Computer \code{pc} to calculate the ndvi}
+
+\item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
+
+\item{year}{The year of the satellite images. The years 2020 and 2021 can be used for the time being.}
 }
 \value{
 The percentage of each land cover type within a given buffer or isochrone around a set of locations is printed.
