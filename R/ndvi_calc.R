@@ -232,7 +232,7 @@ calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, networ
   if (missing(raster)){
     if (engine == 'pc'){
       address <- address_location
-      projected_crs <- sf::st_crs(address)
+      #projected_crs <- sf::st_crs(address)
       address <- sf::st_transform(address, 4326)
       #calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)

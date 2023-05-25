@@ -4,7 +4,18 @@
 \alias{park_pct}
 \title{Park Coverage}
 \usage{
-park_pct(address_location, park_layer, buffer_distance, net, UID)
+park_pct(
+  address_location,
+  park_layer = NULL,
+  buffer_distance = NULL,
+  network_buffer = FALSE,
+  speed = NULL,
+  time = NULL,
+  UID = NULL,
+  network_file = NULL,
+  city = NULL,
+  address_calculation = TRUE
+)
 }
 \arguments{
 \item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
@@ -13,9 +24,19 @@ park_pct(address_location, park_layer, buffer_distance, net, UID)
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
-\item{net}{an optional \code{sfnetworks} object representing a road network}
+\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
+
+\item{time}{numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
+
+\item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
+
+\item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
+
+\item{address_calculation}{A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')}
 }
 \value{
 Returns the percentage of park coverage given a certain buffer.

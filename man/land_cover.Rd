@@ -28,13 +28,11 @@ land_cover(
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
 
-\item{raster}{raster file with land cover values}
+\item{raster}{raster file with land cover values, if raster file is missing planetary computer will be used.}
 
 \item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
 
 \item{network_file}{n optional sfnetwork object representing a road network, If missing the road network will be created.}
-
-\item{engine}{When the raster is missing, users can choose whether they want to use Google Earth engine \code{gee} or Planetary Computer \code{pc} to calculate the ndvi}
 
 \item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 
