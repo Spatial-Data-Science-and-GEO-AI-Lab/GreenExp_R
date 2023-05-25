@@ -1,6 +1,6 @@
 #' Distance to the nearest fake entries of parks
 #'
-#' @param address A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param parks A spatial object representing parks
 #' @param UID A character string representing a unique identifier for each point of interest
@@ -13,13 +13,13 @@
 #' @export
 #'
 #' @examples
-parks_access_entrance <- function(address, parks = NULL, buffer_distance = NULL, network_file=NULL,
+parks_access_entrance <- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
                                   speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
   ### Make sure main data set has projected CRS and save it
 
-  address_location <- sf::st_geometry(address)
+  address_location <- sf::st_geometry(address_location)
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     st_crs(address_location) <- 3395
