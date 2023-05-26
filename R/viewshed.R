@@ -151,5 +151,6 @@ viewshed <- function(observer, dsm_rast, dtm_rast,
     terra::plot(output, legend = F); graphics::points(x0, y0, col = "red", pch = 20, cex = 2)
     graphics::par(mfrow=c(1,1))
   }
+  message('This code is retrieved from the GVI function, for more information look at https://github.com/STBrinkmann/GVI)')
   return(output)
 }

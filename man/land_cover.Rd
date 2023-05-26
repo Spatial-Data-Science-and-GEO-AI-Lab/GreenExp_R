@@ -6,19 +6,28 @@
 \usage{
 land_cover(
   address_location,
-  class_raster,
-  buffer_distance,
-  net,
-  UID,
+  raster,
+  buffer_distance = NULL,
+  network_buffer = FALSE,
+  network_file = NULL,
+  UID = NULL,
   address_calculation = TRUE,
-  speed,
-  time
+  speed = NULL,
+  time = NULL,
+  city = NULL,
+  year = "2021"
 )
 }
 \arguments{
 \item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
 
+\item{raster}{raster file with land cover values, if raster file is missing planetary computer will be used.}
+
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
+
+\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{network_file}{n optional sfnetwork object representing a road network, If missing the road network will be created.}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
@@ -27,12 +36,6 @@ land_cover(
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
-
-\item{raster}{raster file with land cover values, if raster file is missing planetary computer will be used.}
-
-\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
-
-\item{network_file}{n optional sfnetwork object representing a road network, If missing the road network will be created.}
 
 \item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 

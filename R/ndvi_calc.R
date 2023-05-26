@@ -14,13 +14,14 @@
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param start_date The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
 #' @param end_date  The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
+#' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #'
 #' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
 #'
 #' @examples
 
-calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE,
+calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
                            network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
                            city=NULL, start_date='2020-01-01', end_date='2021-01-01') {
   ### Preparation
@@ -81,15 +82,14 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         bbox <- sf::st_bbox(iso_area)
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
-          warning('If a city is missing, it will take more time to run the function')
-          start<-Sys.time()
-          lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
-          print(Sys.time()-start)
+
+             lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
+                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
-          start<-Sys.time()
-          lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
-          print(Sys.time()-start)
+          message('If a city is missing, it will take more time to run the function')
+          lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
+                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
           }
 
         ## We might need the multilinestrings as well?
@@ -97,49 +97,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
         # print(Sys.time()-start)
 
-        # now I have the lines I want.
-        lines <- sf::st_transform(lines, projected_crs)
-        lines <- tidygraph::select(lines, "osm_id", "name")
 
-        region_shp <- sf::st_transform(iso_area, projected_crs)
-
-        #Download osm used a square bounding box, now trim to the exact boundary
-        #note that lines that that cross the boundary are still included
-        lines <- lines[region_shp,]
-
-        # Round coordinates to 0 digits.
-        sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-          sf::st_sfc(crs = sf::st_crs(lines))
-
-        # Network
-        network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-        network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
-
-        #convert network to an sf object of edge
-        start=Sys.time()
-        net_sf <- network_file %>% tidygraph::activate("edges") %>%
-          sf::st_as_sf()
-        print(Sys.time()-start)
-        print('To activate edges')
-        # Find which edges are touching each other
-        touching_list <- sf::st_touches(net_sf)
-        # create a graph from the touching list
-        graph_list <- igraph::graph.adjlist(touching_list)
-        # Identify the cpnnected components of the graph
-        roads_group <- igraph::components(graph_list)
-        # cont the number of edges in each component
-        roads_table <- table(roads_group$membership)
-        #order the components by size, largest to smallest
-        roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
-        # get the name of the largest component
-        biggest_group <- names(roads_table_order[1])
-
-        # Subset the edges corresponding to the biggest connected component
-        osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
-        # Filter nodes that are not connected to the biggest connected component
-        network_file <- network_file %>%
-          tidygraph::activate("nodes") %>%
-          sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
 
       }
       else{
@@ -150,7 +108,51 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
           network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
         }
 
+
       }
+      # now I have the lines I want.
+      lines <- sf::st_transform(lines, projected_crs)
+      lines <- tidygraph::select(lines, "osm_id", "name")
+
+      region_shp <- sf::st_transform(iso_area, projected_crs)
+
+      #Download osm used a square bounding box, now trim to the exact boundary
+      #note that lines that that cross the boundary are still included
+      lines <- lines[region_shp,]
+
+      # Round coordinates to 0 digits.
+      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+        sf::st_sfc(crs = sf::st_crs(lines))
+
+      # Network
+      network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+      network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
+
+      #convert network to an sf object of edge
+      start=Sys.time()
+      net_sf <- network_file %>% tidygraph::activate("edges") %>%
+        sf::st_as_sf()
+      print(Sys.time()-start)
+      print('To activate edges')
+      # Find which edges are touching each other
+      touching_list <- sf::st_touches(net_sf)
+      # create a graph from the touching list
+      graph_list <- igraph::graph.adjlist(touching_list)
+      # Identify the cpnnected components of the graph
+      roads_group <- igraph::components(graph_list)
+      # cont the number of edges in each component
+      roads_table <- table(roads_group$membership)
+      #order the components by size, largest to smallest
+      roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
+      # get the name of the largest component
+      biggest_group <- names(roads_table_order[1])
+
+      # Subset the edges corresponding to the biggest connected component
+      osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+      # Filter nodes that are not connected to the biggest connected component
+      network_file <- network_file %>%
+        tidygraph::activate("nodes") %>%
+        sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
       start <- Sys.time()
 
       # Compute the edge weights bsased on their length

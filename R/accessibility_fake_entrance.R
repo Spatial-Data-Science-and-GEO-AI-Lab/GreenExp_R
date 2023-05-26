@@ -8,17 +8,18 @@
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
+#' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #'
 #' @return The distance to the nearest fake entries of parks and whether the parks are within the buffer distance that is given
 #' @export
 #'
 #' @examples
-parks_access_entrance <- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
+parks_access_entrance <- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL, download_dir = tempdir(),
                                   speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
   ### Make sure main data set has projected CRS and save it
-  address_location <- sf::st_geometry(address_location)
+  #address_location <- sf::st_geometry(address_location)
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     st_crs(address_location) <- 3395
@@ -57,15 +58,19 @@ parks_access_entrance <- function(address_location, parks = NULL, buffer_distanc
     bbox <- sf::st_bbox(iso_area)
     # Use the osmextract package to extract the lines in the area.
     if (!missing(city)) {
-      warning('If a city is missing, it will take more time to run the function')
-      start<-Sys.time()
-      lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
-      print(Sys.time()-start)
+
+      lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
+                                  download_directory=download_dir,
+                                  max_file_size = 5e+09, boundary_type = 'spat')
+
 
     } else{
-      start<-Sys.time()
-      lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
-      print(Sys.time()-start)
+      message('If a city is missing, it will take more time to run the function')
+
+      lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
+                                  download_directory=download_dir,
+                                  max_file_size = 5e+09, boundary_type = 'spat')
+
     }
 
     ## We might need the multilinestrings as well?
@@ -73,68 +78,68 @@ parks_access_entrance <- function(address_location, parks = NULL, buffer_distanc
     # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
     # print(Sys.time()-start)
 
-    # now I have the lines I want.
-    lines <- sf::st_transform(lines, projected_crs)
-    lines <- tidygraph::select(lines, "osm_id", "name")
 
-    region_shp <- sf::st_transform(iso_area, projected_crs)
-
-    #Download osm used a square bounding box, now trim to the exact boundary
-    #note that lines that that cross the boundary are still included
-    lines <- lines[region_shp,]
-
-    # Round coordinates to 0 digits.
-    sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-      sf::st_sfc(crs = sf::st_crs(lines))
-
-    # Network
-    network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-    network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
-
-    #convert network to an sf object of edge
-    start=Sys.time()
-    net_sf <- network_file %>% tidygraph::activate("edges") %>%
-      sf::st_as_sf()
-    print(Sys.time()-start)
-    print('To activate edges')
-    # Find which edges are touching each other
-    touching_list <- sf::st_touches(net_sf)
-    # create a graph from the touching list
-    graph_list <- igraph::graph.adjlist(touching_list)
-    # Identify the cpnnected components of the graph
-    roads_group <- igraph::components(graph_list)
-    # cont the number of edges in each component
-    roads_table <- table(roads_group$membership)
-    #order the components by size, largest to smallest
-    roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
-    # get the name of the largest component
-    biggest_group <- names(roads_table_order[1])
-
-    # Subset the edges corresponding to the biggest connected component
-    osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
-    # Filter nodes that are not connected to the biggest connected component
-    network_file <- network_file %>%
-      tidygraph::activate("nodes") %>%
-      sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
-
-    net_intersect <- sf::st_transform(network_file,  crs = 4326)
-    net_points <- sf::st_geometry(net_intersect)
   }
 
   else  {
     # If the CRS of the network data set is geographic, tranfrom it to the project CRS
-    if (sf::st_crs(address_location) != sf::st_crs(nework_file))
+    if (sf::st_crs(address_location) != sf::st_crs(network_file))
     {
       print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
       network_file <- sf::st_transform(network_file, projected_crs)
     }
   }
+  # now I have the lines I want.
+  lines <- sf::st_transform(lines, projected_crs)
+  lines <- tidygraph::select(lines, "osm_id", "name")
+
+  region_shp <- sf::st_transform(iso_area, projected_crs)
+
+  #Download osm used a square bounding box, now trim to the exact boundary
+  #note that lines that that cross the boundary are still included
+  lines <- lines[region_shp,]
+
+  # Round coordinates to 0 digits.
+  sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+    sf::st_sfc(crs = sf::st_crs(lines))
+
+  # Network
+  network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+  network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
+
+  #convert network to an sf object of edge
+
+  net_sf <- network_file %>% tidygraph::activate("edges") %>%
+    sf::st_as_sf()
+
+  # Find which edges are touching each other
+  touching_list <- sf::st_touches(net_sf)
+  # create a graph from the touching list
+  graph_list <- igraph::graph.adjlist(touching_list)
+  # Identify the cpnnected components of the graph
+  roads_group <- igraph::components(graph_list)
+  # cont the number of edges in each component
+  roads_table <- table(roads_group$membership)
+  #order the components by size, largest to smallest
+  roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
+  # get the name of the largest component
+  biggest_group <- names(roads_table_order[1])
+
+  # Subset the edges corresponding to the biggest connected component
+  osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+  # Filter nodes that are not connected to the biggest connected component
+  network_file <- network_file %>%
+    tidygraph::activate("nodes") %>%
+    sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
+
+  net_intersect <- sf::st_transform(network_file,  crs = 4326)
+  net_points <- sf::st_geometry(net_intersect)
   # Compute the edge weights bsased on their length
   network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
                                     weight = sfnetworks::edge_length())
 
   if (missing(parks)) {
-    start <- Sys.time()
+
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "landuse",
                                value = c('allotments','forest',
@@ -153,18 +158,14 @@ parks_access_entrance <- function(address_location, parks = NULL, buffer_distanc
       osmdata::osmdata_sf()
     res <- c(q1, q2, q3)
 
-    print('Extract the parks')
-    print(Sys.time()-start)
 
-    start <- Sys.time()
 
     # Parks cleaning
     parks <- res$osm_polygons
     parks <- tidygraph::select(parks, "osm_id", "name")
     parks <- sf::st_make_valid(parks)
     parks_buffer <- sf::st_buffer(parks, 20)
-    print('Clean parks')
-    print(Sys.time()-start)
+
     st_intersection_faster <- function(x,y){
       #faster replacement for st_intersection(x, y,...)
 
@@ -179,8 +180,7 @@ parks_access_entrance <- function(address_location, parks = NULL, buffer_distanc
     }
     fake_entrance <- st_intersection_faster(net_points, parks_buffer)
     fake_entrance <- fake_entrance %>% sf::st_transform(crs=projected_crs)
-    print('time to calculate fake entrances parks')
-    print(Sys.time()-start)
+
 
   }
   else {
@@ -201,16 +201,15 @@ parks_access_entrance <- function(address_location, parks = NULL, buffer_distanc
   }
 
   ### Calculations
-  start <- Sys.time()
+
   add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = fake_entrance))
   closest_park <- apply(add_park_dist, 1, FUN = min)
   parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
-  print(Sys.time()-start)
-  print('time to do calculations')
+
 
 
   if (missing(UID)) {
-    UID <- 1:nrow(address)
+    UID <- 1:nrow(address_location)
   }
 
   # if ("UID" %in% colnames(address)) {
@@ -221,7 +220,8 @@ parks_access_entrance <- function(address_location, parks = NULL, buffer_distanc
   #   df <- data.frame(UID, address, closest_park, parks_in_buffer)
   #   df <- sf::st_as_sf(df)
   # }
-  df <- data.frame(UID, address_location, closest_park, parks_in_buffer)
+
+  df <- data.frame(UID, sf::st_geometry(address_location), closest_park, parks_in_buffer)
   df <- sf::st_as_sf(df)
 
   print(Sys.time()-start_function)

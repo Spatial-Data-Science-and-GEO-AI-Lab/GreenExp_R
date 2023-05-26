@@ -5,7 +5,7 @@
 \title{Distance to the nearest fake entries of parks}
 \usage{
 parks_access_entrance(
-  address,
+  address_location,
   parks = NULL,
   buffer_distance = NULL,
   network_file = NULL,
@@ -16,6 +16,8 @@ parks_access_entrance(
 )
 }
 \arguments{
+\item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
+
 \item{parks}{A spatial object representing parks}
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
@@ -29,8 +31,6 @@ parks_access_entrance(
 \item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
-
-\item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
 }
 \value{
 The distance to the nearest fake entries of parks and whether the parks are within the buffer distance that is given
