@@ -5,6 +5,8 @@
 <!-- badges: end -->
 
 - [Installation](#installation)
+  * [GEE](#gee)
+  * [Rcpp](#rcpp)
 - [Functions](#functions)
   * [Availability](#availability)
     + [Calc NDVI](#calc-ndvi)
@@ -12,12 +14,10 @@
     + [Canopy coverage](#canopy-coverage)
     + [Park percentage](#park-percentage)
   * [Accessibility](#accessibility)
-    + [Installation](#installation-1)
     + [Park access](#park-access)
     + [Parks access fake entrance](#parks-access-fake-entrance)
     + [Population](#population)
   * [Visibility](#visibility)
-    + [Installation](#installation-2)
     + [Viewshed](#viewshed)
 
 
@@ -32,172 +32,17 @@ You can install the development version of GreenExp from [GitHub](https://github
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenEx_R")
 ```
 
-# Functions
+To make optimal use of the package 
 
-## Availability
+## GEE 
 
-### Calc NDVI 
-
-The `calc_ndvi` function returns a `sf` dataset with the address location, the buffer around the address location and the ndvi value in that buffer. Note that for this function, the speed and time are used to create a buffer. An alternative is the buffer distance which will be showcased in the next function.
-
-
-``` r
-library(GreenExp)
-## basic example code
-# Read the home address
-address_test <- sf::st_read("Data/Test_multiple_home_locations.gpkg")
-# Read the NDVI dataset
-ndvi_test <- terra::rast("data/NDVI_data_test.tif")
-# the funciton 'calc_ndvi' returns a sf dataset with the mean ndvi within a buffer from the home address 
-ndvi_scores <- GreenExp::calc_ndvi(address_location = address_test, raster = ndvi_test, buffer_distance=400)
-ndvi_scores
-class(ndvi_scores)
-## [1] "sf"         "data.frame"
-```
-
-This is a simple feature collection with 3 features and 2 fields. The details of the collection are as follows:
-
-- Active geometry column: `geometry`
-- Geometry type: `POINT`
-- Dimension: `XY`
-- Bounding box: `xmin: 385981.9`, `ymin: 392861.6`, `xmax: 388644.2`, `ymax: 395322.2`
-- Projected CRS: `OSGB36 / British National Grid`
-
-The feature collection includes the following features:
-
-| UID | mean_NDVI |                  geometry                  |                       buffer                       |
-|:-----:|:-----------:|:--------------------------------------------:|:--------------------------------------------------:|
-| 1   | 0.3912100 | POINT (388644.2 392861.6)                  | POLYGON ((389044.2 392861.6, ...                   |
-| 2   | 0.3373851 | POINT (385981.9 393805.5)                  | POLYGON ((386381.9 393805.5, ...                   |
-| 3   | 0.3896356 | POINT (388631.2 395322.2)                  | POLYGON ((389031.2 395322.2, ...                   |
-
-
----
-
-When the NDVI file is not given, the NDVI will be calculated using the [Google Earth Engine](https://earthengine.google.com). 
-
-```r
-GreenExp::calc_ndvi(address_location = address_test, buffer_distance = 400)
-#[1] "Buffer distance is used for calculations"
-#The image scale is set to 1000.
-#Simple feature collection with 3 features and 2 fields
-#Active geometry column: geometry
-#Geometry type: POINT
-#Dimension:     XY
-#Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-#Projected CRS: OSGB36 / British National Grid
-#  id      NDVI                  geometry                     geometry.1
-#1  1 0.4026307 POINT (388644.2 392861.6) POLYGON ((389044.2 392861.6...
-#2  2 0.4907173 POINT (385981.9 393805.5) POLYGON ((386381.9 393805.5...
-#3  3 0.4494947 POINT (388631.2 395322.2) POLYGON ((389031.2 395322.2...
-```
-
-
-
----
-
-### Land Cover
-
-The `land_cover` function calculates the percentage of area covered by each land cover class within a given buffer distance or location. In this instance, the speed and time are used to calculate the buffer. The codes in the table below represent land types. 
-
-``` r
-# Read the dataset with the land coverages. 
-landcover_test <- terra::rast("Data/Landcover_data_test.tif")
-# Use the land_cover function 
-greencover_values <- GreenExp::land_cover(address_location = address_test, class_raster = landcover_test, speed=5, time=10)
-greencover_values
-class(greencover_values)
-## [1] "sf"         "data.frame"
-
-```
-
-This is a simple feature collection with 3 features and 37 fields. The details of the collection are as follows:
-
-- Active geometry column: `geometry`
-- Geometry type: `POINT`
-- Dimension: `XY`
-- Bounding box: `xmin: 385981.9`, `ymin: 392861.6`, `xmax: 388644.2`, `ymax: 395322.2`
-- Projected CRS: `OSGB36 / British National Grid`
-
-The feature collection includes the following fields:
-
-| UID | 1001 | 1002 | 1003 | 1004 | 1005 | 1101 | 1102 | 1103 | 1104 | 1105 | 1201 | 1202 | 1203 | 1204 | 1205 | 1301 | 1302 | 1303 | 1304 | 1305 | 1401 | 1402 | 1403 | 1404 | 1405 | 1501 | 1502 | 1503 | 1504 | 1505 | 2001 | 2002 | 2003 | 2004 | 2005 | NA | geometry| buffer |
-|-----|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------------------------------------|-------------------------------------------|
-| 1   | 0.26 | 0    | 0.03 | 0.02 | 0.05 | 0.01 | 0    | 0.04 | 0.07 | 0.06 | 0.02 | 0    | 0.01 | 0.02 | 0.03 | 0.15 | 0    | 0.06 | 0.05 | 0.09 | 0.01 | 0    | 0.01 | 0.01 | 0.01 | 0.01    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0.00 | POINT (388644.2 392861.6) | POLYGON ((388727 391348, ...
-| 2   | 0.24 | 0    | 0.03 | 0.01 | 0.05 | 0.02 | 0    | 0.04 | 0.05 | 0.06 | 0.01 | 0    | 0    | 0.01 | 0.03 | 0.16 | 0    | 0.06 | 0.05 | 0.10 | 0.02 | 0    | 0.01 | 0.01 | 0.02 | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0| 0    | 0.01 | POINT (385981.9 393805.5) | POLYGON ((385566 391671, ...
-| 3   | 0.27 | 0    | 0.02 | 0.02 | 0.04 | 0.01 | 0    | 0.05 | 0.07 | 0.07 | 0.01 | 0    | 0.01 | 0.03 | 0.03 | 0.16 | 0    | 0.04 | 0.05 | 0.06 | 0.01 | 0    | 0    | 0.01 | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0    | 0.00 |POINT (388631.2 395322.2) | POLYGON ((388523 392904, ...
-
----
-
-### Canopy coverage
-
-The `canopy_perc` function calculates the percentage of a canopy within a given buffer distance or location. 
-
-``` r
-# Read the canopy dataset
-canopy <- sf::st_read("Data/CanopyTestArea.gpkg")
-
-canopy_values <- canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_distance = 500)
-canopy_values 
-class(canopy_values)
-#[1] "sf"         "data.frame"
-```
-
-- Simple feature collection with 3 features and 2 fields
-- Active geometry column: geometry
-- Geometry type: POINT
-- Dimension:     XY
-- Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-- Projected CRS: OSGB36 / British National Grid
-
-| UID | canopy_pct |                  geometry                  |                       buffer                       |
-|:-----:|------------:|:--------------------------------------------:|:--------------------------------------------------:|
-| 1   | 14.42063   | POINT (388644.2 392861.6)                  | POLYGON ((389144.2 392861.6, ...                   |
-| 2   | 19.27852   | POINT (385981.9 393805.5)                  | POLYGON ((386481.9 393805.5, ...                   |
-| 3   | 10.67145   | POINT (388631.2 395322.2)                  | POLYGON ((389131.2 395322.2, ...                   |
-
----
-
-### Park percentage
-
-The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `park_layer` is not given, the parks will be retrieved using `osmdata`. 
-
-``` r
-# use the park_pct function with only address_location and buffer distance
-park_pct_values <- park_pct(address_location = address_test, buffer_distance = 300)
-park_pct_values
-class(park_pct_values)
-#[1] "sf"         "data.frame"
-```
-
-So the park percentage in a buffer of 300 meters is:
-
-- Simple feature collection with 3 features and 2 fields
-- Active geometry column: geometry
-- Geometry type: POINT
-- Dimension:     XY
-- Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-- Projected CRS: OSGB36 / British National Grid
-
-| UID | park_pct   |                  geometry                  |
-|:-----:|:------------:|:--------------------------------------------:|
-| 1   | 3.6795963  | POINT (388644.2 392861.6)                  |
-| 2   | 10.9080537 | POINT (385981.9 393805.5)                  |
-| 3   | 0.1408044  | POINT (388631.2 395322.2)                  |
-
----
-
-## Accessibility
-
-
-
-### Installation 
+This step is optional, by default the [Planetary Computer](https://planetarycomputer.microsoft.com) will be used for satellite images, 
+But if you also want to use the [Google Earth Engine](https://earthengine.google.com), and do not have it installed yet,
+you need to follow the following steps or the steps given in this [instruction video](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
 
 **Step 1:**
 
-To use the [Google Earth Engine](https://earthengine.google.com) you need to follow the following steps or the steps given in this [intruction movie](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
-
-make an account on  [Google Earth Engine](https://earthengine.google.com)
+Make an account on  [Google Earth Engine](https://earthengine.google.com)
 
 
 ``` r
@@ -278,6 +123,156 @@ copy the code into R
  
 ---
 
+## Rcpp 
+
+Make sure the [Rcpp package](https://cran.r-project.org/web/packages/Rcpp/index.html) is installed.
+If you are using mac, make sure you have [Xcode](https://apps.apple.com/nl/app/xcode/id497799835?mt=12) installed. 
+
+Furthermore you have to make a Makevars file if the cpp files are not working. 
+go to terminal and do the following:
+
+```
+mkdir .R
+cd .R 
+touch Makevars
+open Makevars
+
+## copy and paste:
+FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
+F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
+FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
+```
+
+# Functions
+
+## Availability
+
+Availability will be measured by the [Calc NDVI](#calc-ndvi), [Land Cover](#land-cover),
+[Canopy coverage](#canopy-coverage), and the  [Park percentage](#park-percentage) functions. 
+All functions will return a [sf](https://r-spatial.github.io/sf/articles/sf1.html) `dataframe` with the input location and the values that was called for in the function within a certain buffer. The buffer around the input location are by default Euclidean, but it can be changed into a network buffer. 
+In the next subsections a short explanation for each availability function will be given.   
+
+### Calc NDVI 
+
+The `calc_ndvi` function calculates the mean [NDVI](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a certain distance for given location(s). The input for the function is `address_location` which should be a `sf dataframe` with a [projected CRS](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). 
+
+It is possible to provide a raster file with ndvi values, but if that is not provided, by default the [sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) data set of Planetary Computer will be used to calculate the NDVI (see Figure below for an example of NDVI in Manchester). It is possible for users to change the engine to `GEE` if they want. 
+
+![](man/figures/NDVI_pc.png)
+
+For the buffer distance around the address location, either the `buffer distance` or the `speed` and `time` can be given as input. 
+
+``` r
+#read in the address location
+address_location <- sf::st_read('data/test_multiple_home_locations.gpkg')
+# Call the NDVI function 
+GreenExp::calc_ndvi(address_location = address_location, buffer_distance = 300)
+
+# Euclidean distance will be used to calculate the buffers around the address location that is given
+# Time difference of 2.736458 secs
+# [1] "Amount of run time"
+# Simple feature collection with 3 features and 2 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+# Projected CRS: OSGB36 / British National Grid
+#   ID mean_NDVI                  geometry
+# 1  1 0.5481073 POINT (388644.2 392861.6)
+# 2  2 0.4415157 POINT (385981.9 393805.5)
+# 3  3 0.4527954 POINT (388631.2 395322.2)
+```
+
+---
+
+### Land Cover
+
+The `land_cover` function calculates the percentage of area covered by each land cover class within a given buffer distance. Again, the input for the function is `address_location` which should be a `sf dataframe`. 
+
+It is possible to provide a raster file with land cover values, but if that is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover (see Figure below for an example of land cover in Manchester)
+
+![](man/figures/land_cover_pc.png)
+
+In this instance I will use a network buffer to calculate the land cover values for the address locations.
+The [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package will be used to get the networks, if a network file is not given. 
+
+``` r
+GreenExp::land_cover(address_location,speed=5,time=5,network_buffer=T)
+
+# You will use a network to create a buffer around the address location(s),
+#               Keep in mind that for large files it can take a while to run the funciton.
+# You did not provide a network file, osm will be used to create a network file.
+# The input place was matched with Greater Manchester. 
+#   |===============================================================================| 100%
+# File downloaded!
+# Start with the vectortranslate operations on the input file!
+# 0...10...20...30...40...50...60...70...80...90...100 - done.
+# Finished the vectortranslate operations on the input file!
+
+# Simple feature collection with 3 features and 12 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+# Projected CRS: OSGB36 / British National Grid
+#   UID                  geometry tree_cover shrubland grassland cropland built-up
+# 1   1 POINT (388644.2 392861.6)       0.48         0      0.10        0     0.41
+# 2   2 POINT (385981.9 393805.5)       0.28         0      0.10        0     0.62
+# 3   3 POINT (388631.2 395322.2)       0.24         0      0.16        0     0.60
+#   bare_vegetation snow_ice perm_water_bodies herbaceous_wetland mangroves moss_lichen
+# 1               0        0                 0                  0         0           0
+# 2               0        0                 0                  0         0           0
+# 3               0        0                 0                  0         0           0
+```
+
+---
+
+### Canopy coverage
+
+The `canopy_perc` function calculates the percentage of a canopy within a given buffer distance or location. 
+
+``` r
+# Read the canopy dataset
+canopy <- sf::st_read("Data/CanopyTestArea.gpkg")
+
+canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_distance = 500)
+ 
+
+# Simple feature collection with 3 features and 2 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+# Projected CRS: OSGB36 / British National Grid
+#   UID canopy_pct                  geometry
+# 1   1   14.42063 POINT (388644.2 392861.6)
+# 2   2   19.27852 POINT (385981.9 393805.5)
+# 3   3   10.67145 POINT (388631.2 395322.2)
+```
+
+---
+
+### Park percentage
+
+The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `park_layer` is not given, the parks will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
+
+``` r
+GreenExp::park_pct(address_location, buffer_distance=300)
+# Simple feature collection with 3 features and 2 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+# Projected CRS: OSGB36 / British National Grid
+#   UID   park_pct                  geometry
+# 1   1  3.6795963 POINT (388644.2 392861.6)
+# 2   2 10.9080537 POINT (385981.9 393805.5)
+# 3   3  0.1408044 POINT (388631.2 395322.2)
+
+```
+
+---
+
+## Accessibility
+
+
+
 ### Park access
 
 The first accessibility function returns the closest park from a certain point. 
@@ -353,23 +348,6 @@ The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GV
 
 ### Installation 
 
-Make sure the [Rcpp package](https://cran.r-project.org/web/packages/Rcpp/index.html) is installed.
-If you are using mac, make sure you have [Xcode](https://apps.apple.com/nl/app/xcode/id497799835?mt=12) installed. 
-
-Furthermore you have to make a Makevars file if the cpp files are not working. 
-go to terminal and do the following:
-
-```
-mkdir .R
-cd .R 
-touch Makevars
-open Makevars
-
-## copy and paste:
-FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
-F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
-FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
-```
 ---
 
 ### Viewshed

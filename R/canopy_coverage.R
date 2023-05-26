@@ -248,7 +248,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
     buffer <- calculation_area
     names(buffer) <- "buffer"
     df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)),
-                     sf::st_geometry(address_location), buffer)
+                     sf::st_geometry(address_location))
     df$UID <- seq.int(nrow(df))
     if (!missing(UID)){
       df$UID <- UID}

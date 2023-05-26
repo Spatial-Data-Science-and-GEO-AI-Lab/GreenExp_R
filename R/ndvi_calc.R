@@ -20,7 +20,7 @@
 #'
 #' @examples
 
-calc_ndvi_new <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE,
+calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE,
                            network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
                            city=NULL, start_date='2020-01-01', end_date='2021-01-01') {
   ### Preparation
