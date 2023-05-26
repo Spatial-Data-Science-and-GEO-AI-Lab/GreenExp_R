@@ -158,7 +158,7 @@ The `calc_ndvi` function calculates the mean [NDVI](https://en.wikipedia.org/wik
 
 It is possible to provide a raster file with ndvi values, but if that is not provided, by default the [sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) data set of Planetary Computer will be used to calculate the NDVI (see Figure below for an example of NDVI in Manchester). It is possible for users to change the engine to `GEE` if they want. 
 
-![](man/figures/NDVI_pc.png)
+![](man/figures/NDVI_PC.png)
 
 For the buffer distance around the address location, either the `buffer distance` or the `speed` and `time` can be given as input. 
 
