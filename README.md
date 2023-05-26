@@ -15,8 +15,6 @@
     + [Park percentage](#park-percentage)
   * [Accessibility](#accessibility)
     + [Park access](#park-access)
-    + [Parks access fake entrance](#parks-access-fake-entrance)
-    + [Population](#population)
   * [Visibility](#visibility)
     + [Viewshed](#viewshed)
 
@@ -271,71 +269,32 @@ GreenExp::park_pct(address_location, buffer_distance=300)
 
 ## Accessibility
 
-
-
 ### Park access
 
-The first accessibility function returns the closest park from a certain point. 
-In the `parks_access` function the centroids of the parks will be used to calculate the distance. The parks can be give as a layer, when the parks file is missing [osmdata](https://www.openstreetmap.org) will be used to retrieve the parks. 
+In the `parks_access` functions, the nearest parks for the given address locations will be created and whether these parks are within a given buffer distance. To calculate the distance to the parks, fake entry points are created. These fake entrances are created by making a buffer of 20 meter around the park polygon. this buffer is intersected with the intersection nodes which is created by intersecting the network points created with the parks. 
 
 
 ``` r
-
-parks_distance <- parks_access(address = address_test, buffer_distance = 400)
-parks_distance
-class(parks_distance)
-#[1] "sf"         "data.frame"
+parks_access(address_location, buffer_distance=350)
+# You did not provide a network file, a network will be created using osm.
+# If a city is missing, it will take more time to run the function
+# The input place was matched with Greater Manchester. 
+#   |===============================================================================| 100%
+# File downloaded!
+# Start with the vectortranslate operations on the input file!
+# 0...10...20...30...40...50...60...70...80...90...100 - done.
+# Finished the vectortranslate operations on the input file!
+# Simple feature collection with 3 features and 3 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
+# Projected CRS: OSGB36 / British National Grid
+#   UID closest_park parks_in_buffer                  geometry
+# 1   1     264.6468            TRUE POINT (388644.2 392861.6)
+# 2   2     167.2045            TRUE POINT (385981.9 393805.5)
+# 3   3     278.6349            TRUE POINT (388631.2 395322.2)
 ```
 
-- Simple feature collection with 3 features and 2 fields
-- Active geometry column: geometry
-- Geometry type: POINT
-- Dimension:     XY
-- Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-- Projected CRS: OSGB36 / British National Grid
-
-| UID | closest_park | parks_in_buffer |                  geometry                  |
-|:-----:|:--------------:|:-----------------:|:--------------------------------------------:|
-| 1   | 264.9838     | TRUE            | POINT (388644.2 392861.6)                  |
-| 2   | 334.9009     | TRUE            | POINT (385981.9 393805.5)                  |
-| 3   | 302.8359     | TRUE            | POINT (388631.2 395322.2)                  |
-
-
-
----
-
-
-### Parks access fake entrance
-
-In the next accessibility function, instead of the centroids, fake entrances will be used to calculate the distance to. These fake entrances are created by making a buffer of 20 meter around the park polygon. this buffer is intersected with the intersection nodes which is created by intersecting the network points created with the `OnlineStreetMap` data and the `parks` data. 
-
-
-``` r
-parks_distance_fake_entrance <- parks_access_entrance(address = address_test, buffer_distance = 400)
-parks_distance_fake_entrance
-class(parks_distance_fake_entrance)
-#[1] "sf"         "data.frame"
-```
-
-- Simple feature collection with 3 features and 2 fields
-- Active geometry column: geometry
-- Geometry type: POINT
-- Dimension:     XY
-- Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-- Projected CRS: OSGB36 / British National Grid
-
-| UID | closest_park | parks_in_buffer |      geometry      |
-|:---:|:------------:|:--------------:|:------------------:|
-|  1  |   264.9838   |      TRUE      |  POINT (388644.2 392861.6)  |
-|  2  |    129.0000  |      TRUE      |  POINT (385981.9 393805.5)  |
-|  3  |   279.2987   |      TRUE      |  POINT (388631.2 395322.2)  |
-
----
-
-### Population 
-
-This function is in progress. I am trying to get the [Google Earth Engine](https://earthengine.google.com) in the package to retrieve the world population.
-This will be used to make a cost analysis for people to go to a park. 
 
 
 ---
@@ -343,10 +302,6 @@ This will be used to make a cost analysis for people to go to a park.
 ## Visibility
  
 The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
-
----
-
-### Installation 
 
 ---
 
@@ -360,41 +315,25 @@ For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) pa
 
 **EXAMPLE**
 
-The data is also used from the GitHub of [Brinkmann](https://github.com/STBrinkmann)
+Data can be retrieved from this [site](https://zenodo.org/record/5061257). 
 
 ```r
-# Download DEM
-DEM_tmp <- tempfile(fileext = ".tif")
-download.file(url = "https://github.com/STBrinkmann/data/raw/main/GVI_Data/GVI_DEM.tif",
-              destfile = DEM_tmp, mode="wb")
+# Read in the digital eleveation model
+DEM <- terra::rast('data/GreaterManchester_DTM_5m.tif')
+# Read the digital surfaca model
+DSM <- terra::rast('data/GreaterManchester_DSM_5m.tif')
+# Read the greenspace 
+GS <- terra::rast('data/GreaterManchester_GreenSpace_5m.tif')
 
-# Download DSM
-DSM_tmp <- tempfile(fileext = ".tif")
-download.file(url = "https://github.com/STBrinkmann/data/raw/main/GVI_Data/GVI_DSM.tif",
-              destfile = DSM_tmp, mode="wb")
+# 
+observer <- sf::st_sf(sfheaders::sf_point(c(388644.2, 392862.7)), crs = sf::st_crs(terra::crs(DEM)))
 
-# Download GreenSpace
-GS_tmp <- tempfile(fileext = ".tif")
-download.file(url = "https://github.com/STBrinkmann/data/raw/main/GVI_Data/GVI_GreenSpace.tif",
-              destfile = GS_tmp, mode="wb")
-```
-
-```r
-
-DEM <- terra::rast(DEM_tmp)
-DSM <- terra::rast(DSM_tmp)
-GreenSpace <- terra::rast(GS_tmp)
-
-
-observer <- sf::st_sf(sfheaders::sf_point(c(492243.3, 5454231.4)), crs = sf::st_crs(26910))
-```
-
-```r
 vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
-               max_distance = 200, observer_height = 1.7, plot = TRUE)
+                         max_distance = 200, observer_height = 1.7, plot = TRUE)
 ```
 
-![](man/figures/RplotViewshed.png)
+
+![](man/figures/viewshed.png)
 
 The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visibile area and gray is not visible. 
 
@@ -408,17 +347,16 @@ For more information about the VGVI please go to the [GVI](https://github.com/ST
 
 ```r
 VGVI <- vgvi_from_sf(observer = observer,
-             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GreenSpace,
+             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
+# Simple feature collection with 1 feature and 2 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 388644.2 ymin: 392862.7 xmax: 388644.2 ymax: 392862.7
+# Projected CRS: OSGB36 / British National Grid
+#   id      VGVI                  geometry
+# 1  1 0.3177667 POINT (388644.2 392862.7)
 ```
-
-Simple feature collection with 1 feature and 2 fields
-Geometry type: POINT
-Dimension:     XY
-Bounding box:  xmin: 492243.3 ymin: 5454231 xmax: 492243.3 ymax: 5454231
-Projected CRS: NAD83 / UTM zone 10N
-  id      VGVI                 geometry
-1  1 0.5255536 POINT (492243.3 5454231)
 
 

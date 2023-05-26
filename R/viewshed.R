@@ -140,12 +140,12 @@ viewshed <- function(observer, dsm_rast, dtm_rast,
     unique()
   cell_0 <- terra::cellFromXY(output, sf::st_coordinates(observer))
 
-  output[which(!(1:ncell(output)) %in% c(cell_0, (cells_in_vs+1)))] <- NA
+  output[which(!(1:terra::ncell(output)) %in% c(cell_0, (cells_in_vs+1)))] <- NA
 
 
   #### 4. Compare DSM with Visibility ####
   if (plot) {
-    dsm_rast_masked[which(!(1:ncell(output)) %in% c(cell_0, (cells_in_vs+1)))] <- NA
+    dsm_rast_masked[which(!(1:terra::ncell(output)) %in% c(cell_0, (cells_in_vs+1)))] <- NA
     graphics::par(mfrow=c(1,2))
     terra::plot(dsm_rast_masked, legend = F); graphics::points(x0, y0, col = "red", pch = 20, cex = 2)
     terra::plot(output, legend = F); graphics::points(x0, y0, col = "red", pch = 20, cex = 2)

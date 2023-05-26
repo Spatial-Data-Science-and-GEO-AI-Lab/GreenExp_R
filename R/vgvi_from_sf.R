@@ -306,6 +306,7 @@ vgvi_from_sf <- function(observer, dsm_rast, dtm_rast, greenspace_rast,
 
   rm(dsm_cpp_rast, dsm_vec, greenspace_cpp_rast, greenspace_vec, c0, r0, height_0_vec)
   invisible(gc())
+  message('This code is retrieved from the GVI function, for more information look at https://github.com/STBrinkmann/GVI ')
 
   return(observer)
 }
