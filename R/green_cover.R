@@ -43,7 +43,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     }
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
-        stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
+        stop("You didn't enter speed or time, please enter speed or time, or the buffer distance.")
       } else if (!speed > 0) {
         stop("Speed must be a positive integer")
       } else if (!time > 0) {

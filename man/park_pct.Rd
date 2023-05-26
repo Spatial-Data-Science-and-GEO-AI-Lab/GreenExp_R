@@ -9,6 +9,7 @@ park_pct(
   park_layer = NULL,
   buffer_distance = NULL,
   network_buffer = FALSE,
+  download_dir = tempfile(),
   speed = NULL,
   time = NULL,
   UID = NULL,
@@ -25,6 +26,8 @@ park_pct(
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
 \item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
 
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 

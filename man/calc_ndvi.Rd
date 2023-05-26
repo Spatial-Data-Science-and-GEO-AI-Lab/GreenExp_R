@@ -9,6 +9,7 @@ calc_ndvi(
   raster,
   buffer_distance = NULL,
   network_buffer = FALSE,
+  download_dir = tempdir(),
   network_file = NULL,
   UID = NULL,
   address_calculation = TRUE,
@@ -28,6 +29,8 @@ calc_ndvi(
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
 \item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+
+\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
 
 \item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
 
