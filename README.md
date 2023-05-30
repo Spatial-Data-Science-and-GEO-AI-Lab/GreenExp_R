@@ -17,6 +17,8 @@
     + [Park access](#park-access)
   * [Visibility](#visibility)
     + [Viewshed](#viewshed)
+    + [VGVI](#vgvi)
+    + [Streetview](#streetview)
 
 
   
@@ -140,6 +142,11 @@ FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
 F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
 FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 ```
+---
+
+## Mapillary
+
+To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
 
 # Functions
 
@@ -359,4 +366,7 @@ VGVI <- vgvi_from_sf(observer = observer,
 # 1  1 0.3177667 POINT (388644.2 392862.7)
 ```
 
+--- 
+
+### streetview 
 
