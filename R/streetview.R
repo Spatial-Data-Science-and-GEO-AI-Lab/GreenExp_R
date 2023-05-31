@@ -1,4 +1,4 @@
-#access_token <- "MLY|5946359745468210|66b4730cad535105b96da4fac2cf73f3"
+access_token <- "MLY|5946359745468210|66b4730cad535105b96da4fac2cf73f3"
 
 streetview <- function(address_location, access_token, x_dist=0.0025, y_dist=0.0025){
 
@@ -10,6 +10,7 @@ streetview <- function(address_location, access_token, x_dist=0.0025, y_dist=0.0
   coords <- sf::st_coordinates(address_location)
   coords <- data.frame(coords)
   headers <- c("Authorization" = paste("OAuth", access_token))
+  url_imagesearch <- list()
 
   for (i in 1:nrow(coords)){
     #create a bbox for each coordinate
