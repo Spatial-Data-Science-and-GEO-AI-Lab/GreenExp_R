@@ -1,6 +1,6 @@
 access_token <- "MLY|5946359745468210|66b4730cad535105b96da4fac2cf73f3"
 
-streetview <- function(address_location, access_token, x_dist=0.0025, y_dist=0.0025){
+streetview <- function(address_location, access_token, x_dist=0.00025, y_dist=0.00025){
 
   projected_crs <- sf::st_crs(address_location)
   address_location <- sf::st_transform(address_location, 4326)
@@ -29,20 +29,28 @@ streetview <- function(address_location, access_token, x_dist=0.0025, y_dist=0.0
     images <- httr::content(url, as = "parsed")
   })
 
-  # Print the number of images found
-  cat("Images found:", length(data_imagesearch$data), "\n")
+  # Print the number of i), "\n")
 
   # Create empty lists
   ids <- list()
   urls <- list()
   list_indices <- list()
+  pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                                   total = length(data_imagesearch),
+                                   complete = "=",   # Completion bar character
+                                   incomplete = "-", # Incomplete bar character
+                                   current = ">",    # Current bar character
+                                   clear = FALSE,    # If TRUE, clears the bar when finish
+                                   width = 100)      # Width of the progress bar
+
 
   for (i in seq_along(data_imagesearch)) {
     image_list <- data_imagesearch[[i]]
     for (image in image_list$data) {
+      pb$tick
       # Image details
       url_image <- paste0(metadata_endpoint, "/", image$id, "?fields=id,thumb_2048_url,captured_at,sequence")
-      response_image <- httr::GET(url_image, add_headers(headers))
+      response_image <- httr::GET(url_image, httr::add_headers(headers))
       data_image <- httr::content(response_image, as = "parsed")
 
       # Store the ID and URL in the corresponding lists
