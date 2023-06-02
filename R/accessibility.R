@@ -212,10 +212,19 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
 
   ### Calculations
   address_location <- sf::st_transform(address_location, projected_crs)
+  if (euclidean) {
+    euclidean_dist <- sf::st_distance(address_location, fake_entrance)
+    # Convert the result to a data frame
+    euclidean_dist_df <- as.data.frame(euclidean_dist)
+        # Find the minimum Euclidean distance
+    closest_park <- apply(euclidean_dist_df, 1, FUN = min)
+    parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
-  add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = fake_entrance))
-  closest_park <- apply(add_park_dist, 1, FUN = min)
-  parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
+  }else{
+    add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = fake_entrance))
+    closest_park <- apply(add_park_dist, 1, FUN = min)
+    parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
+  }
 
 
 
