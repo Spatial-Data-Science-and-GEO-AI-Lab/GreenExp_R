@@ -18,7 +18,9 @@ calc_ndvi(
   engine = "pc",
   city = NULL,
   start_date = "2020-01-01",
-  end_date = "2021-01-01"
+  end_date = "2021-01-01",
+  save_NDVI = FALSE,
+  plot_NDVI = FALSE
 )
 }
 \arguments{
@@ -49,6 +51,10 @@ calc_ndvi(
 \item{start_date}{The start date from when the satellite images will be filtered \code{yyyy-mm-dd} default = \code{2020-01-01}}
 
 \item{end_date}{The end date from when the satellite images will be filtered. \code{yyyy-mm-dd} default = \code{2021-01-01}}
+
+\item{save_NDVI}{If you want to save the NDVI values, default is \code{FALSE}}
+
+\item{plot_NDVI}{If you want to plot the NDVI, default is \code{FALSE}}
 }
 \value{
 A \code{sf} dataframe with the mean ndvi, the geometry and the buffer that was used

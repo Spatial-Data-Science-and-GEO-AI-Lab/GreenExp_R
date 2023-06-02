@@ -22,7 +22,7 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
   #address_location <- sf::st_geometry(address_location)
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    st_crs(address_location) <- 3395
+    sf::st_crs(address_location) <- 3395
   }
   projected_crs <- sf::st_crs(address_location)
 

@@ -15,6 +15,8 @@
 #' @param start_date The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
 #' @param end_date  The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param save_NDVI If you want to save the NDVI values, default is `FALSE`
+#' @param plot_NDVI If you want to plot the NDVI, default is `FALSE`
 #'
 #' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
@@ -23,7 +25,7 @@
 
 calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
                            network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
-                           city=NULL, start_date='2020-01-01', end_date='2021-01-01') {
+                           city=NULL, start_date='2020-01-01', end_date='2021-01-01', save_NDVI=FALSE, plot_NDVI=FALSE) {
   ### Preparation
   start_function <- Sys.time()
   # Make sure main data set has projected CRS and save it
@@ -249,6 +251,9 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       cloud_cover <- matches %>%
         rstac::items_reap(field = c("properties", "eo:cloud_cover"))
       selected_item <- matches$features[[which.min(cloud_cover)]]
+      cat('Sentinel-2-l2a data is used to retrieve the ndvi values. \n The ID of the selected image is: ', selected_item$id,
+          '\n The date of the picture that was taken is: ',selected_item$properties$datetime,
+          '\n The cloud cover of this day was ', min(cloud_cover),'%', sep='')
 
       red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href))
 
@@ -264,9 +269,15 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       names(ndvi_values) <- c('ID', 'NDVI')
 
       raster_values <- replace(ndvi_values, is.na(ndvi_values), 0)
+      if (save_NDVI){
+
+      }
       # Calculate the average NDVI
       average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI), .groups = 'drop')
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
+      if (plot_NDVI){
+        terra::animate(ndvi)
+      }
     }
     else if (engine=='gee') {
       rgee::ee_Initialize()
