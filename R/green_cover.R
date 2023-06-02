@@ -20,16 +20,23 @@
 #' @examples
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
-                          network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL,
+                          network_file=NULL, epsg_code=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL,
                           city=NULL, year='2021') {
   ### Preparation
   start_function <- Sys.time()
   # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    sf::st_crs(address_location) <- 3395
+    if (missing(epsg_code)) {
+      projected_crs <- sf::st_crs(3395)
+    }
+    else{
+      projected_crs<-sf::st_crs(epsg_code)
+    }
+    #sf::st_crs(address_location) <- 3395
+  } else{
+    projected_crs <- sf::st_crs(address_location)
   }
-  projected_crs <- sf::st_crs(address_location)
   ### Address vs area
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any
@@ -175,6 +182,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
                                        current = ">",    # Current bar character
                                        clear = FALSE,    # If TRUE, clears the bar when finish
                                        width = 100)      # Width of the progress bar
+      address_location <- sf::st_transform(address_location, projected_crs)
 
 
 
@@ -302,7 +310,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
     missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
     missings_df <- replace(missings_df, is.na(missings_df), 0)
-    address <- sf::st_geometry(address_location)
+    address <- sf::st_geometry(address_location) %>% sf::st_transform(crs=projected_crs)
 
     df <- data.frame(class_raster_values_perc, missings_df, address) %>% sf::st_as_sf()
     #order the columns to give meaningful names to the columns
@@ -335,7 +343,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
     missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
     missings_df <- replace(missings_df, is.na(missings_df), 0)
-    address <- sf::st_geometry(address_location)
+    address <- sf::st_geometry(address_location) %>% sf::st_transform(crs=projected_crs)
 
     # names(address) <- "address"
     #buffer <- calculation_area
