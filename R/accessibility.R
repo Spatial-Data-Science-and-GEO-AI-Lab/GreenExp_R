@@ -16,25 +16,28 @@
 #' @export
 #'
 #' @examples
-parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
-                        epsg_code=NULL, download_dir = tempdir(), euclidean=TRUE,
-                                  speed=NULL, time=NULL, city=NULL, UID=NULL) {
+parks_access <- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
+                           epsg_code=NULL, download_dir = tempdir(), euclidean=TRUE,
+                           pseudo_entrance=FALSE,
+                           speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
+
   ### Make sure main data set has projected CRS and save it
   #address_location <- sf::st_geometry(address_location)
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
       projected_crs <- sf::st_crs(3395)
-      }
-      else{
-        projected_crs<-sf::st_crs(epsg_code)
-      }
+    }
+    else{
+      projected_crs<-sf::st_crs(epsg_code)
+    }
     #sf::st_crs(address_location) <- 3395
   } else{
     projected_crs <- sf::st_crs(address_location)
   }
+
 
   if (missing(network_file)){
     message('You did not provide a network file, a network will be created using osm.')
@@ -67,28 +70,22 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
     # bbox might be redundant
     bbox <- sf::st_bbox(iso_area)
     # Use the osmextract package to extract the lines in the area.
-    if (!missing(city)) {
+    if (pseudo_entrance){
+      if (!missing(city)) {
 
-      lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
-                                  download_directory=download_dir,
-                                  max_file_size = 5e+09, boundary_type = 'spat')
+        lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
+                                    download_directory=download_dir,
+                                    max_file_size = 5e+09, boundary_type = 'spat')
 
 
-    } else{
-      message('If a city is missing, it will take more time to run the function')
+      } else{
+        message('If a city is missing, it will take more time to run the function')
 
-      lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
-                                  download_directory=download_dir,
-                                  max_file_size = 5e+09, boundary_type = 'spat')
-
+        lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
+                                    download_directory=download_dir,
+                                    max_file_size = 5e+09, boundary_type = 'spat')
+      }
     }
-
-    ## We might need the multilinestrings as well?
-    # start<-Sys.time()
-    # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
-    # print(Sys.time()-start)
-
-
   }
 
   else  {
@@ -99,54 +96,56 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
       network_file <- sf::st_transform(network_file, projected_crs)
     }
   }
-  # now I have the lines I want.
-  lines <- sf::st_transform(lines, projected_crs)
-  lines <- tidygraph::select(lines, "osm_id", "name")
+  if (pseudo_entrance) {
+    # now I have the lines I want.
+    lines <- sf::st_transform(lines, projected_crs)
+    lines <- tidygraph::select(lines, "osm_id", "name")
 
-  region_shp <- sf::st_transform(iso_area, projected_crs)
+    region_shp <- sf::st_transform(iso_area, projected_crs)
 
-  #Download osm used a square bounding box, now trim to the exact boundary
-  #note that lines that that cross the boundary are still included
-  lines <- lines[region_shp,]
+    #Download osm used a square bounding box, now trim to the exact boundary
+    #note that lines that that cross the boundary are still included
+    lines <- lines[region_shp,]
 
-  # Round coordinates to 0 digits.
-  sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-    sf::st_sfc(crs = sf::st_crs(lines))
+    # Round coordinates to 0 digits.
+    sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+      sf::st_sfc(crs = sf::st_crs(lines))
 
-  # Network
-  network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-  network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
+    # Network
+    network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+    network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
 
-  #convert network to an sf object of edge
+    #convert network to an sf object of edge
 
-  net_sf <- network_file %>% tidygraph::activate("edges") %>%
-    sf::st_as_sf()
+    net_sf <- network_file %>% tidygraph::activate("edges") %>%
+      sf::st_as_sf()
 
-  # Find which edges are touching each other
-  touching_list <- sf::st_touches(net_sf)
-  # create a graph from the touching list
-  graph_list <- igraph::graph.adjlist(touching_list)
-  # Identify the cpnnected components of the graph
-  roads_group <- igraph::components(graph_list)
-  # cont the number of edges in each component
-  roads_table <- table(roads_group$membership)
-  #order the components by size, largest to smallest
-  roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
-  # get the name of the largest component
-  biggest_group <- names(roads_table_order[1])
+    # Find which edges are touching each other
+    touching_list <- sf::st_touches(net_sf)
+    # create a graph from the touching list
+    graph_list <- igraph::graph.adjlist(touching_list)
+    # Identify the cpnnected components of the graph
+    roads_group <- igraph::components(graph_list)
+    # cont the number of edges in each component
+    roads_table <- table(roads_group$membership)
+    #order the components by size, largest to smallest
+    roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
+    # get the name of the largest component
+    biggest_group <- names(roads_table_order[1])
 
-  # Subset the edges corresponding to the biggest connected component
-  osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
-  # Filter nodes that are not connected to the biggest connected component
-  network_file <- network_file %>%
-    tidygraph::activate("nodes") %>%
-    sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
+    # Subset the edges corresponding to the biggest connected component
+    osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+    # Filter nodes that are not connected to the biggest connected component
+    network_file <- network_file %>%
+      tidygraph::activate("nodes") %>%
+      sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
 
-  net_intersect <- sf::st_transform(network_file,  crs = 4326)
-  net_points <- sf::st_geometry(net_intersect)
-  # Compute the edge weights bsased on their length
-  network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
-                                    weight = sfnetworks::edge_length())
+    net_intersect <- sf::st_transform(network_file,  crs = 4326)
+    net_points <- sf::st_geometry(net_intersect)
+    # Compute the edge weights bsased on their length
+    network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
+                                      weight = sfnetworks::edge_length())
+  }
 
   if (missing(parks)) {
 
@@ -174,22 +173,28 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
     parks <- res$osm_polygons
     parks <- tidygraph::select(parks, "osm_id", "name")
     parks <- sf::st_make_valid(parks)
-    parks_buffer <- sf::st_buffer(parks, 20)
 
-    st_intersection_faster <- function(x,y){
-      #faster replacement for st_intersection(x, y,...)
+    if (pseudo_entrance){
+      parks_buffer <- sf::st_buffer(parks, 20)
 
-      y_subset <-
-        sf::st_intersects(x, y) %>%
-        unlist() %>%
-        unique() %>%
-        sort() %>%
-        {y[.,]}
+      st_intersection_faster <- function(x,y){
+        #faster replacement for st_intersection(x, y,...)
 
-      sf::st_intersection(x, y_subset)
+        y_subset <-
+          sf::st_intersects(x, y) %>%
+          unlist() %>%
+          unique() %>%
+          sort() %>%
+          {y[.,]}
+
+        sf::st_intersection(x, y_subset)
+      }
+      parks_point <- st_intersection_faster(net_points, parks_buffer)
+      parks_point <- parks_point %>% sf::st_transform(crs=projected_crs)
     }
-    fake_entrance <- st_intersection_faster(net_points, parks_buffer)
-    fake_entrance <- fake_entrance %>% sf::st_transform(crs=projected_crs)
+    else{
+      parks_point <- sf::st_centroid(parks) %>% sf::st_transform(crs=projected_crs)
+    }
 
 
   }
@@ -203,28 +208,35 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
     if ("POINT" %in% sf::st_geometry_type(parks)){
       # Do nothing
     } else {
-      message('Fake entrances for the given park polygons will be created')
-      parks_buffer <- sf::st_buffer(parks, 20)
-      fake_entrance <- sf::st_intersection(net_points, parks_buffer)
-      fake_entrance <- fake_entrance %>% sf::st_transform(crs=projected_crs)
+      if (pseudo_entrance){
+        message('Fake entrances for the given park polygons will be created')
+        parks_buffer <- sf::st_buffer(parks, 20)
+        parks_point <- sf::st_intersection(net_points, parks_buffer)
+        parks_point <- parks_point %>% sf::st_transform(crs=projected_crs)
+      }
+      else {
+        parks_point <- sf::st_centroid(parks) %>% sf::st_transform(crs=projected_crs)
+      }
     }
   }
 
   ### Calculations
   address_location <- sf::st_transform(address_location, projected_crs)
+
   if (euclidean) {
-    euclidean_dist <- sf::st_distance(address_location, fake_entrance)
+    euclidean_dist <- sf::st_distance(address_location, parks_point)
     # Convert the result to a data frame
     euclidean_dist_df <- as.data.frame(euclidean_dist)
-        # Find the minimum Euclidean distance
+    # Find the minimum Euclidean distance
     closest_park <- apply(euclidean_dist_df, 1, FUN = min)
     parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
   }else{
-    add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = fake_entrance))
+    add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
     closest_park <- apply(add_park_dist, 1, FUN = min)
     parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
   }
+
 
 
 
@@ -251,6 +263,8 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
 
 
 }
+
+
 
 
 
