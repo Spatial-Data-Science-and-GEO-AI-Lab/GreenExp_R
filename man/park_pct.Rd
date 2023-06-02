@@ -12,6 +12,7 @@ park_pct(
   download_dir = tempfile(),
   speed = NULL,
   time = NULL,
+  epsg_code = NULL,
   UID = NULL,
   network_file = NULL,
   city = NULL,
@@ -32,6 +33,8 @@ park_pct(
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+
+\item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 

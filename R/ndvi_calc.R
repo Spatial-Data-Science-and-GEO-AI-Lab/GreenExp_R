@@ -17,6 +17,7 @@
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #' @param save_NDVI If you want to save the NDVI values, default is `FALSE`
 #' @param plot_NDVI If you want to plot the NDVI, default is `FALSE`
+#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #'
 #' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
@@ -24,19 +25,30 @@
 #' @examples
 
 calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
-                           network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
+                     epsg_code=NULL, network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
                            city=NULL, start_date='2020-01-01', end_date='2021-01-01', save_NDVI=FALSE, plot_NDVI=FALSE) {
-  ### Preparation
+
   start_function <- Sys.time()
+######
+#Preparation
+
   # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    sf::st_crs(address_location) <- 3395
+    if (missing(epsg_code)) {
+      projected_crs <- sf::st_crs(3395)
+    }
+    else{
+      projected_crs<-sf::st_crs(epsg_code)
+    }
+    #sf::st_crs(address_location) <- 3395
+  } else{
+    projected_crs <- sf::st_crs(address_location)
   }
-  projected_crs <- sf::st_crs(address_location)
   ### Address vs area
   if (address_calculation) {
-    ### Check for any polygons, convert into centroids if there are any
+######
+#Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
@@ -45,6 +57,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
+#####
+# If buffer distnace is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
         stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
@@ -59,10 +73,13 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
     }
 
-    # If people want to calculate the network buffer.
+#####
+# If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
               Keep in mind that for large files it can take a while to run the funciton.')
+#####
+# If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
         # make sure that speed and time are given in the function.
@@ -84,7 +101,6 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         bbox <- sf::st_bbox(iso_area)
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
-
              lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
                                       downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
 
@@ -92,16 +108,11 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
                                       downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
-          }
-
-        ## We might need the multilinestrings as well?
-        # start<-Sys.time()
-        # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
-        # print(Sys.time()-start)
-
-
+        }
 
       }
+######
+# If network file is given, make sure the crs are both the same
       else{
         #Check if the address location and the network file that was given have the same CRS.
         if (sf::st_crs(address_location) != sf::st_crs(network_file))
@@ -112,6 +123,11 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
 
       }
+
+######
+# Calculation of the network files
+
+
       # now I have the lines I want.
       lines <- sf::st_transform(lines, projected_crs)
       lines <- tidygraph::select(lines, "osm_id", "name")
@@ -233,43 +249,55 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   else {
     calculation_area <- address_location
   }
+
   if (missing(raster)){
+######
+# Calculation of the raster Planetary computer, if raster is missing
     if (engine == 'pc'){
       address <- address_location
       #projected_crs <- sf::st_crs(address)
       address <- sf::st_transform(address, 4326)
       #calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)
-      bbox <- sf::st_bbox(address)
+      # Make a bbox around the calculationa area
+      bbox <- sf::st_bbox(calculation_area)
 
 
-
+      # Look at the matches from the sentinal-2-l2a data within a cdertain time frame
       matches <- rstac::stac("https://planetarycomputer.microsoft.com/api/stac/v1/") %>%
         rstac::stac_search(collections = "sentinel-2-l2a",
                            bbox = bbox, datetime = paste0(start_date,'/',end_date)) %>%
         rstac::get_request() %>%   rstac::items_sign(sign_fn = rstac::sign_planetary_computer())
+      # Get the cloud cover per item
       cloud_cover <- matches %>%
         rstac::items_reap(field = c("properties", "eo:cloud_cover"))
+      # select the least cloudy day
       selected_item <- matches$features[[which.min(cloud_cover)]]
       cat('Sentinel-2-l2a data is used to retrieve the ndvi values. \n The ID of the selected image is: ', selected_item$id,
           '\n The date of the picture that was taken is: ',selected_item$properties$datetime,
           '\n The cloud cover of this day was ', min(cloud_cover),'%', sep='')
-
+      # extract the red band href from the selected item and raster it.
       red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href))
 
+      # get tge bbox projection of the bbox that was given and create a spat vector
       bbox_proj <- bbox %>%  sf::st_as_sfc() %>%  sf::st_transform(sf::st_crs(red)) %>% terra::vect()
 
+      # crop the spatvector bbox to the nir and red band.
       red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href)) %>%  terra::crop(bbox_proj)
       nir <- terra::rast( paste0("/vsicurl/", selected_item$assets$B08$href) ) %>%  terra::crop(bbox_proj)
 
+      # calculate the ndvi
       ndvi <- (nir-red) / (red+nir)
+      # make sure the calculation area has the same crs as ndvi
       calculation_area_proj <- sf::st_transform(calculation_area, terra::crs(ndvi))
+      # extract the ndvi values
       ndvi_values <- terra::extract(ndvi, calculation_area_proj)
 
       names(ndvi_values) <- c('ID', 'NDVI')
-
+      # replace the missing values with 0.
       raster_values <- replace(ndvi_values, is.na(ndvi_values), 0)
       if (save_NDVI){
+        # function to save the ndvi
 
       }
       # Calculate the average NDVI
@@ -280,6 +308,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       }
     }
     else if (engine=='gee') {
+#####
+# Calculation of the raster with google earth engine if the raster is missing
       rgee::ee_Initialize()
       calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)
@@ -306,7 +336,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
     }
 
   } else{
-    ### Calculation
+#####
+# Calculation of raster when raster is given
     # Extract the NDVI values within the buffer
     raster_values <- terra::extract(raster, calculation_area)
     raster_values <- replace(raster_values, is.na(raster_values), 0)
@@ -322,10 +353,10 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   if (!missing(UID)){
     average_rast$UID <- UID
   }
+  address_location <- sf::st_transform(address_location, projected_crs)
+
   address <- sf::st_geometry(address_location)
 
-  #buffer <- calculation_area
-  #names(buffer) <- "buffer"
   ndvi_avg <- data.frame(average_rast, address)
   ndvi_avg <- sf::st_as_sf(ndvi_avg)
 

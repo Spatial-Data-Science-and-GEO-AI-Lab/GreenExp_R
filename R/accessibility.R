@@ -9,12 +9,15 @@
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param euclidean Whether the distance between the fake entry points and the address location is euclidean, or calculated with the network.
 #'
 #' @return The distance to the nearest fake entries of parks and whether the parks are within the buffer distance that is given
 #' @export
 #'
 #' @examples
-parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL, download_dir = tempdir(),
+parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
+                        epsg_code=NULL, download_dir = tempdir(), euclidean=TRUE,
                                   speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
@@ -22,9 +25,16 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
   #address_location <- sf::st_geometry(address_location)
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    sf::st_crs(address_location) <- 3395
+    if (missing(epsg_code)) {
+      projected_crs <- sf::st_crs(3395)
+      }
+      else{
+        projected_crs<-sf::st_crs(epsg_code)
+      }
+    #sf::st_crs(address_location) <- 3395
+  } else{
+    projected_crs <- sf::st_crs(address_location)
   }
-  projected_crs <- sf::st_crs(address_location)
 
   if (missing(network_file)){
     message('You did not provide a network file, a network will be created using osm.')
@@ -201,6 +211,7 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
   }
 
   ### Calculations
+  address_location <- sf::st_transform(address_location, projected_crs)
 
   add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = fake_entrance))
   closest_park <- apply(add_park_dist, 1, FUN = min)
@@ -212,14 +223,6 @@ parks_access<- function(address_location, parks = NULL, buffer_distance = NULL, 
     UID <- 1:nrow(address_location)
   }
 
-  # if ("UID" %in% colnames(address)) {
-  #   df <- data.frame(address, closest_park, parks_in_buffer)
-  #   df <- sf::st_as_sf(df)
-  # } else{
-  #
-  #   df <- data.frame(UID, address, closest_park, parks_in_buffer)
-  #   df <- sf::st_as_sf(df)
-  # }
 
   df <- data.frame(UID, sf::st_geometry(address_location), closest_park, parks_in_buffer)
   df <- sf::st_as_sf(df)

@@ -12,6 +12,7 @@
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param address_calculation  A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #'
 #' @return Returns the percentage of park coverage given a certain buffer.
 #' @export
@@ -20,14 +21,22 @@
 
 
 park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempfile(),
-                      speed=NULL,  time=NULL, UID=NULL, network_file=NULL, city=NULL, address_calculation=TRUE) {
+                      speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_calculation=TRUE) {
   start_function <- Sys.time()
-  # Make sure main data set has projected CRS and save it
+#####
+#Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    sf::st_crs(address_location) <- 3395
+    if (missing(epsg_code)) {
+      projected_crs <- sf::st_crs(3395)
+    }
+    else{
+      projected_crs<-sf::st_crs(epsg_code)
+    }
+    #sf::st_crs(address_location) <- 3395
+  } else{
+    projected_crs <- sf::st_crs(address_location)
   }
-  projected_crs <- sf::st_crs(address_location)
   ### Address vs area
   if (address_calculation) {
     ### Check for any polygons, convert into centroids if there are any

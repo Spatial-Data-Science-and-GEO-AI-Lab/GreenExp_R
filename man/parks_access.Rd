@@ -9,7 +9,9 @@ parks_access(
   parks = NULL,
   buffer_distance = NULL,
   network_file = NULL,
+  epsg_code = NULL,
   download_dir = tempdir(),
+  euclidean = TRUE,
   speed = NULL,
   time = NULL,
   city = NULL,
@@ -25,7 +27,11 @@ parks_access(
 
 \item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
 
+\item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
+
 \item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+
+\item{euclidean}{Whether the distance between the fake entry points and the address location is euclidean, or calculated with the network.}
 
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 

@@ -10,6 +10,7 @@ calc_ndvi(
   buffer_distance = NULL,
   network_buffer = FALSE,
   download_dir = tempdir(),
+  epsg_code = NULL,
   network_file = NULL,
   UID = NULL,
   address_calculation = TRUE,
@@ -33,6 +34,8 @@ calc_ndvi(
 \item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
 
 \item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+
+\item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
 \item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
 

@@ -11,6 +11,7 @@
 #' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
+#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #'
 #' @return The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
 #' @export
@@ -19,17 +20,28 @@
 
 
 canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
+                        epsg_code=NULL,
                         UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, city=NULL){
+
   start_function <- Sys.time()
-  # Make sure main data set has projected CRS and save it
+#####
+#Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
-    sf::st_crs(address_location) <- 3395
+    if (missing(epsg_code)) {
+      projected_crs <- sf::st_crs(3395)
+    }
+    else{
+      projected_crs<-sf::st_crs(epsg_code)
+    }
+    #sf::st_crs(address_location) <- 3395
+  } else{
+    projected_crs <- sf::st_crs(address_location)
   }
-  projected_crs <- sf::st_crs(address_location)
-  ### Address vs area
+
   if (address_calculation) {
-    ### Check for any polygons, convert into centroids if there are any
+######
+#Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
@@ -38,6 +50,8 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
+#####
+# If buffer distnace is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
         stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
@@ -52,10 +66,13 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
 
     }
 
-    # If people want to calculate the network buffer.
+#####
+# If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
               Keep in mind that for large files it can take a while to run the funciton.')
+#####
+# If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
         # make sure that speed and time are given in the function.
@@ -77,68 +94,18 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
         bbox <- sf::st_bbox(iso_area)
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
-
-          start<-Sys.time()
-          lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
-          print(Sys.time()-start)
+          lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
+                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
           message('If a city is missing, it will take more time to run the function')
-          start<-Sys.time()
-          lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area, max_file_size = 5e+09, boundary_type = 'spat')
-          print(Sys.time()-start)
+          lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
+                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
         }
 
-        ## We might need the multilinestrings as well?
-        # start<-Sys.time()
-        # b <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE,quiet=T, layer='multilinestrings', boundary=iso_area, boundary_type = 'spat')
-        # print(Sys.time()-start)
-
-        # now I have the lines I want.
-        lines <- sf::st_transform(lines, projected_crs)
-        lines <- tidygraph::select(lines, "osm_id", "name")
-
-        region_shp <- sf::st_transform(iso_area, projected_crs)
-
-        #Download osm used a square bounding box, now trim to the exact boundary
-        #note that lines that that cross the boundary are still included
-        lines <- lines[region_shp,]
-
-        # Round coordinates to 0 digits.
-        sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-          sf::st_sfc(crs = sf::st_crs(lines))
-
-        # Network
-        network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
-        network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
-
-        #convert network to an sf object of edge
-        start=Sys.time()
-        net_sf <- network_file %>% tidygraph::activate("edges") %>%
-          sf::st_as_sf()
-        print(Sys.time()-start)
-        print('To activate edges')
-        # Find which edges are touching each other
-        touching_list <- sf::st_touches(net_sf)
-        # create a graph from the touching list
-        graph_list <- igraph::graph.adjlist(touching_list)
-        # Identify the cpnnected components of the graph
-        roads_group <- igraph::components(graph_list)
-        # cont the number of edges in each component
-        roads_table <- table(roads_group$membership)
-        #order the components by size, largest to smallest
-        roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
-        # get the name of the largest component
-        biggest_group <- names(roads_table_order[1])
-
-        # Subset the edges corresponding to the biggest connected component
-        osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
-        # Filter nodes that are not connected to the biggest connected component
-        network_file <- network_file %>%
-          tidygraph::activate("nodes") %>%
-          sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
-
       }
+#####
+# If network file is given, make sure the crs are both the same
       else{
         #Check if the address location and the network file that was given have the same CRS.
         if (sf::st_crs(address_location) != sf::st_crs(network_file))
@@ -147,7 +114,56 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
           network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
         }
 
+
       }
+
+######
+# Calculation of the network files
+
+
+      # now I have the lines I want.
+      lines <- sf::st_transform(lines, projected_crs)
+      lines <- tidygraph::select(lines, "osm_id", "name")
+
+      region_shp <- sf::st_transform(iso_area, projected_crs)
+
+      #Download osm used a square bounding box, now trim to the exact boundary
+      #note that lines that that cross the boundary are still included
+      lines <- lines[region_shp,]
+
+      # Round coordinates to 0 digits.
+      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+        sf::st_sfc(crs = sf::st_crs(lines))
+
+      # Network
+      network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+      network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
+
+      #convert network to an sf object of edge
+      start=Sys.time()
+      net_sf <- network_file %>% tidygraph::activate("edges") %>%
+        sf::st_as_sf()
+      print(Sys.time()-start)
+      print('To activate edges')
+      # Find which edges are touching each other
+      touching_list <- sf::st_touches(net_sf)
+      # create a graph from the touching list
+      graph_list <- igraph::graph.adjlist(touching_list)
+      # Identify the cpnnected components of the graph
+      roads_group <- igraph::components(graph_list)
+      # cont the number of edges in each component
+      roads_table <- table(roads_group$membership)
+      #order the components by size, largest to smallest
+      roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
+      # get the name of the largest component
+      biggest_group <- names(roads_table_order[1])
+
+      # Subset the edges corresponding to the biggest connected component
+      osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+      # Filter nodes that are not connected to the biggest connected component
+      network_file <- network_file %>%
+        tidygraph::activate("nodes") %>%
+        sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
       start <- Sys.time()
 
       # Compute the edge weights bsased on their length
@@ -226,7 +242,6 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
   else {
     calculation_area <- address_location
   }
-
   ### Make the calculations here
   canopy_pct <- list()
 
@@ -245,6 +260,8 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
 
 
     }
+
+  address_location <- sf::st_transform(address_calculation, projected_crs)
     buffer <- calculation_area
     names(buffer) <- "buffer"
     df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)),
@@ -254,28 +271,6 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       df$UID <- UID}
 
     df <- sf::st_as_sf(df)
-  # else{
-  #
-  #   # Clip tree canopy to polygon
-  #   canopy_clip <- sf::st_intersection(canopy, calculation_area)
-  #   # Calculate area of clipped tree canopy
-  #   canopy_area <- sf::st_area(canopy_clip)
-  #   total_area <- sum(canopy_area)
-  #   # Calculate area of polygon
-  #   polygon_area <- sf::st_area(calculation_area)
-  #   # Calculate tree canopy percentage
-  #   canopy_pct <- total_area / polygon_area * 100
-  #   buffer <- calculation_area
-  #   names(buffer) <- "buffer"
-  #   print(nrow(calculation_area))
-  #   print(as.numeric(canopy_pct))
-  #   df <- data.frame(UID = nrow(calculation_area), canopy_pct = as.numeric(canopy_pct), sf::st_geometry(address_location), buffer)
-  #
-  #   df$UID <- nrow(df)
-  #   if (!missing(UID)){
-  #     df$UID <- UID}
-  # }
-  #
 
 
 

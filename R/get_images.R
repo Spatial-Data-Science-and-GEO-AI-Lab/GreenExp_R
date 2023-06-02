@@ -69,3 +69,102 @@ streetview <- function(address_location, access_token, x_dist=0.00025, y_dist=0.
 
 }
 
+#######
+# function extension potential
+
+# address <- sf::st_read('data/Ams_Test_multiple_home_locations1000.gpkg')
+# access_token <- "MLY|5946359745468210|66b4730cad535105b96da4fac2cf73f3"
+#
+# a <- address[1:3,]
+#
+# df <- streetview(a, access_token = access_token)
+# library(reticulate)
+# library(here)
+# reticulate::py_config()
+# transformers <- reticulate::import("transformers")
+# pil          <- import('PIL')
+# requests     <- import('requests')
+# torch        <- import('torch')
+# numpy <- import('numpy')
+#
+# url <- paste0(df$urls[1],'.jpg')
+#
+# image <- pil$Image$open(requests$get(url, stream=T)$raw)
+#
+#
+# #
+# #
+# # processor <- transformers$AutoImageProcessor$from_pretrained("facebook/mask2former-swin-large-cityscapes-semantic")
+# # model <- transformers$Mask2FormerForUniversalSegmentation$from_pretrained("facebook/mask2former-swin-large-cityscapes-semantic")
+# #
+# # with(torch$no_grad(),
+# #      outputs<-model(inputs['pixel_values'], return_dict=TRUE))
+# #
+# #
+# # class_queries_logits <- outputs$class_queries_logits
+# # mask_queries_logits <- outputs$masks_queries_logits$detach()
+#
+#
+#
+# processor = transformers$SegformerFeatureExtractor$from_pretrained("nvidia/segformer-b5-finetuned-cityscapes-1024-1024")
+# model = transformers$SegformerForSemanticSegmentation$from_pretrained("nvidia/segformer-b5-finetuned-cityscapes-1024-1024")
+#
+#
+#
+# inputs <- processor(images=image, return_tensors="pt")
+# # outputs = model(inputs['pixel_values'], return_dict=TRUE)
+# # token_logits = model(inputs['pixel_values'], return_dict=TRUE)$logits
+#
+# with(torch$no_grad(),
+#      outputs<-model(inputs['pixel_values'], return_dict=TRUE))
+#
+# logits = outputs$logits$cpu()
+#
+#
+# logits_np <- numpy$asarray(logits)
+#
+#
+# # Get the predicted label as a scalar
+#
+# logits<-outputs$logits
+#
+# unsampled_logits <- torch$nn$functional$interpolate(logits,
+#                                                     size=(c(image$size[2], image$size[1])),
+#                                                     mode='bilinear',
+#                                                     align_corners = FALSE)
+#
+# predicted_mask = unsampled_logits$argmax(dim=as.integer(1))$cpu()$numpy()
+#
+#
+# PALETTE <- list(
+#   c(128, 64, 128), c(244, 35, 232), c(70, 70, 70), c(102, 102, 156),
+#   c(190, 153, 153), c(153, 153, 153), c(250, 170, 30), c(220, 220, 0),
+#   c(107, 142, 35), c(152, 251, 152), c(70, 130, 180), c(220, 20, 60),
+#   c(255, 0, 0), c(0, 0, 142), c(0, 0, 70), c(0, 60, 100), c(0, 80, 100),
+#   c(0, 0, 230), c(119, 11, 32)
+# )
+#
+# color_map <- lapply(seq_along(PALETTE), function(i) { i - 1 })
+# names(color_map) <- lapply(seq_along(PALETTE), function(i) { PALETTE[[i]] })
+#
+#
+# vis <- numpy$zeros(dim(predicted_mask)[1:2], 3)
+#
+# vis <- numpy$zeros(predicted_mask$shape)
+# # Convert upsampled_logits tensor to a NumPy array
+# prediction <- torch$argmax(unsample_logits, dim = as.integer(1))$cpu()$numpy()
+#
+# # Create an array of zeros with the shape of prediction
+# for (i in seq_along(color_map)) {
+#   c <- color_map[[i]]
+#   vis[predicted_mask == i] <- as.character(c)
+# }
+#
+#
+# mask <- pil$Image$fromarray(vis$astype(numpy$uint8))
+#
+# vis <-  numpy$astype(vis, numpy$uint8)
+#
+# vis <- numpy$uint8(vis)
+# mask <- pil$Image$fromarray(vis)
+
