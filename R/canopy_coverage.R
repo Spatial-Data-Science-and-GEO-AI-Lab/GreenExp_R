@@ -30,15 +30,20 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
       projected_crs <- sf::st_crs(3395)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
     else{
       projected_crs<-sf::st_crs(epsg_code)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
-    #sf::st_crs(address_location) <- 3395
   } else{
+    # If address location is given as projected, save the crs
     projected_crs <- sf::st_crs(address_location)
   }
 
+  if (missing(canopy_layer)){
+    stop('Please provide a canopy layer')
+  }
   if (address_calculation) {
 ######
 #Check for any polygons, convert into centroids if there are any
@@ -242,6 +247,12 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
   else {
     calculation_area <- address_location
   }
+  if (sf::st_crs(canopy_layer) != sf::st_crs(calculation_area)){
+    paste("The CRS of your canopy_layer is geographic, CRS of main data set will be used to transform")
+    canopy_layer <- sf::st_transform(park_layer, projected_crs)
+
+  }
+
   ### Make the calculations here
   canopy_pct <- list()
 

@@ -296,7 +296,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       cat('Sentinel-2-l2a data is used to retrieve the ndvi values. \n The ID of the selected image is: ', selected_item$id,
           '\n The date of the picture that was taken is: ',selected_item$properties$datetime,
-          '\n The cloud cover of this day was ', min(cloud_cover),'%', sep='')
+          '\n The cloud cover of this day was ', min(cloud_cover)*100,'% \n', sep='')
       # extract the red band href from the selected item and raster it.
       red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href))
 
@@ -386,8 +386,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   ndvi_avg <- data.frame(average_rast, address)
   ndvi_avg <- sf::st_as_sf(ndvi_avg)
 
-  print(Sys.time()-start_function)
-  print('Amount of run time')
+  paste(Sys.time()-start_function)
+  paste('Amount of run time')
 
   # Return the result
   return(ndvi_avg)

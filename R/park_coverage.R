@@ -29,12 +29,14 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
       projected_crs <- sf::st_crs(3395)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
     else{
       projected_crs<-sf::st_crs(epsg_code)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
-    #sf::st_crs(address_location) <- 3395
   } else{
+    # If address location is given as projected, save the crs
     projected_crs <- sf::st_crs(address_location)
   }
   ### Address vs area
@@ -293,8 +295,8 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
   } else {
     if (sf::st_crs(address_location) != sf::st_crs(park_layer))
     {
-      print("The CRS of your park_layer data set is geographic, CRS of main data set will be used to transform")
-      park_layer <- sf::st_transform(park_layer, original_pr)
+      paste("The CRS of your park_layer data set is geographic, CRS of main data set will be used to transform")
+      park_layer <- sf::st_transform(park_layer, projected_crs)
     }}
 
 

@@ -32,7 +32,8 @@ Imports:
     rgee,
     rstac,
     tidygraph,
-    osmextract
+    osmextract,
+    FNN
 Depends:
     R (>= 3.3.0)
 LinkingTo:

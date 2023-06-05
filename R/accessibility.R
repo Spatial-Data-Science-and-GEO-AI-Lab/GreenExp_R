@@ -226,11 +226,11 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
   address_location <- sf::st_transform(address_location, projected_crs)
 
   if (euclidean) {
-    euclidean_dist <- sf::st_distance(address_location, parks_point)
-    # Convert the result to a data frame
-    euclidean_dist_df <- as.data.frame(euclidean_dist)
-    # Find the minimum Euclidean distance
-    closest_park <- apply(euclidean_dist_df, 1, FUN = min)
+
+    # get the nearest neighbhors of the address_location + parks
+    nearest_neighbours <- FNN::get.knnx(sf::st_coordinates(parks_point), sf::st_coordinates(address_location), k = 5)
+    closest_park <- nearest_neighbours$nn.dist[,1]
+    euclidean_dist_df <- as.data.frame(closest_park)
     parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
   }else{
