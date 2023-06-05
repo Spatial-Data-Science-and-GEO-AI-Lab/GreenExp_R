@@ -11,6 +11,9 @@
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #' @param euclidean Whether the distance between the fake entry points and the address location is euclidean, or calculated with the network.
+#' @param pseudo_entrance The possibility to calculate the distance to created pseudo entrances. These pseudo entrances are created,
+#' by intersecting a buffer that was created around a park with network points. default is `FALSE`
+#' @param entrances_within_buffer The possibility to get the closest park for every point. default is `FALSE`
 #'
 #' @return The distance to the nearest fake entries of parks and whether the parks are within the buffer distance that is given
 #' @export
@@ -18,7 +21,7 @@
 #' @examples
 parks_access <- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
                            epsg_code=NULL, download_dir = tempdir(), euclidean=TRUE,
-                           pseudo_entrance=FALSE,
+                           pseudo_entrance=FALSE, entrances_within_buffer=TRUE,
                            speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
@@ -234,10 +237,29 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
     parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
   }else{
+    if (entrances_within_buffer) {
+      closest_park <- list()
+      for (i in 1:nrow(address_location)) {
+        address <- address_location[i, ]
+        address_buffer <- sf::st_buffer(address, dist = buffer_distance)
+        parks_within_buffer <- sf::st_intersection(address_buffer, parks_point)
+        add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_within_buffer))
+        closest_park[i] <- min(add_park_dist)
+        # Append the closest park and min_distance to the results data frame
+        #results <- rbind(results, data.frame(address_location = a, uid=i, min_distance = min_distance))
+      }
+      parks_in_buffer <- ifelse(closest_park < buffer_distance, TRUE, FALSE)
+      closest_park <- ifelse(parks_in_buffer, closest_park, NaN) %>% unlist()
+
+    }else{
+      add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
+      closest_park <- apply(add_park_dist, 1, FUN = min)
+      parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
+
+    }
+
     # Clip the buffer distance as default
-    add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
-    closest_park <- apply(add_park_dist, 1, FUN = min)
-    parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
+
   }
 
 

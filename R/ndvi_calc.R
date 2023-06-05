@@ -271,6 +271,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       time_range <- rstac::cql2_interval(start_date, end_date)
       # save the area of interest
       area_of_interest <- rstac::cql2_bbox_as_geojson(bbox)
+      planetary_computer <- rstac::stac("https://planetarycomputer.microsoft.com/api/stac/v1/")
 
       # stack the tiles that conform the following conditions
       stac_items <- planetary_computer %>%

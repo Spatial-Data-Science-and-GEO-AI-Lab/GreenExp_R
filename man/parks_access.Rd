@@ -13,6 +13,7 @@ parks_access(
   download_dir = tempdir(),
   euclidean = TRUE,
   pseudo_entrance = FALSE,
+  entrances_within_buffer = TRUE,
   speed = NULL,
   time = NULL,
   city = NULL,
@@ -33,6 +34,11 @@ parks_access(
 \item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
 
 \item{euclidean}{Whether the distance between the fake entry points and the address location is euclidean, or calculated with the network.}
+
+\item{pseudo_entrance}{The possibility to calculate the distance to created pseudo entrances. These pseudo entrances are created,
+by intersecting a buffer that was created around a park with network points. default is \code{FALSE}}
+
+\item{entrances_within_buffer}{The possibility to get the closest park for every point. default is \code{FALSE}}
 
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
