@@ -265,19 +265,34 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       #calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)
       # Make a bbox around the calculationa area
-      bbox <- sf::st_bbox(calculation_area)
 
+      # give the time range
+      time_range <- rstac::cql2_interval(start_date, end_date)
+      # save the area of interest
+      area_of_interest <- rstac::cql2_bbox_as_geojson(bbox)
 
-      # Look at the matches from the sentinal-2-l2a data within a cdertain time frame
-      matches <- rstac::stac("https://planetarycomputer.microsoft.com/api/stac/v1/") %>%
-        rstac::stac_search(collections = "sentinel-2-l2a",
-                           bbox = bbox, datetime = paste0(start_date,'/',end_date)) %>%
-        rstac::get_request() %>%   rstac::items_sign(sign_fn = rstac::sign_planetary_computer())
-      # Get the cloud cover per item
+      # stack the tiles that conform the following conditions
+      stac_items <- planetary_computer %>%
+        rstac::ext_filter(
+          # The collection should be in sentinel-2-l2a
+          collection %in% c("sentinel-2-l2a") &&
+            # The date time has to be within the time frame
+            t_intersects(datetime, {{time_range}}) &&
+            # The shape file should contain the area of interest
+            s_contains(geometry, {{area_of_interest}}) &&
+            # And the cloud coverage should be less than 20%
+            `eo:cloud_cover` < 20
+        ) |>
+        rstac::post_request()
+
+      # sign in pc
+      matches <- stac_items %>% rstac::items_sign(sign_fn = rstac::sign_planetary_computer())
+      # look at the cloud cover for all matches
       cloud_cover <- matches %>%
         rstac::items_reap(field = c("properties", "eo:cloud_cover"))
-      # select the least cloudy day
+      # select the leas cloudy day
       selected_item <- matches$features[[which.min(cloud_cover)]]
+
       cat('Sentinel-2-l2a data is used to retrieve the ndvi values. \n The ID of the selected image is: ', selected_item$id,
           '\n The date of the picture that was taken is: ',selected_item$properties$datetime,
           '\n The cloud cover of this day was ', min(cloud_cover),'%', sep='')
@@ -333,6 +348,11 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       s2_NDVI <- s2_NDVI$select('NDVI')
       average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
+
+      if(plot_NDVI) {
+        message('The gee function is not compatible with plotting the ndvi yet.')
+      }
+
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
 
     } else{
