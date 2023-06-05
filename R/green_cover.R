@@ -12,6 +12,8 @@
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param year The year of the satellite images. The years 2020 and 2021 can be used for the time being.
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param plot_landcover Option to plot the land cover, default is `FALSE`
 #'
 #' @return The percentage of each land cover type within a given buffer or isochrone around a set of locations is printed.
 #' @export
@@ -21,7 +23,7 @@
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
                           network_file=NULL, epsg_code=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL,
-                          city=NULL, year='2021') {
+                          city=NULL, year='2021', plot_landcover=FALSE) {
   ### Preparation
   start_function <- Sys.time()
   # Make sure main data set has projected CRS and save it
@@ -29,12 +31,14 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
       projected_crs <- sf::st_crs(3395)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
     else{
       projected_crs<-sf::st_crs(epsg_code)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
-    #sf::st_crs(address_location) <- 3395
   } else{
+    # If address location is given as projected, save the crs
     projected_crs <- sf::st_crs(address_location)
   }
   ### Address vs area
@@ -270,6 +274,47 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     bbox_proj <- bbox %>%  sf::st_as_sfc() %>%  sf::st_transform(sf::st_crs(land_cover)) %>% terra::vect()
     land_cover <- terra::rast( paste0("/vsicurl/", selected_item$assets$map$href)) %>%  terra::crop(bbox_proj)
 
+    if (plot_landcover){
+
+
+      df <- as.data.frame(land_cover, xy = TRUE)
+      names(df) <- c('x','y','land_cover')
+
+      df$land_cover <- as.character(df$land_cover)
+
+      df <- df %>%
+        dplyr::mutate(land_cover = dplyr::case_when(
+          land_cover == "10" ~ "treecover",
+          land_cover == "20" ~ "shrubland",
+          land_cover == "30" ~ "grassland",
+          land_cover == "40" ~ "cropland",
+          land_cover == "50" ~ "built-up",
+          land_cover == "60" ~ "bare_vegetation",
+          land_cover == "70" ~ "snow/ice",
+          land_cover == "80" ~ "perm_water_bodies",
+          land_cover == "90" ~ "herb_wetland",
+          land_cover == "95" ~ "mangroves",
+          land_cover == "100" ~ "moss/lichen",
+          # Add more conditions as needed
+          TRUE ~ land_cover  # Keep the original value if no condition matches
+        ))
+
+
+      plot <- ggplot2::ggplot(data = df, ggplot2::aes(x = x, y = y, fill = land_cover)) +
+        ggplot2::geom_tile() +
+        ggplot2::theme_bw()
+
+
+      legend_title <- "Land Cover"
+      legend_labels <- c("treecover" = "#006400", "shrubland"="#FFBB22",
+                         "grassland"="#FFFF4C", "cropland"="#F096FF", "built-up"= "#FA0000", "bare_vegetation"="#B4B4B4",
+                         "snow/ice"="#F0F0F0", "perm_water_bodies"="#0064C8", "herb_wetland"="#0096A0",
+                         "mangroves"="#00CF75", "moss/lichen"="#FAE6A0" )
+      plot <- plot + ggplot2::scale_fill_manual(values=legend_labels)
+      print(plot)
+
+
+    }
 
     land_cover_values <- terra::extract(land_cover, calculation_area)
     names(land_cover_values) <- c('ID', 'land_cover')
@@ -327,6 +372,11 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
     ### Calculations
     # Extract the landcover values within the buffer
+    if (plot_landcover){
+      plot <- plot(class_raster)
+      print(plot)
+    }
+
     class_raster_values <- terra::extract(class_raster, calculation_area)
     # count the amount of land cover values per polygon
     class_raster_values <- dplyr::count(class_raster_values, ID, N = get(rast_value_name))
@@ -352,6 +402,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
     df <- sf::st_as_sf(landcover_values_perc)
   }
+
   return(df)
 }
 

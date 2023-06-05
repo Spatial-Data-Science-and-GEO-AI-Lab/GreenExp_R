@@ -24,17 +24,19 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
   start_function <- Sys.time()
 
   ### Make sure main data set has projected CRS and save it
-  #address_location <- sf::st_geometry(address_location)
+  # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
       projected_crs <- sf::st_crs(3395)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
     else{
       projected_crs<-sf::st_crs(epsg_code)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
-    #sf::st_crs(address_location) <- 3395
   } else{
+    # If address location is given as projected, save the crs
     projected_crs <- sf::st_crs(address_location)
   }
 
@@ -232,6 +234,7 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
     parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
   }else{
+    # Clip the buffer distance as default
     add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
     closest_park <- apply(add_park_dist, 1, FUN = min)
     parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)

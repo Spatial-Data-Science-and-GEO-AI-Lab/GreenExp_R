@@ -37,9 +37,11 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
       projected_crs <- sf::st_crs(3395)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
     else{
       projected_crs<-sf::st_crs(epsg_code)
+      address_location <- sf::st_transform(address_location, projected_crs)
     }
     #sf::st_crs(address_location) <- 3395
   } else{
@@ -92,7 +94,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         }
         # Now we know that the speed and time are given, calculations can be done.
         start <- Sys.time()
-        ### Extracting OSM road structure to build isochrone polygon
+        ### Extracting OSM road structure to build isochrone polygona
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
@@ -177,11 +179,14 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
                                         weight = sfnetworks::edge_length())
 
-      network_file <- network_file%>%
-        tidygraph::activate("edges") %>%
-        tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
-        tidygraph::mutate(duration = weight / speed) %>%
-        tidygraph::ungroup()
+      if(!missing(speed)){
+
+        network_file <- network_file%>%
+          tidygraph::activate("edges") %>%
+          tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
+          tidygraph::mutate(weight = weight / speed) %>%
+          tidygraph::ungroup()
+      }
 
       network_file<- tidygraph::activate(network_file, "nodes")
 
@@ -206,7 +211,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       iso_list <- lapply(1:n_iter, function(i) {
         pb$tick()
         tidygraph::filter(network_file, tidygraph::node_distance_from(
-          nearest_features[i], weights = duration) <= time * 60)
+          nearest_features[i], weights = weight))
       })
       n_iter2 <- length(iso_list)
 

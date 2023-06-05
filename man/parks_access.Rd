@@ -12,6 +12,7 @@ parks_access(
   epsg_code = NULL,
   download_dir = tempdir(),
   euclidean = TRUE,
+  pseudo_entrance = FALSE,
   speed = NULL,
   time = NULL,
   city = NULL,

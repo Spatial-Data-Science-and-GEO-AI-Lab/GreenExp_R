@@ -11,12 +11,14 @@ land_cover(
   network_buffer = FALSE,
   download_dir = tempdir(),
   network_file = NULL,
+  epsg_code = NULL,
   UID = NULL,
   address_calculation = TRUE,
   speed = NULL,
   time = NULL,
   city = NULL,
-  year = "2021"
+  year = "2021",
+  plot_landcover = FALSE
 )
 }
 \arguments{
@@ -32,6 +34,8 @@ land_cover(
 
 \item{network_file}{n optional sfnetwork object representing a road network, If missing the road network will be created.}
 
+\item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
+
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
 \item{address_calculation}{A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')}
@@ -43,6 +47,8 @@ land_cover(
 \item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 
 \item{year}{The year of the satellite images. The years 2020 and 2021 can be used for the time being.}
+
+\item{plot_landcover}{Option to plot the land cover, default is \code{FALSE}}
 }
 \value{
 The percentage of each land cover type within a given buffer or isochrone around a set of locations is printed.

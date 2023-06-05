@@ -3,7 +3,7 @@
 
 <!-- badges: start -->
 <!-- badges: end -->
-
+- [Updates](#updates)
 - [Installation](#installation)
   * [GEE](#gee)
   * [Rcpp](#rcpp)
@@ -21,7 +21,14 @@
     + [Streetview](#streetview)
 
 
-  
+# Updates
+
+Over here are the agreements that need to be done this week:
+
+- Make sure the epsg logic is fixed for each function
+- Make the accessibility function faster by intersecting the the buffer for the pseudo entrances and for the euclidean buffer, use the nearest neighbours. 
+- Start with the motivation of the paper see [overleaf](www.overleaf.com)
+- Make a visibility function for the buffer around the address location. Important to take random points in this buffer and use the [VGVI](#vgvi) Function to implement this. 
 
 # Installation
 
