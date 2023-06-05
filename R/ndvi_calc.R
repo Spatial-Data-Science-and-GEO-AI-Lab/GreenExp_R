@@ -265,6 +265,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       #calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)
       # Make a bbox around the calculationa area
+      bbox <- sf::st_bbox(calculation_area)
 
       # give the time range
       time_range <- rstac::cql2_interval(start_date, end_date)
