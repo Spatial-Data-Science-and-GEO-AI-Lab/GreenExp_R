@@ -366,6 +366,14 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 #####
 # Calculation of raster when raster is given
     # Extract the NDVI values within the buffer
+    if(sf::st_crs(terra::crs(raster))$epsg != sf::st_crs(calculation_area)$epsg){
+      warning('The crs of your raster is not the same as the projected crs of the input location,
+              the projected crs of the raster will be transformed into the projected crs of the address location')
+      epsg_raster <- sf::st_crs(calculation_area)$epsg
+      raster <- terra::project(raster, paste0('EPSG:',epsg_raster))
+
+    }
+
     raster_values <- terra::extract(raster, calculation_area)
     raster_values <- replace(raster_values, is.na(raster_values), 0)
     # Calculate the average NDVI
@@ -380,7 +388,6 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   if (!missing(UID)){
     average_rast$UID <- UID
   }
-  address_location <- sf::st_transform(address_location, projected_crs)
 
   address <- sf::st_geometry(address_location)
 

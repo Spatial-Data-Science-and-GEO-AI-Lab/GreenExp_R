@@ -55,8 +55,12 @@ viewshed <- function(observer, dsm_rast, dtm_rast,
   # dsm_rast
   if (!is(dsm_rast, "SpatRaster")) {
     stop("dsm_rast needs to be a SpatRaster object")
-  } else if (sf::st_crs(terra::crs(dsm_rast))$epsg != sf::st_crs(observer)$epsg) {
-    stop("dsm_rast needs to have the same CRS as observer")
+  } else if(sf::st_crs(terra::crs(dsm_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your raster is not the same as the projected crs of the input location,
+              the projected crs of the raster will be transformed into the projected crs of the address location')
+    epsg_dsm_rast <- sf::st_crs(observer)$epsg
+    dsm_rast <- terra::project(dsm_rast, paste0('EPSG:',epsg_dsm_rast))
+
   } else if(dsm_rast@ptr$res[1] != dsm_rast@ptr$res[2]) {
     stop("dsm_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }
@@ -64,8 +68,12 @@ viewshed <- function(observer, dsm_rast, dtm_rast,
   # dtm_rast
   if (!is(dtm_rast, "SpatRaster")) {
     stop("dtm_rast needs to be a SpatRaster object")
-  } else if (sf::st_crs(terra::crs(dtm_rast))$epsg != sf::st_crs(observer)$epsg) {
-    stop("dtm_rast needs to have the same CRS as observer")
+  } else if(sf::st_crs(terra::crs(dtm_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your DTM raster is not the same as the projected crs of the input location,
+              the projected crs of the raster will be transformed into the projected crs of the address location')
+    epsg_dtm_rast <- sf::st_crs(observer)$epsg
+    dtm_rast <- terra::project(dtm_rast, paste0('EPSG:',epsg_dtm_rast))
+
   }
 
   # max_distance

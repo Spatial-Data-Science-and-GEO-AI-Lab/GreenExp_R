@@ -93,8 +93,12 @@ vgvi_from_sf <- function(observer, dsm_rast, dtm_rast, greenspace_rast,
   # dsm_rast
   if (!is(dsm_rast, "SpatRaster")) {
     stop("dsm_rast needs to be a SpatRaster object!")
-  } else if (sf::st_crs(terra::crs(dsm_rast))$epsg != sf::st_crs(observer)$epsg) {
-    stop("dsm_rast needs to have the same CRS as observer")
+  }  else if(sf::st_crs(terra::crs(dsm_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your raster is not the same as the projected crs of the input location,
+              the projected crs of the raster will be transformed into the projected crs of the address location')
+    epsg_dsm_rast <- sf::st_crs(observer)$epsg
+    dsm_rast <- terra::project(dsm_rast, paste0('EPSG:',epsg_dsm_rast))
+
   } else if(dsm_rast@ptr$res[1] != dsm_rast@ptr$res[2]) {
     stop("dsm_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }
@@ -102,15 +106,23 @@ vgvi_from_sf <- function(observer, dsm_rast, dtm_rast, greenspace_rast,
   # dtm_rast
   if (!is(dtm_rast, "SpatRaster")) {
     stop("dtm_rast needs to be a SpatRaster object!")
-  } else if (sf::st_crs(terra::crs(dtm_rast))$epsg != sf::st_crs(observer)$epsg) {
-    stop("dtm_rast needs to have the same CRS as observer")
+  } else if(sf::st_crs(terra::crs(dtm_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your DTM raster is not the same as the projected crs of the input location,
+              the projected crs of the raster will be transformed into the projected crs of the address location')
+    epsg_dtm_rast <- sf::st_crs(observer)$epsg
+    dtm_rast <- terra::project(dtm_rast, paste0('EPSG:',epsg_dtm_rast))
+
   }
 
   # greenspace_rast
   if (!is(greenspace_rast, "SpatRaster")) {
     stop("greenspace_rast needs to be a SpatRaster object!")
-  } else if (sf::st_crs(terra::crs(greenspace_rast))$epsg != sf::st_crs(observer)$epsg) {
-    stop("greenspace_rast needs to have the same CRS as observer")
+  } else if(sf::st_crs(terra::crs(greenspace_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your greenspace raster is not the same as the projected crs of the input location,
+              the projected crs of the raster will be transformed into the projected crs of the address location')
+    epsg_greenspace_rast <- sf::st_crs(observer)$epsg
+    greenspace_rast <- terra::project(greenspace_rast, paste0('EPSG:',epsg_greenspace_rast))
+
   } else if(dsm_rast@ptr$res[1] != dsm_rast@ptr$res[2]) {
     stop("greenspace_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }

@@ -247,9 +247,11 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
   else {
     calculation_area <- address_location
   }
-  if (sf::st_crs(canopy_layer) != sf::st_crs(calculation_area)){
-    paste("The CRS of your canopy_layer is geographic, CRS of main data set will be used to transform")
-    canopy_layer <- sf::st_transform(park_layer, projected_crs)
+  if(sf::st_crs(terra::crs(canopy_layer))$epsg != sf::st_crs(calculation_area)$epsg){
+    warning('The crs of your canopy layer is not the same as the projected crs of the input location,
+              the projected crs of the canopy layer will be transformed into the projected crs of the address location')
+    epsg_raster <- sf::st_crs(calculation_area)$epsg
+    canopy_layer <- terra::project(canopy_layer, paste0('EPSG:',epsg_raster))
 
   }
 
@@ -272,7 +274,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
 
     }
 
-  address_location <- sf::st_transform(address_calculation, projected_crs)
+    address_location <- sf::st_transform(address_location, projected_crs)
     buffer <- calculation_area
     names(buffer) <- "buffer"
     df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)),
