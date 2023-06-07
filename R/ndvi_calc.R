@@ -326,7 +326,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI), .groups = 'drop')
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
       if (plot_NDVI){
-        terra::animate(ndvi)
+        terra::animate(ndvi, main='NDVI')
       }
     }
     else if (engine=='gee') {
