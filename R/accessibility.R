@@ -238,18 +238,21 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
 
   }else{
     if (entrances_within_buffer) {
-      closest_park <- list()
+      closest_park <- vector("numeric", length = nrow(address_location))
+
       for (i in 1:nrow(address_location)) {
         address <- address_location[i, ]
         address_buffer <- sf::st_buffer(address, dist = buffer_distance)
         parks_within_buffer <- sf::st_intersection(address_buffer, parks_point)
-        add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_within_buffer))
-        closest_park[i] <- min(add_park_dist)
-        # Append the closest park and min_distance to the results data frame
-        #results <- rbind(results, data.frame(address_location = a, uid=i, min_distance = min_distance))
+
+        if (nrow(parks_within_buffer) > 0) {
+          add_park_dist <- sfnetworks::st_network_cost(network_file, from = address, to = parks_within_buffer)
+          closest_park[i] <- min(add_park_dist)
+        } else {
+          closest_park[i] <- NA
+        }
       }
-      parks_in_buffer <- ifelse(closest_park < buffer_distance, TRUE, FALSE)
-      closest_park <- ifelse(parks_in_buffer, closest_park, NaN) %>% unlist()
+      parks_in_buffer <- ifelse(is.na(closest_park), FALSE, TRUE)
 
     }else{
       add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
