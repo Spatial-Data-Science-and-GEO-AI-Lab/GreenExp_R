@@ -75,7 +75,7 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
     # bbox might be redundant
     bbox <- sf::st_bbox(iso_area)
     # Use the osmextract package to extract the lines in the area.
-    if (pseudo_entrance){
+    if (pseudo_entrance || !euclidean){
       if (!missing(city)) {
 
         lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
@@ -101,7 +101,7 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
       network_file <- sf::st_transform(network_file, projected_crs)
     }
   }
-  if (pseudo_entrance) {
+  if (pseudo_entrance||!euclidean) {
     # now I have the lines I want.
     lines <- sf::st_transform(lines, projected_crs)
     lines <- tidygraph::select(lines, "osm_id", "name")
@@ -237,6 +237,7 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
     parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
   }else{
+    #if (pseudo_entrance) {
     if (entrances_within_buffer) {
       closest_park <- vector("numeric", length = nrow(address_location))
 
