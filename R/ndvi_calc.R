@@ -297,7 +297,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       cat('Sentinel-2-l2a data is used to retrieve the ndvi values. \n The ID of the selected image is: ', selected_item$id,
           '\n The date of the picture that was taken is: ',selected_item$properties$datetime,
-          '\n The cloud cover of this day was ', min(cloud_cover)*100,'% \n', sep='')
+          '\n The cloud cover of this day was ', min(cloud_cover),'% \n', sep='')
       # extract the red band href from the selected item and raster it.
       red <- terra::rast( paste0("/vsicurl/", selected_item$assets$B04$href))
 
