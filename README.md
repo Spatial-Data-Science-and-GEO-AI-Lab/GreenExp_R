@@ -175,23 +175,28 @@ It is possible to provide a raster file with ndvi values, but if that is not pro
 For the buffer distance around the address location, either the `buffer distance` or the `speed` and `time` can be given as input. 
 
 ``` r
-#read in the address location
-address_location <- sf::st_read('data/test_multiple_home_locations.gpkg')
-# Call the NDVI function 
-GreenExp::calc_ndvi(address_location = address_location, buffer_distance = 300)
-
-# Euclidean distance will be used to calculate the buffers around the address location that is given
-# Time difference of 2.736458 secs
-# [1] "Amount of run time"
-# Simple feature collection with 3 features and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-# Projected CRS: OSGB36 / British National Grid
-#   ID mean_NDVI                  geometry
-# 1  1 0.5481073 POINT (388644.2 392861.6)
-# 2  2 0.4415157 POINT (385981.9 393805.5)
-# 3  3 0.4527954 POINT (388631.2 395322.2)
+GreenExp::calc_ndvi(address_location, buffer_distance = 1000, plot_NDVI = T)
+Euclidean distance will be used to calculate the buffers around the address location that is given
+Sentinel-2-l2a data is used to retrieve the ndvi values. 
+ The ID of the selected image is: S2B_MSIL2A_20200922T104649_R051_T31UFU_20201028T024449
+ The date of the picture that was taken is: 2020-09-22T10:46:49.025000Z
+ The cloud cover of this day was 14.9568% 
+Simple feature collection with 10 features and 2 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 117888.5 ymin: 484720.8 xmax: 124758.8 ymax: 489450.1
+Projected CRS: Amersfoort / RD New
+   ID  mean_NDVI                  geometry
+1   1 0.44782921 POINT (119458.8 488820.7)
+2   2 0.33730730     POINT (123424 486844)
+3   3 0.42265358 POINT (117888.5 488373.5)
+4   4 0.50207853 POINT (124216.4 489450.1)
+5   5 0.29126764 POINT (122060.4 486539.3)
+6   6 0.02374916 POINT (124758.8 487883.4)
+7   7 0.52373293   POINT (124386.6 484726)
+8   8 0.51939093 POINT (124241.9 484720.8)
+9   9 0.33909020 POINT (120020.4 486680.8)
+10 10 0.44022585 POINT (118699.8 489187.2)
 ```
 
 ---

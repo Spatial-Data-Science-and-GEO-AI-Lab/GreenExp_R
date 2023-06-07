@@ -72,15 +72,8 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
               Keep in mind that for large files it can take a while to run the funciton.')
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
-        # make sure that speed and time are given in the function.
-        if(missing(speed)||missing(time)){
-          stop("You didn't enter speed or time, please enter speed or time.")
-        } else if (!speed > 0) {
-          stop("Speed must be a positive integer")
-        } else if (!time > 0) {
-          stop("Time must be a positive integer")
-        }
-        # Now we know that the speed and time are given, calculations can be done.
+
+
         start <- Sys.time()
         ### Extracting OSM road structure to build isochrone polygon
         iso_area <- sf::st_buffer(sf::st_convex_hull(
@@ -165,12 +158,17 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
       # Compute the edge weights bsased on their length
       network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
                                         weight = sfnetworks::edge_length())
+      # Convert speed to m/s
+      if (!missing(speed)){
+        network_file <- network_file %>%
+          tidygraph::activate("edges") %>%
+          tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
+          tidygraph::mutate(weight = weight / speed) %>%
+          tidygraph::ungroup()
+      }
 
-      network_file <- network_file%>%
-        tidygraph::activate("edges") %>%
-        tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
-        tidygraph::mutate(duration = weight / speed) %>%
-        tidygraph::ungroup()
+
+
 
       network_file<- tidygraph::activate(network_file, "nodes")
 
@@ -186,7 +184,6 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
                                        current = ">",    # Current bar character
                                        clear = FALSE,    # If TRUE, clears the bar when finish
                                        width = 100)      # Width of the progress bar
-      address_location <- sf::st_transform(address_location, projected_crs)
 
 
 
@@ -196,7 +193,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
       iso_list <- lapply(1:n_iter, function(i) {
         pb$tick()
         tidygraph::filter(network_file, tidygraph::node_distance_from(
-          nearest_features[i], weights = duration) <= time * 60)
+          nearest_features[i], weights = weight) <= buffer_distance)
       })
       n_iter2 <- length(iso_list)
 

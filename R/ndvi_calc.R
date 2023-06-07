@@ -84,14 +84,14 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
-        # make sure that speed and time are given in the function.
-        if(missing(speed)||missing(time)){
-          stop("You didn't enter speed or time, please enter speed or time.")
-        } else if (!speed > 0) {
-          stop("Speed must be a positive integer")
-        } else if (!time > 0) {
-          stop("Time must be a positive integer")
-        }
+        # # make sure that speed and time are given in the function.
+        # if(missing(speed)||missing(time)){
+        #   stop("You didn't enter speed or time, please enter speed or time.")
+        # } else if (!speed > 0) {
+        #   stop("Speed must be a positive integer")
+        # } else if (!time > 0) {
+        #   stop("Time must be a positive integer")
+        # }
         # Now we know that the speed and time are given, calculations can be done.
         start <- Sys.time()
         ### Extracting OSM road structure to build isochrone polygona
@@ -104,12 +104,12 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
              lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
-                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
-                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
         }
 
       }
@@ -177,16 +177,18 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       # Compute the edge weights bsased on their length
       network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
-                                        weight = sfnetworks::edge_length())
-
-      if(!missing(speed)){
-
-        network_file <- network_file%>%
+                               weight = sfnetworks::edge_length())
+      # Convert speed to m/s
+      if (!missing(speed)){
+        network_file <- network_file %>%
           tidygraph::activate("edges") %>%
           tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
           tidygraph::mutate(weight = weight / speed) %>%
           tidygraph::ungroup()
       }
+
+
+
 
       network_file<- tidygraph::activate(network_file, "nodes")
 
@@ -211,7 +213,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       iso_list <- lapply(1:n_iter, function(i) {
         pb$tick()
         tidygraph::filter(network_file, tidygraph::node_distance_from(
-          nearest_features[i], weights = weight))
+          nearest_features[i], weights = weight) <= buffer_distance)
       })
       n_iter2 <- length(iso_list)
 
