@@ -9,7 +9,7 @@ park_pct(
   park_layer = NULL,
   buffer_distance = NULL,
   network_buffer = FALSE,
-  download_dir = tempfile(),
+  download_dir = tempdir(),
   speed = NULL,
   time = NULL,
   epsg_code = NULL,

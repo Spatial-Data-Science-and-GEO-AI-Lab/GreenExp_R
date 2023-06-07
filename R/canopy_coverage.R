@@ -12,6 +12,7 @@
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #'
 #' @return The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
 #' @export
@@ -20,12 +21,11 @@
 
 
 canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
-                        epsg_code=NULL,
+                        epsg_code=NULL, download_dir = tempdir(),
                         UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, city=NULL){
 
   start_function <- Sys.time()
-#####
-#Make sure main data set has projected CRS and save it
+  # Make sure main data set has projected CRS and save it
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
@@ -36,17 +36,17 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       projected_crs<-sf::st_crs(epsg_code)
       address_location <- sf::st_transform(address_location, projected_crs)
     }
+    #sf::st_crs(address_location) <- 3395
   } else{
-    # If address location is given as projected, save the crs
     projected_crs <- sf::st_crs(address_location)
   }
-
-  if (missing(canopy_layer)){
+  if (missing(canopy_layer)) {
     stop('Please provide a canopy layer')
   }
+  ### Address vs area
   if (address_calculation) {
-######
-#Check for any polygons, convert into centroids if there are any
+    ######
+    #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
@@ -55,8 +55,8 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
-#####
-# If buffer distnace is missing, make sure to calculate it with time and speed,
+    #####
+    # If buffer distnace is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
         stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
@@ -71,26 +71,17 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
 
     }
 
-#####
-# If people want to calculate the network buffer.
+    #####
+    # If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
               Keep in mind that for large files it can take a while to run the funciton.')
-#####
-# If the network file is missing create the network file using osmextract
+      #####
+      # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
-        # make sure that speed and time are given in the function.
-        if(missing(speed)||missing(time)){
-          stop("You didn't enter speed or time, please enter speed or time.")
-        } else if (!speed > 0) {
-          stop("Speed must be a positive integer")
-        } else if (!time > 0) {
-          stop("Time must be a positive integer")
-        }
-        # Now we know that the speed and time are given, calculations can be done.
-        start <- Sys.time()
-        ### Extracting OSM road structure to build isochrone polygon
+
+        ### Extracting OSM road structure to build isochrone polygona
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
@@ -100,17 +91,17 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
           lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
-                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
-                                      downlaod_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
         }
 
       }
-#####
-# If network file is given, make sure the crs are both the same
+      ######
+      # If network file is given, make sure the crs are both the same
       else{
         #Check if the address location and the network file that was given have the same CRS.
         if (sf::st_crs(address_location) != sf::st_crs(network_file))
@@ -122,8 +113,8 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
 
       }
 
-######
-# Calculation of the network files
+      ######
+      # Calculation of the network files
 
 
       # now I have the lines I want.
@@ -174,12 +165,17 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       # Compute the edge weights bsased on their length
       network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
                                         weight = sfnetworks::edge_length())
+      # Convert speed to m/s
+      if (!missing(speed)){
+        network_file <- network_file %>%
+          tidygraph::activate("edges") %>%
+          tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
+          tidygraph::mutate(weight = weight / speed) %>%
+          tidygraph::ungroup()
+      }
 
-      network_file <- network_file%>%
-        tidygraph::activate("edges") %>%
-        tidygraph::mutate(speed = units::set_units(speed[dplyr::cur_group_id()], "m/s")) %>%
-        tidygraph::mutate(duration = weight / speed) %>%
-        tidygraph::ungroup()
+
+
 
       network_file<- tidygraph::activate(network_file, "nodes")
 
@@ -204,7 +200,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       iso_list <- lapply(1:n_iter, function(i) {
         pb$tick()
         tidygraph::filter(network_file, tidygraph::node_distance_from(
-          nearest_features[i], weights = duration) <= time * 60)
+          nearest_features[i], weights = weight) <= buffer_distance)
       })
       n_iter2 <- length(iso_list)
 
@@ -247,6 +243,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
   else {
     calculation_area <- address_location
   }
+
   if(sf::st_crs(terra::crs(canopy_layer))$epsg != sf::st_crs(calculation_area)$epsg){
     warning('The crs of your canopy layer is not the same as the projected crs of the input location,
               the projected crs of the canopy layer will be transformed into the projected crs of the address location')

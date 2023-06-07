@@ -84,16 +84,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
-        # # make sure that speed and time are given in the function.
-        # if(missing(speed)||missing(time)){
-        #   stop("You didn't enter speed or time, please enter speed or time.")
-        # } else if (!speed > 0) {
-        #   stop("Speed must be a positive integer")
-        # } else if (!time > 0) {
-        #   stop("Time must be a positive integer")
-        # }
-        # Now we know that the speed and time are given, calculations can be done.
-        start <- Sys.time()
+
         ### Extracting OSM road structure to build isochrone polygona
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
