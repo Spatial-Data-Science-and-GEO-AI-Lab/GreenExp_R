@@ -241,7 +241,19 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
     if (entrances_within_buffer) {
       closest_park <- vector("numeric", length = nrow(address_location))
 
-      for (i in 1:nrow(address_location)) {
+      n_iter <- nrow(address_location)
+
+      # Set up a progress bar
+      pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                                       total = n_iter,
+                                       complete = "=",   # Completion bar character
+                                       incomplete = "-", # Incomplete bar character
+                                       current = ">",    # Current bar character
+                                       clear = FALSE,    # If TRUE, clears the bar when finish
+                                       width = 100)      # Width of the progress bar
+
+      for (i in 1:n_iter) {
+        pb$tick()
         address <- address_location[i, ]
         address_buffer <- sf::st_buffer(address, dist = buffer_distance)
         parks_within_buffer <- sf::st_intersection(address_buffer, parks_point)
