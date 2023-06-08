@@ -28,11 +28,11 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
                      epsg_code=NULL, network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
                            city=NULL, start_date='2020-01-01', end_date='2021-01-01', save_NDVI=FALSE, plot_NDVI=FALSE) {
 
-  start_function <- Sys.time()
-######
-#Preparation
 
-  # Make sure main data set has projected CRS and save it
+###### 1. Preperation + Cleaning #######
+  start_function <- Sys.time()
+
+  # Make sure main data set has projected CRS and save it as default WGS84 if it has geographich coordinates
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
@@ -43,14 +43,15 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       projected_crs<-sf::st_crs(epsg_code)
       address_location <- sf::st_transform(address_location, projected_crs)
     }
-    #sf::st_crs(address_location) <- 3395
   } else{
     projected_crs <- sf::st_crs(address_location)
   }
-  ### Address vs area
+
   if (address_calculation) {
-######
-#Check for any polygons, convert into centroids if there are any
+
+
+
+    #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
@@ -59,8 +60,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
-#####
-# If buffer distnace is missing, make sure to calculate it with time and speed,
+
+    # If buffer distnace is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
         stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
@@ -75,23 +76,20 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
     }
 
-#####
-# If people want to calculate the network buffer.
+###### 2. Network buffer ######
+    # If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
               Keep in mind that for large files it can take a while to run the funciton.')
-#####
-# If the network file is missing create the network file using osmextract
+      # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
-
-        ### Extracting OSM road structure to build isochrone polygona
+###### 2.1 Calculating the network buffer when missing ######
+        # Extracting OSM road structure to build isochrone polygona
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
         iso_area <- sf::st_transform(iso_area, crs = 4326)
-        # bbox might be redundant
-        bbox <- sf::st_bbox(iso_area)
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
              lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
@@ -104,8 +102,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         }
 
       }
-######
-# If network file is given, make sure the crs are both the same
+
+      # If network file is given, make sure the crs are both the same
       else{
         #Check if the address location and the network file that was given have the same CRS.
         if (sf::st_crs(address_location) != sf::st_crs(network_file))
@@ -113,38 +111,27 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
           print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
           network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
         }
-
-
       }
 
-######
-# Calculation of the network files
+####### 2.2 Calculation of the network files ########
 
 
-      # now I have the lines I want.
+      # Give the lines the correct crs, and select items we need
       lines <- sf::st_transform(lines, projected_crs)
       lines <- tidygraph::select(lines, "osm_id", "name")
 
+      # make sure the region is correct crs and trim the lines
       region_shp <- sf::st_transform(iso_area, projected_crs)
-
-      #Download osm used a square bounding box, now trim to the exact boundary
-      #note that lines that that cross the boundary are still included
       lines <- lines[region_shp,]
 
-      # Round coordinates to 0 digits.
-      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-        sf::st_sfc(crs = sf::st_crs(lines))
-
-      # Network
+      # convert to a network file
       network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
       network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
 
-      #convert network to an sf object of edge
+      #convert network to an sf object the activated edges
       start=Sys.time()
       net_sf <- network_file %>% tidygraph::activate("edges") %>%
         sf::st_as_sf()
-      print(Sys.time()-start)
-      print('To activate edges')
       # Find which edges are touching each other
       touching_list <- sf::st_touches(net_sf)
       # create a graph from the touching list
@@ -178,16 +165,13 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
           tidygraph::ungroup()
       }
 
-
-
-
+      # Activate the nodes of the network file
       network_file<- tidygraph::activate(network_file, "nodes")
 
-      iso_list <- list()
-
+      # the amount of iterations
       n_iter <- nrow(address_location)
 
-
+      # Set up a progress bar
       pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
                                        total = n_iter,
                                        complete = "=",   # Completion bar character
@@ -197,7 +181,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
                                        width = 100)      # Width of the progress bar
 
 
-
+      # create an empty list for the nearest features for the address locations
+      iso_list <- list()
       # Calculate nearest features for all address locations
       nearest_features <- sf::st_nearest_feature(address_location, network_file)
       start <- Sys.time()
@@ -206,8 +191,10 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         tidygraph::filter(network_file, tidygraph::node_distance_from(
           nearest_features[i], weights = weight) <= buffer_distance)
       })
-      n_iter2 <- length(iso_list)
 
+      # iterations
+      n_iter2 <- length(iso_list)
+      # second progress bar
       pb2 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
                                         total = n_iter2,
                                         complete = "=",   # Completion bar character
@@ -247,11 +234,12 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   else {
     calculation_area <- address_location
   }
-
+###### 3. Raster for NDVI #######
   if (missing(raster)){
-######
-# Calculation of the raster Planetary computer, if raster is missing
+
+    # Calculation of the raster Planetary computer, if raster is missing
     if (engine == 'pc'){
+###### 3.1 Planetary Computer #######
       address <- address_location
       #projected_crs <- sf::st_crs(address)
       address <- sf::st_transform(address, 4326)
@@ -323,8 +311,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       }
     }
     else if (engine=='gee') {
-#####
-# Calculation of the raster with google earth engine if the raster is missing
+##### 3.2 Google Earth Engine
+      # Calculation of the raster with google earth engine if the raster is missing
       rgee::ee_Initialize()
       calculation_area <- sf::st_geometry(calculation_area)
       calculation_area <- sf::st_transform(calculation_area, 4326)
@@ -356,8 +344,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
     }
 
   } else{
-#####
-# Calculation of raster when raster is given
+###### 3.3 Raster File #####
+  # Calculation of raster when raster is given
     # Extract the NDVI values within the buffer
     if(sf::st_crs(terra::crs(raster))$epsg != sf::st_crs(calculation_area)$epsg){
       warning('The crs of your raster is not the same as the projected crs of the input location,
