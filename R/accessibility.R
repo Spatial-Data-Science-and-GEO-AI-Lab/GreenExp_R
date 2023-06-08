@@ -1,8 +1,8 @@
-#' Distance to the nearest fake entries of parks
+#' Distance to the nearest fake entries of greenspace
 #'
 #' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param parks A spatial object representing parks
+#' @param greenspace A spatial object representing greenspace
 #' @param UID A character string representing a unique identifier for each point of interest
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
@@ -12,22 +12,20 @@
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #' @param euclidean Whether the distance between the fake entry points and the address location is euclidean, or calculated with the network.
 #' @param pseudo_entrance The possibility to calculate the distance to created pseudo entrances. These pseudo entrances are created,
-#' by intersecting a buffer that was created around a park with network points. default is `FALSE`
-#' @param entrances_within_buffer The possibility to get the closest park for every point. default is `FALSE`
+#' by intersecting a buffer that was created around a greenspace with network points. default is `FALSE`
+#' @param entrances_within_buffer The possibility to get the closest greenspace for every point. default is `FALSE`
 #'
-#' @return The distance to the nearest fake entries of parks and whether the parks are within the buffer distance that is given
+#' @return The distance to the nearest greenspace and whether the greenspace are within the buffer distance that is given
 #' @export
 #'
 #' @examples
-parks_access <- function(address_location, parks = NULL, buffer_distance = NULL, network_file=NULL,
+greenspace_access <- function(address_location, greenspace = NULL, buffer_distance = NULL, network_file=NULL,
                            epsg_code=NULL, download_dir = tempdir(), euclidean=TRUE,
                            pseudo_entrance=FALSE, entrances_within_buffer=TRUE,
                            speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
-
-  ### Make sure main data set has projected CRS and save it
-  # Make sure main data set has projected CRS and save it
+  ##### 1. preparation and cleaning #######
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
@@ -42,32 +40,36 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
     # If address location is given as projected, save the crs
     projected_crs <- sf::st_crs(address_location)
   }
-
-
-  if (missing(network_file)){
-    message('You did not provide a network file, a network will be created using osm.')
-    if (missing(buffer_distance)){
-      if(missing(speed)||missing(time)){
-        stop("You didn't enter speed and time or the buffer distance,
+  # Make sure there is a buffer distance, or speed or time
+  message('You did not provide a network file, a network will be created using osm.')
+  if (missing(buffer_distance)){
+    if(missing(speed)||missing(time)){
+      stop("You didn't enter speed and time or the buffer distance,
              please enter speed and time, or the buffer distance.")
-      } else if (!speed > 0) {
-        stop("Speed must be a positive integer")
-      } else if (!time > 0) {
-        stop("Time must be a positive integer")
-      } else{
-        buffer_distance <- speed * 1000/ 60 * time
-      }
+    } else if (!speed > 0) {
+      stop("Speed must be a positive integer")
+    } else if (!time > 0) {
+      stop("Time must be a positive integer")
+    } else{
+      buffer_distance <- speed * 1000/ 60 * time
     }
-    if ("POINT" %in% sf::st_geometry_type(address_location)) {
-    }else if (missing(buffer_distance)) {
-      stop("You do not have a point geometry and did not provide a buffer,
+  }
+  if ("POINT" %in% sf::st_geometry_type(address_location)) {
+  }else if (missing(buffer_distance)) {
+    stop("You do not have a point geometry and did not provide a buffer,
       or speed and time,
            please provide a point geometry or a buffer distance (or spede and time)")
-    }
-    else {
-      message('There are nonpoint geometries, they will be converted into centroids')
-      address_location <- sf::st_centroid(address_location)
-    }
+  }
+  else {
+    message('There are nonpoint geometries, they will be converted into centroids')
+    address_location <- sf::st_centroid(address_location)
+  }
+
+  ##### 2. Network file #######
+  if (missing(network_file)){
+
+
+
     iso_area <- sf::st_buffer(sf::st_convex_hull(
       sf::st_union(sf::st_geometry(address_location))),
       buffer_distance)
@@ -101,6 +103,8 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
       network_file <- sf::st_transform(network_file, projected_crs)
     }
   }
+  ##### 2.1 calculate the network file if we are using network distance or pseudo entrances ######
+
   if (pseudo_entrance||!euclidean) {
     # now I have the lines I want.
     lines <- sf::st_transform(lines, projected_crs)
@@ -152,7 +156,10 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
                                       weight = sfnetworks::edge_length())
   }
 
-  if (missing(parks)) {
+  ##### 3. greenspace #######
+  # When greenspace are missing take them from osmdata
+  if (missing(greenspace)) {
+    ##### 3.1 If greenspace are not given ####
 
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "landuse",
@@ -175,20 +182,20 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
 
 
 
-    # Parks cleaning
-    parks <- res$osm_polygons
-    parks <- tidygraph::select(parks, "osm_id", "name")
-    parks <- sf::st_make_valid(parks)
-
+    # greenspace cleaning
+    greenspace <- res$osm_polygons
+    greenspace <- tidygraph::select(greenspace, "osm_id", "name")
+    greenspace <- sf::st_make_valid(greenspace)
+    ##### 3.1.1 greenspace entrances for psuedo entrances #####
     if (pseudo_entrance){
-      parks_buffer <- sf::st_buffer(parks, 20)
+      greenspace_buffer <- sf::st_buffer(greenspace, 20)
 
-      # When parks are overlapping, combine them
-      parks_combined <- sf::st_union(parks_buffer)
+      # When greenspace are overlapping, combine them
+      greenspace_combined <- sf::st_union(greenspace_buffer)
 
       # make it a multipolygon
-      parks_buffer <- sf::st_as_sf(sf::st_sfc(parks_combined))
-      parks_buffer <- sf::st_make_valid(parks_buffer)
+      greenspace_buffer <- sf::st_as_sf(sf::st_sfc(greenspace_combined))
+      greenspace_buffer <- sf::st_make_valid(greenspace_buffer)
 
       st_intersection_faster <- function(x,y){
         #faster replacement for st_intersection(x, y,...)
@@ -202,39 +209,38 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
 
         sf::st_intersection(x, y_subset)
       }
-      parks_point <- st_intersection_faster(net_points, parks_buffer)
-      parks_point <- parks_point %>% sf::st_transform(crs=projected_crs)
+      greenspace_point <- st_intersection_faster(net_points, greenspace_buffer)
+      greenspace_point <- greenspace_point %>% sf::st_transform(crs=projected_crs)
     }
     else{
-      parks_point <- sf::st_centroid(parks) %>% sf::st_transform(crs=projected_crs)
+      # Take centroid of the greenspace if no pseudo entrances are wanted
+      greenspace_point <- sf::st_centroid(greenspace) %>% sf::st_transform(crs=projected_crs)
     }
 
 
   }
+  ##### 3.2 If greenspace dataset is given #####
   else {
-    if (sf::st_crs(address_location) != sf::st_crs(parks))
+    if (sf::st_crs(address_location) != sf::st_crs(greenspace))
     {
-      message("The CRS of your parks data set is geographic, CRS of main data set will be used to transform")
-      parks <- sf::st_transform(parks, projected_crs)
+      message("The CRS of your greenspace data set is different from the address location,
+              CRS of main data set will be used to transform")
+      greenspace <- sf::st_transform(greenspace, projected_crs)
     }
 
-    if ("POINT" %in% sf::st_geometry_type(parks)){
+    if ("POINT" %in% sf::st_geometry_type(greenspace)){
       # Do nothing
     } else {
       if (pseudo_entrance){
-        message('Fake entrances for the given park polygons will be created')
-        parks_buffer <- sf::st_buffer(parks, 20)
+        message('Fake entrances for the given greenspace polygons will be created')
+        greenspace_buffer <- sf::st_buffer(greenspace, 20)
 
-         # Create the buffer
-
-        # Remove the original park polygons from the buffer
-
-        # When parks are overlapping, combine them
-        parks_combined <- sf::st_union(parks_buffer)
+          # When greenspace are overlapping, combine them
+        greenspace_combined <- sf::st_union(greenspace_buffer)
 
         # make it a multipolygon
-        parks_buffer <- sf::st_as_sf(sf::st_sfc(parks_combined))
-        parks_buffer <- sf::st_make_valid(parks_buffer)
+        greenspace_buffer <- sf::st_as_sf(sf::st_sfc(greenspace_combined))
+        greenspace_buffer <- sf::st_make_valid(greenspace_buffer)
 
 
         st_intersection_faster <- function(x,y){
@@ -249,30 +255,34 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
 
           sf::st_intersection(x, y_subset)
         }
-        parks_point <- st_intersection_faster(net_points, parks_buffer)
-        parks_point <- parks_point %>% sf::st_transform(crs=projected_crs)
+        greenspace_point <- st_intersection_faster(net_points, greenspace_buffer)
+        greenspace_point <- greenspace_point %>% sf::st_transform(crs=projected_crs)
       }
       else {
-        parks_point <- sf::st_centroid(parks) %>% sf::st_transform(crs=projected_crs)
+        greenspace_point <- sf::st_centroid(greenspace) %>% sf::st_transform(crs=projected_crs)
       }
     }
   }
 
-  ### Calculations
+##### 4. Calculations #####
   address_location <- sf::st_transform(address_location, projected_crs)
 
+##### 4.1 Euclidean distance calculations #####
   if (euclidean) {
 
-    # get the nearest neighbhors of the address_location + parks
-    nearest_neighbours <- FNN::get.knnx(sf::st_coordinates(parks_point), sf::st_coordinates(address_location), k = 5)
-    closest_park <- nearest_neighbours$nn.dist[,1]
-    euclidean_dist_df <- as.data.frame(closest_park)
-    parks_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
+    # get the nearest neighbhors of the address_location + greenspace
+    nearest_neighbours <- FNN::get.knnx(sf::st_coordinates(greenspace_point), sf::st_coordinates(address_location), k = 5)
+    closest_greenspace <- nearest_neighbours$nn.dist[,1]
+    euclidean_dist_df <- as.data.frame(closest_greenspace)
+    greenspace_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
-  }else{
-    #if (pseudo_entrance) {
+
+  }
+##### 4.2 Network distance calclulations ######
+  else{
+    # When the entrances are within the given buffer
     if (entrances_within_buffer) {
-      closest_park <- vector("numeric", length = nrow(address_location))
+      closest_greenspace <- vector("numeric", length = nrow(address_location))
 
       n_iter <- nrow(address_location)
 
@@ -289,27 +299,25 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
         pb$tick()
         address <- address_location[i, ]
         address_buffer <- sf::st_buffer(address, dist = buffer_distance)
-        parks_within_buffer <- sf::st_intersection(address_buffer, parks_point)
+        greenspace_within_buffer <- sf::st_intersection(address_buffer, greenspace_point)
 
-        if (nrow(parks_within_buffer) > 0) {
-          add_park_dist <- sfnetworks::st_network_cost(network_file, from = address, to = parks_within_buffer)
-          closest_park[i] <- min(add_park_dist)
+        if (nrow(greenspace_within_buffer) > 0) {
+          add_greenspace_dist <- sfnetworks::st_network_cost(network_file, from = address, to = greenspace_within_buffer)
+          closest_greenspace[i] <- min(add_greenspace_dist)
         } else {
-          closest_park[i] <- NA
+          closest_greenspace[i] <- NA
         }
       }
-      parks_in_buffer <- ifelse(is.na(closest_park), FALSE, TRUE)
-      #names(parks_in_buffer) <- paste0('parks_in_',round(buffer_distance),'m_buffer')
+      greenspace_in_buffer <- ifelse(is.na(closest_greenspace), FALSE, TRUE)
+      #names(greenspace_in_buffer) <- paste0('greenspace_in_',round(buffer_distance),'m_buffer')
 
     }else{
-      add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
-      closest_park <- apply(add_park_dist, 1, FUN = min)
-      parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
-      #names(parks_in_buffer) <- paste0('parks_in_',round(buffer_distance),'m_buffer')
+      # if the entrance is not within the given buffer
+      add_greenspace_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = greenspace_point))
+      closest_greenspace <- apply(add_greenspace_dist, 1, FUN = min)
+      greenspace_in_buffer <- ifelse((rowSums(units::drop_units(add_greenspace_dist) < buffer_distance) > 0), TRUE, FALSE)
+
     }
-
-    # Clip the buffer distance as default
-
   }
 
 
@@ -320,8 +328,10 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
   }
 
 
-  df <- data.frame(UID, sf::st_geometry(address_location), closest_park, parks_in_buffer)
+  df <- data.frame(UID, sf::st_geometry(address_location), closest_greenspace, greenspace_in_buffer)
   df <- sf::st_as_sf(df)
+  colnames(df)[colnames(df) == "greenspace_in_buffer"] <- paste0('greenspace_in_',buffer_distance,'m_buffer')
+
 
   print(Sys.time()-start_function)
   print('time to run the entire function')
