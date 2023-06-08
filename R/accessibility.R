@@ -174,6 +174,7 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
 
 
 
+
     # Parks cleaning
     parks <- res$osm_polygons
     parks <- tidygraph::select(parks, "osm_id", "name")
@@ -181,6 +182,13 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
 
     if (pseudo_entrance){
       parks_buffer <- sf::st_buffer(parks, 20)
+
+      # When parks are overlapping, combine them
+      parks_combined <- sf::st_union(parks_buffer)
+
+      # make it a multipolygon
+      parks_buffer <- sf::st_as_sf(sf::st_sfc(parks_combined))
+      parks_buffer <- sf::st_make_valid(parks_buffer)
 
       st_intersection_faster <- function(x,y){
         #faster replacement for st_intersection(x, y,...)
@@ -216,7 +224,32 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
       if (pseudo_entrance){
         message('Fake entrances for the given park polygons will be created')
         parks_buffer <- sf::st_buffer(parks, 20)
-        parks_point <- sf::st_intersection(net_points, parks_buffer)
+
+         # Create the buffer
+
+        # Remove the original park polygons from the buffer
+
+        # When parks are overlapping, combine them
+        parks_combined <- sf::st_union(parks_buffer)
+
+        # make it a multipolygon
+        parks_buffer <- sf::st_as_sf(sf::st_sfc(parks_combined))
+        parks_buffer <- sf::st_make_valid(parks_buffer)
+
+
+        st_intersection_faster <- function(x,y){
+          #faster replacement for st_intersection(x, y,...)
+
+          y_subset <-
+            sf::st_intersects(x, y) %>%
+            unlist() %>%
+            unique() %>%
+            sort() %>%
+            {y[.,]}
+
+          sf::st_intersection(x, y_subset)
+        }
+        parks_point <- st_intersection_faster(net_points, parks_buffer)
         parks_point <- parks_point %>% sf::st_transform(crs=projected_crs)
       }
       else {
@@ -266,12 +299,13 @@ parks_access <- function(address_location, parks = NULL, buffer_distance = NULL,
         }
       }
       parks_in_buffer <- ifelse(is.na(closest_park), FALSE, TRUE)
+      #names(parks_in_buffer) <- paste0('parks_in_',round(buffer_distance),'m_buffer')
 
     }else{
       add_park_dist <- as.data.frame(sfnetworks::st_network_cost(network_file, from = address_location, to = parks_point))
       closest_park <- apply(add_park_dist, 1, FUN = min)
       parks_in_buffer <- ifelse((rowSums(units::drop_units(add_park_dist) < buffer_distance) > 0), TRUE, FALSE)
-
+      #names(parks_in_buffer) <- paste0('parks_in_',round(buffer_distance),'m_buffer')
     }
 
     # Clip the buffer distance as default
