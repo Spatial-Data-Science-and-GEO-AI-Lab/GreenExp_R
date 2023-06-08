@@ -155,48 +155,62 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 
 To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
 
-# Functions
+---
+
+# Functionalities 
+
+---
 
 ## Availability
 
-Availability will be measured by the [Calc NDVI](#calc-ndvi), [Land Cover](#land-cover),
-[Canopy coverage](#canopy-coverage), and the  [Park percentage](#park-percentage) functions. 
-All functions will return a [sf](https://r-spatial.github.io/sf/articles/sf1.html) `dataframe` with the input location and the values that was called for in the function within a certain buffer. The buffer around the input location are by default Euclidean, but it can be changed into a network buffer. 
-In the next subsections a short explanation for each availability function will be given.   
+Availability will be assessed using four functions:
+
+1. [Calc NDVI](#calc-ndvi)
+2. [Land Cover](#land-cover)
+3. [Canopy coverage](#canopy-coverage)
+4. [Park percentage](#park-percentage) 
+
+Each of these functions will provide an [sf](https://r-spatial.github.io/sf/articles/sf1.html) `dataframe` that includes the input location and the specific values requested within a defined buffer.
+
+By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilize a network buffer. The distinction between the two types of buffers is illustrated in the figure below. The Euclidean buffer in this instance has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over a duration of 10 minutes.
+
+![](man/figures/buffers_example.png)
+
+
+In the following subsections, a brief description of each availability function will be provided, along with examples extracted from random data points in Amsterdam.
+
+---
 
 ### Calc NDVI 
 
-The `calc_ndvi` function calculates the mean [NDVI](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a certain distance for given location(s). The input for the function is `address_location` which should be a `sf dataframe` with a [projected CRS](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). 
+The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for given location(s). The input for the function is `address_location` which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395)
 
-It is possible to provide a raster file with ndvi values, but if that is not provided, by default the [sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) data set of Planetary Computer will be used to calculate the NDVI (see Figure below for an example of NDVI in Manchester). It is possible for users to change the engine to `GEE` if they want. 
+You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figure below illustrates an example of NDVI in Amsterdam. It showcases three address locations within a Euclidean buffer of 300 meters
 
-![](man/figures/NDVI_PC.png)
+![](man/figures/ndvi_pc_plot_eucbuffer.png)
 
-For the buffer distance around the address location, either the `buffer distance` or the `speed` and `time` can be given as input. 
+If desired, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations
+
+---
+
+Below you can find the code where the results correspond with the NDVI figure. 
 
 ``` r
-GreenExp::calc_ndvi(address_location, buffer_distance = 1000, plot_NDVI = T)
-Euclidean distance will be used to calculate the buffers around the address location that is given
-Sentinel-2-l2a data is used to retrieve the ndvi values. 
- The ID of the selected image is: S2B_MSIL2A_20200922T104649_R051_T31UFU_20201028T024449
- The date of the picture that was taken is: 2020-09-22T10:46:49.025000Z
- The cloud cover of this day was 14.9568% 
-Simple feature collection with 10 features and 2 fields
-Geometry type: POINT
-Dimension:     XY
-Bounding box:  xmin: 117888.5 ymin: 484720.8 xmax: 124758.8 ymax: 489450.1
-Projected CRS: Amersfoort / RD New
-   ID  mean_NDVI                  geometry
-1   1 0.44782921 POINT (119458.8 488820.7)
-2   2 0.33730730     POINT (123424 486844)
-3   3 0.42265358 POINT (117888.5 488373.5)
-4   4 0.50207853 POINT (124216.4 489450.1)
-5   5 0.29126764 POINT (122060.4 486539.3)
-6   6 0.02374916 POINT (124758.8 487883.4)
-7   7 0.52373293   POINT (124386.6 484726)
-8   8 0.51939093 POINT (124241.9 484720.8)
-9   9 0.33909020 POINT (120020.4 486680.8)
-10 10 0.44022585 POINT (118699.8 489187.2)
+GreenExp::calc_ndvi(address_3, buffer_distance = 300)
+# Euclidean distance will be used to calculate the buffers around the address location that is given
+# Sentinel-2-l2a data is used to retrieve the ndvi values. 
+#  The ID of the selected image is: S2B_MSIL2A_20200922T104649_R051_T31UFU_20201028T024449
+#  The date of the picture that was taken is: 2020-09-22T10:46:49.025000Z
+#  The cloud cover of this day was 0.149568% 
+# Simple feature collection with 3 features and 2 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
+# Projected CRS: Amersfoort / RD New
+#   ID mean_NDVI                  geometry
+# 1  1 0.4083971 POINT (118231.8 487636.8)
+# 2  2 0.4953944 POINT (119718.2 488790.5)
+# 3  3 0.2616829 POINT (119659.3 487693.7)
 ```
 
 ---
@@ -205,39 +219,45 @@ Projected CRS: Amersfoort / RD New
 
 The `land_cover` function calculates the percentage of area covered by each land cover class within a given buffer distance. Again, the input for the function is `address_location` which should be a `sf dataframe`. 
 
-It is possible to provide a raster file with land cover values, but if that is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover (see Figure below for an example of land cover in Manchester)
+It is possible to provide a raster file with land cover values, but if that is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover (see Figure below for an example of land cover in Amsterdam)
 
-![](man/figures/land_cover_pc.png)
+![](man/figures/land_cover_network_buffer.png) 
 
 In this instance I will use a network buffer to calculate the land cover values for the address locations.
 The [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package will be used to get the networks, if a network file is not given. 
 
 ``` r
-GreenExp::land_cover(address_location,speed=5,time=5,network_buffer=T)
-
+GreenExp::land_cover(address_location, buffer_distance=500, network_buffer=T)
 # You will use a network to create a buffer around the address location(s),
 #               Keep in mind that for large files it can take a while to run the funciton.
 # You did not provide a network file, osm will be used to create a network file.
-# The input place was matched with Greater Manchester. 
-#   |===============================================================================| 100%
-# File downloaded!
+# If a city is missing, it will take more time to run the function
+# The input place was matched with Noord-Holland. 
+# The chosen file was already detected in the download directory. Skip downloading.
 # Start with the vectortranslate operations on the input file!
 # 0...10...20...30...40...50...60...70...80...90...100 - done.
 # Finished the vectortranslate operations on the input file!
-
+# Reading layer `lines' from data source 
+#   `/private/var/folders/ll/vl2jqx3s46189vcv3w8mdgyh0000gn/T/RtmpBIu31i/geofabrik_noord-holland-latest.gpkg' 
+#   using driver `GPKG'
+# Simple feature collection with 3473 features and 9 fields
+# Geometry type: LINESTRING
+# Dimension:     XY
+# Bounding box:  xmin: 4.757481 ymin: 52.32693 xmax: 4.881442 ymax: 52.40028
+# Geodetic CRS:  WGS 84
 # Simple feature collection with 3 features and 12 fields
 # Geometry type: POINT
 # Dimension:     XY
-# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-# Projected CRS: OSGB36 / British National Grid
+# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
+# Projected CRS: Amersfoort / RD New
 #   UID                  geometry tree_cover shrubland grassland cropland built-up
-# 1   1 POINT (388644.2 392861.6)       0.48         0      0.10        0     0.41
-# 2   2 POINT (385981.9 393805.5)       0.28         0      0.10        0     0.62
-# 3   3 POINT (388631.2 395322.2)       0.24         0      0.16        0     0.60
+# 1   1 POINT (118231.8 487636.8)       0.39         0      0.02        0     0.52
+# 2   2 POINT (119718.2 488790.5)       0.24         0      0.05        0     0.57
+# 3   3 POINT (119659.3 487693.7)       0.07         0      0.03        0     0.87
 #   bare_vegetation snow_ice perm_water_bodies herbaceous_wetland mangroves moss_lichen
-# 1               0        0                 0                  0         0           0
-# 2               0        0                 0                  0         0           0
-# 3               0        0                 0                  0         0           0
+# 1               0        0              0.07                  0         0           0
+# 2               0        0              0.14                  0         0           0
+# 3               0        0              0.03                  0         0           0
 ```
 
 ---
