@@ -293,17 +293,20 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `park_layer` is not given, the parks will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
 
+![](man/figures/parks_example.png)
+
 ``` r
-GreenExp::park_pct(address_location, buffer_distance=300)
+park_pct(address_3, buffer_distance=400)
+# Euclidean distance will be used to calculate the buffers around the address location that is given
 # Simple feature collection with 3 features and 2 fields
 # Geometry type: POINT
 # Dimension:     XY
-# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-# Projected CRS: OSGB36 / British National Grid
-#   UID   park_pct                  geometry
-# 1   1  3.6795963 POINT (388644.2 392861.6)
-# 2   2 10.9080537 POINT (385981.9 393805.5)
-# 3   3  0.1408044 POINT (388631.2 395322.2)
+# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
+# Projected CRS: Amersfoort / RD New
+#   UID  park_pct                  geometry
+# 1   1 23.743997 POINT (118231.8 487636.8)
+# 2   2 51.433460 POINT (119718.2 488790.5)
+# 3   3  4.827692 POINT (119659.3 487693.7)
 
 ```
 

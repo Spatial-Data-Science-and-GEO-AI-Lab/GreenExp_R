@@ -1,6 +1,6 @@
-#' Data of random address locations in Amsterdam
+#' an sf data frame of random address locations in Amsterdam
 #'
-#' Contains 100 data points in Amsterdam
+#' Contains 100 address points in Amsterdam
 #'
 #' @format A data frame with 100 rows and 2 variables:
 #'  \describe{
