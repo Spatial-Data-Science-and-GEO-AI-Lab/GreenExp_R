@@ -40,9 +40,9 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
   } else{
     projected_crs <- sf::st_crs(address_location)
   }
-
+  ##### 2. If address location is an address point ######
   if (address_calculation) {
-    ##### 1. If address location is an address point ######
+    ##### 2.1 Preprocessing #####
     #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
@@ -68,7 +68,7 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
 
     }
 
-    ###### 3. Network buffer ######
+    ###### 2.2 Network buffer ######
     # If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
@@ -105,7 +105,7 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
         }
       }
 
-      ####### 3.2 Calculation of the network files ########
+      ####### 2.3 Calculation of the network files ########
 
 
       # Give the lines the correct crs, and select items we need
@@ -211,12 +211,14 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
 
     }
+    ###### 2.4 Euclidean Buffer ######
     else {
       message('Euclidean distance will be used to calculate the buffers around the address location that is given')
       calculation_area <- sf::st_buffer(address_location, dist = buffer_distance)
     }
 
   }
+  ##### 3. Area polygon #####
   else {
     # If the provided address location is an area
     valid_types_area <- c("POLYGON", "MULTIPOLYGON")
@@ -227,13 +229,9 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     calculation_area <- address_location
   }
 
-
+##### 4. Park layer #######
   ### Creating park_layer set if not given
   if (missing(park_layer)) {
-    ### Building area polygon and loading park_layer
-    # Area assignment
-    # start <- Sys.time()
-
     # Initial load of park_layer
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "landuse",
@@ -252,11 +250,7 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
                                value = c('grassland')) %>%
       osmdata::osmdata_sf()
     res <- c(q1, q2, q3)
-    # print('Time to extract parks'
-    # )
-    # print(Sys.time()-start)
-    #
-    # start <- Sys.time()
+
 
     # park_layer cleaning
     park_layer <- res$osm_polygons
@@ -272,17 +266,15 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     {
       paste("The CRS of your park_layer data set is geographic, CRS of main data set will be used to transform")
       park_layer <- sf::st_transform(park_layer, projected_crs)
-    }}
-
-
-
-  # Make sure the park layer are polygons and no points
-  if ("MULTIPOLYGON" %in% sf::st_geometry_type(park_layer) | "POLYGON" %in% sf::st_geometry_type(park_layer)){
-    # Do nothing
-  } else {
-    stop("The park layer provided has the wrong geometry type, please input a (multi)polygon geometry   ")
+    }
+    # Make sure the park layer are polygons and no points
+    park_geometries <- c("POLYGON", "MULTIPOLYGON")
+    if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% park_geometries){
+      stop('The povided park layer is not a polygon, or multipolygon, please provide a (multi)polygon file')
+    }
   }
 
+##### 5. Calculation #####
   park_pct <- list()
 
   # if (nrow(calculation_area) > 1){
@@ -313,17 +305,13 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
 
 
   }
-
-
-  #pb$close()
-  buffer <- calculation_area
-  names(buffer) <- "buffer"
+  # Create a dataframe for the results
   df <- data.frame(UID = nrow(calculation_area), park_pct = cbind(unlist(park_pct)),
                    sf::st_geometry(address_location))
   df$UID <- seq.int(nrow(df))
   if (!missing(UID)){
     df$UID <- UID}
-
+  # Make sure the dataframe is an sf dataframe
   df <- sf::st_as_sf(df)
   print('running the function took:')
   print(Sys.time()-start_function)
