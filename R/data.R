@@ -33,3 +33,21 @@
 #'
 "Ams_Houses"
 
+
+#' an sf data frame of parks in Amsterdam
+#' Parks are multi polygons
+#'
+#' Contains 123 polygons of parks in Amsterdam
+#'
+#' @format A data frame with 123 rows and 2 variables:
+#'  \describe{
+#'        \item{name}{The name of the park}
+#'        \item{geom}{The geometry of the points of the houses}
+#'        }
+#'
+#' @source {https://maps.amsterdam.nl/open_geodata/}
+#'
+#' @examples
+#' data(Ams_Parks)     # Lazy loading
+#'
+"Ams_Parks"
