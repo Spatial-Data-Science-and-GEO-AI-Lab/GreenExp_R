@@ -217,14 +217,17 @@ GreenExp::calc_ndvi(address_3, buffer_distance = 300)
 
 ### Land Cover
 
-The `land_cover` function calculates the percentage of area covered by each land cover class within a given buffer distance. Again, the input for the function is `address_location` which should be a `sf dataframe`. 
 
-It is possible to provide a raster file with land cover values, but if that is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover (see Figure below for an example of land cover in Amsterdam)
+The `land_cover` function calculates the average land cover within a specified distance for given location(s). The input for the function is address_location, which should be an `sf dataframe` with projected Coordinate Reference System (CRS) information. If no CRS is provided, the function will automatically project the address location to WGS 84 / World Mercator.
+
+You have the option to provide a raster file wiht land cover values. When this is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover.
+
+In the code chunk and figure below an example is given for the Amsterdam area. It illustrates an example of land cover within a network buffer of 500 meters in Amsterdam. It showcases three address locations, and the land cover is determined based on the surrounding road network obtained from the  [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package.
+
 
 ![](man/figures/land_cover_network_buffer.png) 
 
-In this instance I will use a network buffer to calculate the land cover values for the address locations.
-The [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package will be used to get the networks, if a network file is not given. 
+---
 
 ``` r
 GreenExp::land_cover(address_location, buffer_distance=500, network_buffer=T)

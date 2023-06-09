@@ -213,12 +213,6 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
       }
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
 
-
-
-
-
-
-
     }
     else {
       message('Euclidean distance will be used to calculate the buffers around the address location that is given')
@@ -306,14 +300,13 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
 
     }
-
-    land_cover_values <- terra::extract(land_cover, calculation_area)
+    # Check if crs is the same
+    calculation_area_proj <- sf::st_transform(calculation_area, terra::crs(land_cover))
+    # extract the values
+    land_cover_values <- terra::extract(land_cover, calculation_area_proj)
     names(land_cover_values) <- c('ID', 'land_cover')
 
     raster_values <- replace(land_cover_values, is.na(land_cover_values), 0)
-
-
-
     # count the amount of land cover values per polygon
     class_raster_values <- dplyr::count(raster_values, ID, N = get('land_cover'))
     # Convert to wide format + replacing NA
@@ -324,20 +317,6 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     # replace the NA values to <NA>
     codes <- replace(codes, is.na(codes), "<NA>")
 
-
-    land_cover_values <- terra::extract(land_cover, calculation_area)
-    names(land_cover_values) <- c('ID', 'land_cover')
-
-    raster_values <- replace(land_cover_values, is.na(land_cover_values), 0)
-
-
-
-    # count the amount of land cover values per polygon
-    class_raster_values <- dplyr::count(raster_values, ID, N = get('land_cover'))
-    # Convert to wide format + replacing NA
-    class_raster_values_wide <- tidygraph::mutate_all(tidyr::spread(class_raster_values, N, n), ~tidyr::replace_na(.,0))
-    # Calculate the %
-    class_raster_values_perc <- round(cbind(class_raster_values_wide$ID, class_raster_values_wide[,-1]/rowSums(class_raster_values_wide[,-1])), 2)
     names(class_raster_values_perc)[1] <- "UID"
     if (!missing(UID)){
       class_raster_values_perc$UID <- UID
