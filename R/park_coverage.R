@@ -23,7 +23,10 @@
 park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
                       speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_calculation=TRUE) {
   start_function <- Sys.time()
-  # Make sure main data set has projected CRS and save it
+  ###### 1. Preperation + Cleaning #######
+  start_function <- Sys.time()
+
+  # Make sure main data set has projected CRS and save it as default WGS84 if it has geographich coordinates
   if (sf::st_is_longlat(address_location)){
     warning("The CRS in your main data set has geographic coordinates, the Projected CRS will be set to WGS 84 / World Mercator")
     if (missing(epsg_code)) {
@@ -34,13 +37,12 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
       projected_crs<-sf::st_crs(epsg_code)
       address_location <- sf::st_transform(address_location, projected_crs)
     }
-    #sf::st_crs(address_location) <- 3395
   } else{
     projected_crs <- sf::st_crs(address_location)
   }
-  ### Address vs area
+
   if (address_calculation) {
-    ######
+    ##### 1. If address location is an address point ######
     #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
@@ -50,7 +52,7 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
       message('There are nonpoint geometries, they will be converted into centroids')
       address_location <- sf::st_centroid(address_location)
     }
-    #####
+
     # If buffer distnace is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
@@ -66,23 +68,20 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
 
     }
 
-    #####
+    ###### 3. Network buffer ######
     # If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
               Keep in mind that for large files it can take a while to run the funciton.')
-      #####
       # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
-
-        ### Extracting OSM road structure to build isochrone polygona
+        ###### 3.1 Calculating the network buffer when missing ######
+        # Extracting OSM road structure to build isochrone polygona
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
         iso_area <- sf::st_transform(iso_area, crs = 4326)
-        # bbox might be redundant
-        bbox <- sf::st_bbox(iso_area)
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
           lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
@@ -95,7 +94,7 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
         }
 
       }
-      ######
+
       # If network file is given, make sure the crs are both the same
       else{
         #Check if the address location and the network file that was given have the same CRS.
@@ -104,38 +103,27 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
           print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
           network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
         }
-
-
       }
 
-      ######
-      # Calculation of the network files
+      ####### 3.2 Calculation of the network files ########
 
 
-      # now I have the lines I want.
+      # Give the lines the correct crs, and select items we need
       lines <- sf::st_transform(lines, projected_crs)
       lines <- tidygraph::select(lines, "osm_id", "name")
 
+      # make sure the region is correct crs and trim the lines
       region_shp <- sf::st_transform(iso_area, projected_crs)
-
-      #Download osm used a square bounding box, now trim to the exact boundary
-      #note that lines that that cross the boundary are still included
       lines <- lines[region_shp,]
 
-      # Round coordinates to 0 digits.
-      sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
-        sf::st_sfc(crs = sf::st_crs(lines))
-
-      # Network
+      # convert to a network file
       network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
       network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
 
-      #convert network to an sf object of edge
+      #convert network to an sf object the activated edges
       start=Sys.time()
       net_sf <- network_file %>% tidygraph::activate("edges") %>%
         sf::st_as_sf()
-      print(Sys.time()-start)
-      print('To activate edges')
       # Find which edges are touching each other
       touching_list <- sf::st_touches(net_sf)
       # create a graph from the touching list
@@ -169,16 +157,13 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
           tidygraph::ungroup()
       }
 
-
-
-
+      # Activate the nodes of the network file
       network_file<- tidygraph::activate(network_file, "nodes")
 
-      iso_list <- list()
-
+      # the amount of iterations
       n_iter <- nrow(address_location)
 
-
+      # Set up a progress bar
       pb <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
                                        total = n_iter,
                                        complete = "=",   # Completion bar character
@@ -188,7 +173,8 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
                                        width = 100)      # Width of the progress bar
 
 
-
+      # create an empty list for the nearest features for the address locations
+      iso_list <- list()
       # Calculate nearest features for all address locations
       nearest_features <- sf::st_nearest_feature(address_location, network_file)
       start <- Sys.time()
@@ -197,8 +183,10 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
         tidygraph::filter(network_file, tidygraph::node_distance_from(
           nearest_features[i], weights = weight) <= buffer_distance)
       })
-      n_iter2 <- length(iso_list)
 
+      # iterations
+      n_iter2 <- length(iso_list)
+      # second progress bar
       pb2 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
                                         total = n_iter2,
                                         complete = "=",   # Completion bar character
@@ -222,12 +210,6 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
       }
       calculation_area <- sf::st_as_sf(sf::st_sfc(iso_poly)) %>% sf::st_set_crs(projected_crs)
 
-
-
-
-
-
-
     }
     else {
       message('Euclidean distance will be used to calculate the buffers around the address location that is given')
@@ -236,6 +218,12 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
 
   }
   else {
+    # If the provided address location is an area
+    valid_types_area <- c("POLYGON", "MULTIPOLYGON")
+    if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% valid_types_area){
+      stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
+           or set address_calculation to TRUE')
+    }
     calculation_area <- address_location
   }
 

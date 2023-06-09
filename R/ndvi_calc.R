@@ -232,6 +232,12 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
   }
   else {
+    # If the provided address location is an area
+    valid_types_area <- c("POLYGON", "MULTIPOLYGON")
+    if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% valid_types_area){
+      stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
+           or set address_calculation to TRUE')
+    }
     calculation_area <- address_location
   }
 ###### 3. Raster for NDVI #######
