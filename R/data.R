@@ -1,16 +1,35 @@
-#' an sf data frame of random address locations in Amsterdam
+#' an sf data frame of neighborhoods in Amsterdam
 #'
-#' Contains 100 address points in Amsterdam
+#' Contains 518 polygons of neighborhoods in Amsterdam
 #'
-#' @format A data frame with 100 rows and 2 variables:
+#' @format A data frame with 518 rows and 3 variables:
 #'  \describe{
-#'        \item{id}{unique ID}
-#'        \item{geom}{geometry of the address location}
+#'        \item{Buurtcode}{unique ID for each neighborhood}
+#'        \item{Buurt}{The name of each neighborhood}
+#'        \item{geom}{The geometry of the polygons of the neighborhoods}
 #'        }
 #'
-#' @source {Created Random data points in Amsterdam}
+#' @source {https://maps.amsterdam.nl/open_geodata/}
 #'
 #' @examples
-#' data(address_locations)     # Lazy loading
+#' data(Ams_Neighborhoods)     # Lazy loading
 #'
-"address_locations"
+"Ams_Neighborhoods"
+
+#' an sf data frame of houses in Amsterdam
+#' Houses are the centroids of the neighborhoods in Amsterdam
+#'
+#' Contains 518 points of houses in Amsterdam
+#'
+#' @format A data frame with 518 rows and 1 variables:
+#'  \describe{
+#'        \item{geom}{The geometry of the points of the houses}
+#'        }
+#'
+#' @source {https://maps.amsterdam.nl/open_geodata/}
+#'
+#' @examples
+#' data(Ams_Houses)     # Lazy loading
+#'
+"Ams_Houses"
+

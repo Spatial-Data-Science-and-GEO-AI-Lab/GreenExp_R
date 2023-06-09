@@ -3,7 +3,7 @@
 #' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
+#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param raster raster file with land cover values, if raster file is missing planetary computer will be used.
@@ -22,7 +22,7 @@
 #' @examples
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
-                          network_file=NULL, epsg_code=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL,
+                          network_file=NULL, epsg_code=NULL,  UID=NULL, address_location_neighborhood = TRUE, speed=NULL, time=NULL,
                           city=NULL, year='2021', plot_landcover=FALSE) {
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
@@ -42,10 +42,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     projected_crs <- sf::st_crs(address_location)
   }
 
-  if (address_calculation) {
-
-
-
+  if (!address_location_neighborhood) {
     #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
@@ -225,7 +222,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     valid_types_area <- c("POLYGON", "MULTIPOLYGON")
     if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% valid_types_area){
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
-           or set address_calculation to TRUE')
+           or set address_location_neighborhood to TRUE')
     }
     calculation_area <- address_location
   }

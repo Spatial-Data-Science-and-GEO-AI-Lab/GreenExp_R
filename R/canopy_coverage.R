@@ -5,8 +5,7 @@
 #' @param canopy_layer  A canopy layer that represents a canopy, the layer should be in projected coordinates
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
-#' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
+#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
@@ -22,7 +21,7 @@
 
 canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
                         epsg_code=NULL, download_dir = tempdir(),
-                        UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, city=NULL){
+                        UID=NULL, address_location_neighborhood = TRUE, speed=NULL, time=NULL, city=NULL){
 
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
@@ -47,7 +46,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
   }
 
 
-  if (address_calculation) {
+  if (!address_location_neighborhood) {
     ###### 2. Address points ######
     #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
@@ -228,7 +227,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
     valid_types_area <- c("POLYGON", "MULTIPOLYGON")
     if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% valid_types_area){
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
-           or set address_calculation to TRUE')
+           or set address_location_neighborhood to TRUE')
     }
     calculation_area <- address_location
   }
@@ -267,10 +266,7 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       polygon_area <- sf::st_area(calculation_area[i,])
       # Calculate tree canopy percentage
       canopy_pct[i] <- total_area / polygon_area * 100
-
-
     }
-
     address_location <- sf::st_transform(address_location, projected_crs)
     buffer <- calculation_area
     names(buffer) <- "buffer"
@@ -281,18 +277,5 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
       df$UID <- UID}
 
     df <- sf::st_as_sf(df)
-
-
-
-
-
   return(df)
-
-
-
-
-
-
-
-
 }

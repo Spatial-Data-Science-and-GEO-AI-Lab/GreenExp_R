@@ -10,7 +10,7 @@
 #' @param time  numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
-#' @param address_calculation  A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
+#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #'
@@ -21,8 +21,7 @@
 
 
 park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
-                      speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_calculation=TRUE) {
-  start_function <- Sys.time()
+                      speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_location_neighborhood=FALSE) {
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
 
@@ -41,10 +40,11 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     projected_crs <- sf::st_crs(address_location)
   }
   ##### 2. If address location is an address point ######
-  if (address_calculation) {
+  if (!address_location_neighborhood) {
     ##### 2.1 Preprocessing #####
     #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
+      #Do nothing
     }else if (missing(buffer_distance)) {
       stop("You do not have a point geometry and did not provide a buffer, please provide a point geometry or a buffer distance")
     }
@@ -224,7 +224,7 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     valid_types_area <- c("POLYGON", "MULTIPOLYGON")
     if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% valid_types_area){
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
-           or set address_calculation to TRUE')
+           or set address_location_neighborhood to FALSE')
     }
     calculation_area <- address_location
   }
@@ -232,20 +232,21 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
 ##### 4. Park layer #######
   ### Creating park_layer set if not given
   if (missing(park_layer)) {
+    calculation_area_osm <- sf::st_transform(calculation_area, 4326)
     # Initial load of park_layer
-    q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
+    q1 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "landuse",
                                value = c('allotments','forest',
                                          'greenfield','village_green')) %>%
       osmdata::osmdata_sf()
 
-    q2 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
+    q2 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "leisure",
                                value = c('garden','fitness_station',
                                          'nature_reserve','park','playground')) %>%
       osmdata::osmdata_sf()
 
-    q3 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
+    q3 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "natural",
                                value = c('grassland')) %>%
       osmdata::osmdata_sf()

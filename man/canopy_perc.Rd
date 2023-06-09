@@ -13,7 +13,7 @@ canopy_perc(
   epsg_code = NULL,
   download_dir = tempdir(),
   UID = NULL,
-  address_calculation = TRUE,
+  address_location_neighborhood = TRUE,
   speed = NULL,
   time = NULL,
   city = NULL
@@ -36,9 +36,7 @@ canopy_perc(
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
-\item{address_calculation}{A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')}
-
-\item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
+\item{address_location_neighborhood}{A logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
 

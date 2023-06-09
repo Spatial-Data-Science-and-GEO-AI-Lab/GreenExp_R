@@ -13,7 +13,7 @@ calc_ndvi(
   epsg_code = NULL,
   network_file = NULL,
   UID = NULL,
-  address_calculation = TRUE,
+  address_location_neighborhood = FALSE,
   speed = NULL,
   time = NULL,
   engine = "pc",
@@ -41,7 +41,7 @@ calc_ndvi(
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
-\item{address_calculation}{A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')}
+\item{address_location_neighborhood}{A logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
 
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 

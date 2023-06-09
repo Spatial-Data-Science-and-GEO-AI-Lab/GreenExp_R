@@ -6,7 +6,7 @@
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_calculation A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')
+#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param engine When the raster is missing, users can choose whether they want to use Google Earth engine `gee` or Planetary Computer `pc` to calculate the ndvi
@@ -25,7 +25,7 @@
 #' @examples
 
 calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
-                     epsg_code=NULL, network_file=NULL,  UID=NULL, address_calculation = TRUE, speed=NULL, time=NULL, engine='pc',
+                     epsg_code=NULL, network_file=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, engine='pc',
                            city=NULL, start_date='2020-01-01', end_date='2021-01-01', save_NDVI=FALSE, plot_NDVI=FALSE) {
 
 
@@ -47,10 +47,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
     projected_crs <- sf::st_crs(address_location)
   }
 
-  if (address_calculation) {
-
-
-
+  if (!address_location_neighborhood) {
     #Check for any polygons, convert into centroids if there are any
     if ("POINT" %in% sf::st_geometry_type(address_location)) {
     }else if (missing(buffer_distance)) {
@@ -236,7 +233,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
     valid_types_area <- c("POLYGON", "MULTIPOLYGON")
     if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% valid_types_area){
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
-           or set address_calculation to TRUE')
+           or set address_location_neighborhood to FALSE')
     }
     calculation_area <- address_location
   }

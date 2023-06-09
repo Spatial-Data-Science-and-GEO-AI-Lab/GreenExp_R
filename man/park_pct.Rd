@@ -16,7 +16,7 @@ park_pct(
   UID = NULL,
   network_file = NULL,
   city = NULL,
-  address_calculation = TRUE
+  address_location_neighborhood = FALSE
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ park_pct(
 
 \item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
 
-\item{address_calculation}{A logical, indicating whether to calculate the address location (if not a point) as the centroid of the polygon containing it (default is 'TRUE')}
+\item{address_location_neighborhood}{A logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
 }
 \value{
 Returns the percentage of park coverage given a certain buffer.
