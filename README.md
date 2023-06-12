@@ -1,5 +1,5 @@
 
-# GreenExp
+# Green Exp
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -147,11 +147,11 @@ In the following subsections, a brief description of each availability function 
 The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for given location(s). The input for the function is `address_location` which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
 
 
-You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figures below illustrate two examples of NDVI in Amsterdam. The first [Plot_1](#plot_1)one showcases the aforementioned neighborhoods in Amsterdam and there NDVI, the second one shows the address points within an euclidean buffer of 300 meters 
+You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figures below illustrate two examples of NDVI in Amsterdam. The first plot showcases the aforementioned neighborhoods in Amsterdam and there NDVI, the second one shows the address points within an euclidean buffer of 300 meters 
 
 Neighborhood NDVI        |  Addresses within euclidean distance NDVI
 :-------------------------:|:-------------------------:
-![Plot_1](man/figures/NDVI_neighborhoods.png)   |  ![Plot_2](man/figures/NDVI_points_euclidean.png)
+![](man/figures/NDVI_neighborhoods.png)   |  ![](man/figures/NDVI_points_euclidean.png)
 
 
 
