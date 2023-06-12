@@ -218,10 +218,10 @@ The `land_cover` function calculates the average land cover within a specified d
 
 You have the option to provide a raster file wiht land cover values. When this is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover.
 
-In the code chunk and figure below an example is given for the Amsterdam area. It illustrates an example of land cover within a network buffer of 500 meters in Amsterdam. It showcases three address locations, and the land cover is determined based on the surrounding road network obtained from the  [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package.
+In the code chunk and figure below an example is given for the Amsterdam area. It illustrates an example of land cover within a network buffer of 300m in Amsterdam. It showcases nine address locations, and the land cover is determined based on the surrounding road network obtained from the  [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package.
 
 
-![](man/figures/land_cover_network_buffer.png) 
+![](man/figures/land_cover_network.png) 
 
 ---
 
