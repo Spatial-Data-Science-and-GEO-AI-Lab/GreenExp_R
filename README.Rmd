@@ -190,7 +190,7 @@ In the code chunk and figure below an example is given for the Amsterdam area. I
 
 ---
 ```{r}
-GreenExp::land_cover(df_points, buffer_distance=500, network_buffer=T)
+GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T)
 ```
 
 

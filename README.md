@@ -226,37 +226,31 @@ In the code chunk and figure below an example is given for the Amsterdam area. I
 ---
 
 ``` r
-GreenExp::land_cover(address_location, buffer_distance=500, network_buffer=T)
-# You will use a network to create a buffer around the address location(s),
-#               Keep in mind that for large files it can take a while to run the funciton.
-# You did not provide a network file, osm will be used to create a network file.
-# If a city is missing, it will take more time to run the function
-# The input place was matched with Noord-Holland. 
-# The chosen file was already detected in the download directory. Skip downloading.
-# Start with the vectortranslate operations on the input file!
-# 0...10...20...30...40...50...60...70...80...90...100 - done.
-# Finished the vectortranslate operations on the input file!
-# Reading layer `lines' from data source 
-#   `/private/var/folders/ll/vl2jqx3s46189vcv3w8mdgyh0000gn/T/RtmpBIu31i/geofabrik_noord-holland-latest.gpkg' 
-#   using driver `GPKG'
-# Simple feature collection with 3473 features and 9 fields
-# Geometry type: LINESTRING
-# Dimension:     XY
-# Bounding box:  xmin: 4.757481 ymin: 52.32693 xmax: 4.881442 ymax: 52.40028
-# Geodetic CRS:  WGS 84
-# Simple feature collection with 3 features and 12 fields
+GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T)
 # Geometry type: POINT
 # Dimension:     XY
-# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
+# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
 # Projected CRS: Amersfoort / RD New
-#   UID                  geometry tree_cover shrubland grassland cropland built-up
-# 1   1 POINT (118231.8 487636.8)       0.39         0      0.02        0     0.52
-# 2   2 POINT (119718.2 488790.5)       0.24         0      0.05        0     0.57
-# 3   3 POINT (119659.3 487693.7)       0.07         0      0.03        0     0.87
-#   bare_vegetation snow_ice perm_water_bodies herbaceous_wetland mangroves moss_lichen
-# 1               0        0              0.07                  0         0           0
-# 2               0        0              0.14                  0         0           0
-# 3               0        0              0.03                  0         0           0
+#   UID                  geometry tree_cover shrubland grassland cropland built-up bare_vegetation
+# 1   1 POINT (122550.8 487284.1)       0.04         0      0.00        0     0.73               0
+# 2   2 POINT (122168.8 487033.6)       0.11         0      0.00        0     0.83               0
+# 3   3 POINT (122341.7 486895.6)       0.09         0      0.00        0     0.87               0
+# 4   4 POINT (122767.5 486602.6)       0.39         0      0.00        0     0.61               0
+# 5   5 POINT (122906.4 487497.6)       0.25         0      0.04        0     0.55               0
+# 6   6   POINT (123179.1 487316)       0.44         0      0.01        0     0.53               0
+# 7   7 POINT (123344.6 487201.2)       0.00         0      0.00        0     0.69               0
+# 8   8 POINT (123603.6 487073.4)       0.16         0      0.00        0     0.83               0
+# 9   9   POINT (123035 486830.7)       0.15         0      0.00        0     0.72               0
+#   snow_ice perm_water_bodies herbaceous_wetland mangroves moss_lichen
+# 1        0              0.23                  0         0           0
+# 2        0              0.05                  0         0           0
+# 3        0              0.04                  0         0           0
+# 4        0              0.00                  0         0           0
+# 5        0              0.16                  0         0           0
+# 6        0              0.03                  0         0           0
+# 7        0              0.31                  0         0           0
+# 8        0              0.00                  0         0           0
+# 9        0              0.13                  0         0           0
 ```
 
 ---
