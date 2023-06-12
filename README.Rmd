@@ -186,43 +186,13 @@ You have the option to provide a raster file wiht land cover values. When this i
 In the code chunk and figure below an example is given for the Amsterdam area. It illustrates an example of land cover within a network buffer of 500 meters in Amsterdam. It showcases three address locations, and the land cover is determined based on the surrounding road network obtained from the  [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package.
 
 
-![](man/figures/land_cover_network_buffer.png) 
+![](man/figures/land_cover_network.png) 
 
 ---
-
-``` r
-GreenExp::land_cover(address_location, buffer_distance=500, network_buffer=T)
-# You will use a network to create a buffer around the address location(s),
-#               Keep in mind that for large files it can take a while to run the funciton.
-# You did not provide a network file, osm will be used to create a network file.
-# If a city is missing, it will take more time to run the function
-# The input place was matched with Noord-Holland. 
-# The chosen file was already detected in the download directory. Skip downloading.
-# Start with the vectortranslate operations on the input file!
-# 0...10...20...30...40...50...60...70...80...90...100 - done.
-# Finished the vectortranslate operations on the input file!
-# Reading layer `lines' from data source 
-#   `/private/var/folders/ll/vl2jqx3s46189vcv3w8mdgyh0000gn/T/RtmpBIu31i/geofabrik_noord-holland-latest.gpkg' 
-#   using driver `GPKG'
-# Simple feature collection with 3473 features and 9 fields
-# Geometry type: LINESTRING
-# Dimension:     XY
-# Bounding box:  xmin: 4.757481 ymin: 52.32693 xmax: 4.881442 ymax: 52.40028
-# Geodetic CRS:  WGS 84
-# Simple feature collection with 3 features and 12 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
-# Projected CRS: Amersfoort / RD New
-#   UID                  geometry tree_cover shrubland grassland cropland built-up
-# 1   1 POINT (118231.8 487636.8)       0.39         0      0.02        0     0.52
-# 2   2 POINT (119718.2 488790.5)       0.24         0      0.05        0     0.57
-# 3   3 POINT (119659.3 487693.7)       0.07         0      0.03        0     0.87
-#   bare_vegetation snow_ice perm_water_bodies herbaceous_wetland mangroves moss_lichen
-# 1               0        0              0.07                  0         0           0
-# 2               0        0              0.14                  0         0           0
-# 3               0        0              0.03                  0         0           0
+```{r}
+GreenExp::land_cover(df_points, buffer_distance=500, network_buffer=T)
 ```
+
 
 ---
 
