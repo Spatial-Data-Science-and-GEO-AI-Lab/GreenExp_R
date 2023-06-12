@@ -21,7 +21,7 @@
 
 canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
                         epsg_code=NULL, download_dir = tempdir(),
-                        UID=NULL, address_location_neighborhood = TRUE, speed=NULL, time=NULL, city=NULL){
+                        UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, city=NULL){
 
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()

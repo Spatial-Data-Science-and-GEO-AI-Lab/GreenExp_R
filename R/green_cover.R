@@ -22,7 +22,7 @@
 #' @examples
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
-                          network_file=NULL, epsg_code=NULL,  UID=NULL, address_location_neighborhood = TRUE, speed=NULL, time=NULL,
+                          network_file=NULL, epsg_code=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL,
                           city=NULL, year='2021', plot_landcover=FALSE) {
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
