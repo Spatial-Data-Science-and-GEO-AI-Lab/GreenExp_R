@@ -13,7 +13,7 @@ land_cover(
   network_file = NULL,
   epsg_code = NULL,
   UID = NULL,
-  address_location_neighborhood = TRUE,
+  address_location_neighborhood = FALSE,
   speed = NULL,
   time = NULL,
   city = NULL,

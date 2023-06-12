@@ -13,7 +13,7 @@ canopy_perc(
   epsg_code = NULL,
   download_dir = tempdir(),
   UID = NULL,
-  address_location_neighborhood = TRUE,
+  address_location_neighborhood = FALSE,
   speed = NULL,
   time = NULL,
   city = NULL

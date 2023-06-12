@@ -10,6 +10,7 @@ vgvi_from_address(
   dtm_rast,
   greenspace_rast,
   buffer_distance = 50,
+  sample_points = 30,
   max_distance = 800,
   observer_height = 1.7,
   raster_res = NULL,
@@ -32,6 +33,10 @@ vgvi_from_address(
 
 \item{greenspace_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the binary Greenspace mask. Values of the Greenspace mask must be 1 for Green and 0 for No-Green}
 
+\item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location, default is 50m.}
+
+\item{sample_points}{The amount of points that should be sampled in the buffer created around the address to calculate the mean vgvi.}
+
 \item{max_distance}{numeric; Buffer distance to calculate the viewshed}
 
 \item{observer_height}{numeric > 0; Height of the observer (e.g. 1.7 meters)}
@@ -50,6 +55,8 @@ The \code{spacing} parameter sets the distance in between the points on the line
 \item{cores}{numeric; The number of cores to use, i.e. at most how many child processes will be run simultaneously}
 
 \item{folder_path}{optional; Folder path to where the output should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
+
+\item{folder_path_random_points}{optional; Folder path to where the output  of the random generated points should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{progress}{logical; Show progress bar and computation time?}
 }
