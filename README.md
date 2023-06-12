@@ -4,8 +4,6 @@
 <!-- badges: start -->
 <!-- badges: end -->
 - [Installation](#installation)
-  * [GEE](#gee)
-  * [Rcpp](#rcpp)
 - [Data](#data)
   * [Ams_Neighborhoods](#ams_neighborhoods)
   * [Ams_Houses](#ams_houses)
@@ -78,7 +76,10 @@ library(GreenExp) # If GreenExp is not loaded yet
 
 The Ams_Parks dataset is also retrieved from the [Gemeente Amsterdam](https://maps.amsterdam.nl/stadsparken/)
 Run the following code for more information 
-
+```r
+library(GreenExp) # If GreenExp is not loaded yet
+?Ams_Parks
+```
 
 
 # Functionalities 
@@ -91,10 +92,6 @@ The Functionalities, which will be treated in the next subsections, will be prov
 To avoid computationally heavy examples, a few neighborhoods in Amsterdam will be selected, namely: 
 Rapenburg, Uilenburg, Valkenburg, Marine-Etablissement, Kadijken, Plantage, Kattenburg, Wittenburg and Oostenburg. 
 
-You can view the sample map with these neighborhoods in the file below. 
-
-
-![](man/figures/neighborhoods.html)
 
 ```r
 library(GreenExp) # If not loaded yet
@@ -105,8 +102,16 @@ neighborhoods <- c('Rapenburg', 'Uilenburg', 'Valkenburg',
             'Marine-Etablissement', 'Kadijken', 'Plantage', 
             'Kattenburg', 'Wittenburg', 'Oostenburg')
 
+# Filter the neighborhoods
 df <- Ams_Neighborhoods %>%
   dplyr::filter(Buurt %in% neighborhoods)
+
+# Create point locations in Amsterdam  
+df_points <- sf::st_centroid(df)
+
+# Create the parks
+df_parks <- Ams_Parks
+  
 ```
 
 
@@ -125,46 +130,84 @@ Availability will be assessed using four functions:
 
 Each of these functions will provide an [sf](https://r-spatial.github.io/sf/articles/sf1.html) `dataframe` that includes the input location and the specific values requested within a defined buffer.
 
+
+The user has the option to input either a point geometry or a (multi)polygon geometry. By default, the address location will be transformed into a point geometry, and a buffer will be created around it to calculate the availability. However, users can choose to use the provided polygon geometry to calculate availability by setting the 'address_location_neighborhood' parameter to TRUE.
+
 By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilize a network buffer. The distinction between the two types of buffers is illustrated in the figure below. The Euclidean buffer in this instance has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over a duration of 10 minutes.
 
 ![](man/figures/buffers_example.png)
 
 
-In the following subsections, a brief description of each availability function will be provided, along with examples extracted from random data points in Amsterdam.
+In the following subsections, a brief description of each availability function will be provided, along with examples extracted from the neighborhood polygons and points in Amsterdam. 
 
 ---
 
 ### Calc NDVI 
 
-The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for given location(s). The input for the function is `address_location` which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395)
+The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for given location(s). The input for the function is `address_location` which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
 
-You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figure below illustrates an example of NDVI in Amsterdam. It showcases three address locations within a Euclidean buffer of 300 meters
 
-![](man/figures/ndvi_pc_plot_eucbuffer.png)
+You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figures below illustrate two examples of NDVI in Amsterdam. The first [Plot_1](#plot_1)one showcases the aforementioned neighborhoods in Amsterdam and there NDVI, the second one shows the address points within an euclidean buffer of 300 meters 
+
+Neighborhood NDVI        |  Addresses within euclidean distance NDVI
+:-------------------------:|:-------------------------:
+![Plot_1](man/figures/NDVI_neighborhoods.png)   |  ![Plot_2](man/figures/NDVI_points_euclidean.png)
+
+
 
 If desired, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations
 
 ---
 
-Below you can find the code where the results correspond with the NDVI figure. 
+Below you can find two code snippets that correspond to the figures above, the first code snippet corresponds with the neighborhood, whereas the second code snippet corresponds with address locations within the euclidean distance
 
 ``` r
-GreenExp::calc_ndvi(address_3, buffer_distance = 300)
+GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE, UID=df$Buurt)
+# Sentinel-2-l2a data is used to retrieve the ndvi values. 
+#  The ID of the selected image is: S2B_MSIL2A_20201118T104329_R008_T31UFU_20201119T222019
+#  The date of the picture that was taken is: 2020-11-18T10:43:29.024000Z
+#  The cloud cover of this day was 0.118422% 
+# Simple feature collection with 9 features and 3 fields
+# Geometry type: POLYGON
+# Dimension:     XY
+# Bounding box:  xmin: 121895.4 ymin: 486266.6 xmax: 123998.4 ymax: 487863.7
+# Projected CRS: Amersfoort / RD New
+#   ID  mean_NDVI                  UID                       geometry
+# 1  1 0.06167251            Rapenburg POLYGON ((122254.7 487241.8...
+# 2  2 0.19874419            Uilenburg POLYGON ((121895.4 486971.2...
+# 3  3 0.21607993           Valkenburg POLYGON ((122088.4 486839.2...
+# 4  4 0.36863100             Plantage POLYGON ((122233.5 486651, ...
+# 5  5 0.23472975 Marine-Etablissement POLYGON ((122584.8 487858.4...
+# 6  6 0.34115585           Kattenburg POLYGON ((122804.3 487108.2...
+# 7  7 0.26490680           Wittenburg POLYGON ((122978.2 486996.9...
+# 8  8 0.16019079           Oostenburg POLYGON ((123194.2 486865.7...
+# 9  9 0.19806864             Kadijken POLYGON ((122546.8 486975.5...
+```
+
+```r
+ GreenExp::calc_ndvi(df_points, buffer_distance=300)
 # Euclidean distance will be used to calculate the buffers around the address location that is given
 # Sentinel-2-l2a data is used to retrieve the ndvi values. 
-#  The ID of the selected image is: S2B_MSIL2A_20200922T104649_R051_T31UFU_20201028T024449
-#  The date of the picture that was taken is: 2020-09-22T10:46:49.025000Z
-#  The cloud cover of this day was 0.149568% 
-# Simple feature collection with 3 features and 2 fields
+#  The ID of the selected image is: S2B_MSIL2A_20201118T104329_R008_T31UFU_20201119T222019
+#  The date of the picture that was taken is: 2020-11-18T10:43:29.024000Z
+#  The cloud cover of this day was 0.118422% 
+# Simple feature collection with 9 features and 2 fields
 # Geometry type: POINT
 # Dimension:     XY
-# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
+# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
 # Projected CRS: Amersfoort / RD New
 #   ID mean_NDVI                  geometry
-# 1  1 0.4083971 POINT (118231.8 487636.8)
-# 2  2 0.4953944 POINT (119718.2 488790.5)
-# 3  3 0.2616829 POINT (119659.3 487693.7)
+# 1  1 0.0301934 POINT (122550.8 487284.1)
+# 2  2 0.1962309 POINT (122168.8 487033.6)
+# 3  3 0.2561348 POINT (122341.7 486895.6)
+# 4  4 0.3297733 POINT (122767.5 486602.6)
+# 5  5 0.2365295 POINT (122906.4 487497.6)
+# 6  6 0.3569576   POINT (123179.1 487316)
+# 7  7 0.2614934 POINT (123344.6 487201.2)
+# 8  8 0.1715756 POINT (123603.6 487073.4)
+# 9  9 0.2792275   POINT (123035 486830.7)
 ```
+
 
 ---
 
