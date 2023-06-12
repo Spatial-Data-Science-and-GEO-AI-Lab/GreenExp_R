@@ -3,11 +3,15 @@
 
 <!-- badges: start -->
 <!-- badges: end -->
-- [Updates](#updates)
 - [Installation](#installation)
   * [GEE](#gee)
   * [Rcpp](#rcpp)
-- [Functions](#functions)
+- [Data](#data)
+  * [Ams_Neighborhoods](#ams_neighborhoods)
+  * [Ams_Houses](#ams_houses)
+  * [Ams_Parks](#ams_parks)
+- [Functionalities](#functionalities)
+  * [Preparation](#preparation)
   * [Availability](#availability)
     + [Calc NDVI](#calc-ndvi)
     + [Land Cover](#land-cover)
@@ -19,16 +23,10 @@
     + [Viewshed](#viewshed)
     + [VGVI](#vgvi)
     + [Streetview](#streetview)
+- [Alternative Installation](#alternative-installation)
+  * [GEE](#gee)
+  * [Rcpp](#rcpp)
 
-
-# Updates
-
-Over here are the agreements that need to be done this week:
-
-- Make sure the epsg logic is fixed for each function
-- Make the accessibility function faster by intersecting the the buffer for the pseudo entrances and for the euclidean buffer, use the nearest neighbours. 
-- Start with the motivation of the paper see [overleaf](www.overleaf.com)
-- Make a visibility function for the buffer around the address location. Important to take random points in this buffer and use the [VGVI](#vgvi) Function to implement this. 
 
 # Installation
 
@@ -39,125 +37,80 @@ You can install the development version of GreenExp from [GitHub](https://github
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenEx_R")
 ```
 
-To make optimal use of the package 
 
-## GEE 
-
-This step is optional, by default the [Planetary Computer](https://planetarycomputer.microsoft.com) will be used for satellite images, 
-But if you also want to use the [Google Earth Engine](https://earthengine.google.com), and do not have it installed yet,
-you need to follow the following steps or the steps given in this [instruction video](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
-
-**Step 1:**
-
-Make an account on  [Google Earth Engine](https://earthengine.google.com)
-
-
-``` r
-install.packages(c("sf", "reticulate", "remotes"))
-```
-afterwards install the [rgee](https://github.com/r-spatial/rgee) package from github
-
-``` r
-# Install the rgee package from the r spatial GitHub
-remotes::install_github("r-spatial/rgee")
-
-# load the reticulate and rgee package
-library(reticulate)
-library(rgee)
-```
-
-**Step 2:**
-
-Running `reticulate::py_discover_config()` will install `Miniconda`
-
-``` r
-# Use the py_discover_config() function to see what version of Python will be used
-# without actually loading pythong
-reticulate::py_discover_config()
-
-# python:         /Users/martijn/.virtualenvs/rgee/bin/python
-# libpython:      /Users/martijn/anaconda3/lib/libpython3.10.dylib
-# pythonhome:     /Users/martijn/.virtualenvs/rgee:/Users/martijn/.virtualenvs/rgee
-# version:        3.10.9 (main, Mar  1 2023, 12:20:14) [Clang 14.0.6 ]
-# numpy:          /Users/martijn/.virtualenvs/rgee/lib/python3.10/site-packages/numpy
-# numpy_version:  1.24.3
-
-# Verify the current Python path
-import('sys')$executable
-# [1] "/Users/martijn/.virtualenvs/rgee/bin/python"
-
-
-# Create an isolated Python venv with all rgee dependencies
-ee_install()
-# look at the path to the rgee env
-```
-
-**Step 3:**
-
-After this bit, please restart your pc/laptop and launch R again. 
-
-**Step 4:**
-
-Initializing
-
-``` r
-# Set python version to use
-reticulate::use_python("/Users/martijn/.virtualenvs/rgee/bin/python")
-reticulate::py_config()
-
-library(rgee)
-
-#Initialize the Earth Engine
-ee_Initialize()
-
-## 2. Install geemap in the same Python ENV that use rgee
-py_install("geemap")
-gm <- import("geemap")
-
-```
-
-Enter the email you used to sign-up for GEE 
-
-copy the code into R 
-
-── rgee 1.1.6.9999 ───────────────────────────────────── earthengine-api 0.1.354 ── 
-
- ✔ user: not_defined 
- 
- ✔ Initializing Google Earth Engine:  DONE!
- 
- ✔ Earth Engine account: users/ee-greenexp 
- 
 ---
 
-## Rcpp 
+# Data 
 
-Make sure the [Rcpp package](https://cran.r-project.org/web/packages/Rcpp/index.html) is installed.
-If you are using mac, make sure you have [Xcode](https://apps.apple.com/nl/app/xcode/id497799835?mt=12) installed. 
+This package is provided with three sf datasets:
 
-Furthermore you have to make a Makevars file if the cpp files are not working. 
-go to terminal and do the following:
+1. [Ams_Neighborhoods](#ams_neighborhoods)
+2. [Ams_Houses](#ams_houses)
+3. [Ams_Parks](#ams_parks)
 
+These datasets will be used as example to explain the [Functionalities](#functionalities).
+
+#### Ams_Neighborhoods
+
+The first dataset is an sf data frame of neighborhoods in Amsterdam. This dataset is retrieved from [Gemeente Amsterdam](https://maps.amsterdam.nl/gebiedsindeling/). 
+
+Run the following code for more information 
+
+```r
+library(GreenExp) # If GreenExp is not loaded yet
+?Ams_Neighborhoods
 ```
-mkdir .R
-cd .R 
-touch Makevars
-open Makevars
 
-## copy and paste:
-FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
-F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
-FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
+---
+
+#### Ams_Houses
+
+The Ams_Houses contain houses that are created by taking the centroid of the aforementioned [Ams_Neighborhoods](#Ams_Neighborhoods)
+Run the following code for more information 
+
+```r
+library(GreenExp) # If GreenExp is not loaded yet
+?Ams_Houses
 ```
 ---
 
-## Mapillary
+#### Ams_Parks
 
-To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
+The Ams_Parks dataset is also retrieved from the [Gemeente Amsterdam](https://maps.amsterdam.nl/stadsparken/)
+Run the following code for more information 
 
----
+
 
 # Functionalities 
+
+---
+
+## Preparation
+
+The Functionalities, which will be treated in the next subsections, will be provided with examples.
+To avoid computationally heavy examples, a few neighborhoods in Amsterdam will be selected, namely: 
+Rapenburg, Uilenburg, Valkenburg, Marine-Etablissement, Kadijken, Plantage, Kattenburg, Wittenburg and Oostenburg. 
+
+You can view the sample map with these neighborhoods in the file below. 
+
+
+![](man/figures/neighborhoods.html)
+
+```r
+library(GreenExp) # If not loaded yet
+library(magrittr) # If not loaded yet (used for piping %>%)
+
+
+neighborhoods <- c('Rapenburg', 'Uilenburg', 'Valkenburg', 
+            'Marine-Etablissement', 'Kadijken', 'Plantage', 
+            'Kattenburg', 'Wittenburg', 'Oostenburg')
+
+df <- Ams_Neighborhoods %>%
+  dplyr::filter(Buurt %in% neighborhoods)
+```
+
+
+
 
 ---
 
@@ -384,7 +337,7 @@ The left plot represents the Digital Elevation Model (DEM), whereas the right pl
 
 ### VGVI
 
-The Viewshed Greenness Visibility Index (VGVI) represents the proportion of visibile greeness to the total visible area based on the `viewshed`. The estimated VGVI values range between 0 and 1, where = no green cells and 1= all of the visible cells are green.
+The Viewshed Greenness Visibility Index (VGVI) represents the proportion of visible greenness to the total visible area based on the `viewshed`. The estimated VGVI values range between 0 and 1, where = no green cells and 1= all of the visible cells are green.
 
 Based on a viewshed and a binary greenspace raster, all visible points are classified as visible green and visible no-green. All values are summarized using a decay function, to account for the reducing visual prominence of an object in space with increasing distance from the observer. Currently two options are supported, a logistic and an exponential function.
 
@@ -407,4 +360,125 @@ VGVI <- vgvi_from_sf(observer = observer,
 --- 
 
 ### streetview 
+
+---
+
+# Alternative installation
+
+To make optimal use of the package 
+
+## GEE 
+
+This step is optional, by default the [Planetary Computer](https://planetarycomputer.microsoft.com) will be used for satellite images, 
+But if you also want to use the [Google Earth Engine](https://earthengine.google.com), and do not have it installed yet,
+you need to follow the following steps or the steps given in this [instruction video](https://www.youtube.com/watch?v=_fDhRL_LBdQ)
+
+**Step 1:**
+
+Make an account on  [Google Earth Engine](https://earthengine.google.com)
+
+
+``` r
+install.packages(c("sf", "reticulate", "remotes"))
+```
+afterwards install the [rgee](https://github.com/r-spatial/rgee) package from github
+
+``` r
+# Install the rgee package from the r spatial GitHub
+remotes::install_github("r-spatial/rgee")
+
+# load the reticulate and rgee package
+library(reticulate)
+library(rgee)
+```
+
+**Step 2:**
+
+Running `reticulate::py_discover_config()` will install `Miniconda`
+
+``` r
+# Use the py_discover_config() function to see what version of Python will be used
+# without actually loading pythong
+reticulate::py_discover_config()
+
+# python:         /Users/martijn/.virtualenvs/rgee/bin/python
+# libpython:      /Users/martijn/anaconda3/lib/libpython3.10.dylib
+# pythonhome:     /Users/martijn/.virtualenvs/rgee:/Users/martijn/.virtualenvs/rgee
+# version:        3.10.9 (main, Mar  1 2023, 12:20:14) [Clang 14.0.6 ]
+# numpy:          /Users/martijn/.virtualenvs/rgee/lib/python3.10/site-packages/numpy
+# numpy_version:  1.24.3
+
+# Verify the current Python path
+import('sys')$executable
+# [1] "/Users/martijn/.virtualenvs/rgee/bin/python"
+
+
+# Create an isolated Python venv with all rgee dependencies
+ee_install()
+# look at the path to the rgee env
+```
+
+**Step 3:**
+
+After this bit, please restart your pc/laptop and launch R again. 
+
+**Step 4:**
+
+Initializing
+
+``` r
+# Set python version to use
+reticulate::use_python("/Users/martijn/.virtualenvs/rgee/bin/python")
+reticulate::py_config()
+
+library(rgee)
+
+#Initialize the Earth Engine
+ee_Initialize()
+
+## 2. Install geemap in the same Python ENV that use rgee
+py_install("geemap")
+gm <- import("geemap")
+
+```
+
+Enter the email you used to sign-up for GEE 
+
+copy the code into R 
+
+── rgee 1.1.6.9999 ───────────────────────────────────── earthengine-api 0.1.354 ── 
+
+ ✔ user: not_defined 
+ 
+ ✔ Initializing Google Earth Engine:  DONE!
+ 
+ ✔ Earth Engine account: users/ee-greenexp 
+ 
+---
+
+## Rcpp 
+
+Make sure the [Rcpp package](https://cran.r-project.org/web/packages/Rcpp/index.html) is installed.
+If you are using mac, make sure you have [Xcode](https://apps.apple.com/nl/app/xcode/id497799835?mt=12) installed. 
+
+Furthermore you have to make a Makevars file if the cpp files are not working. 
+go to terminal and do the following:
+
+```
+mkdir .R
+cd .R 
+touch Makevars
+open Makevars
+
+## copy and paste:
+FC = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
+F77 = /opt/homebrew/Cellar/gcc/13.1.0/bin/gfortran
+FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
+```
+---
+
+## Mapillary
+
+To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
+
 
