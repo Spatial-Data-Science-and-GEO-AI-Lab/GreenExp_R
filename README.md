@@ -369,8 +369,25 @@ Projected CRS: Amersfoort / RD New
 1   1           178.7477                      TRUE POINT (123603.6 487073.4)
 ```
 
+--- 
 
+**Example 2**
 
+The first example will use a network distance to the greenspace centroids, thus the network distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are in black. As you can see in the plot the lines do not intersect with the points, this is because the lines are retrieved from OSM network file and do the centroids of the parks and the address centroid are not on the line. 
+
+![](man/figures/Network_path_accessibility.png)
+
+``` r
+greenspace_access(df_point, buffer_distance = 300, euclidean=F)
+
+Simple feature collection with 1 feature and 3 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 123603.6 ymin: 487073.4 xmax: 123603.6 ymax: 487073.4
+Projected CRS: Amersfoort / RD New
+  UID closest_greenspace greenspace_in_300m_buffer                  geometry
+1   1           263.8876                      TRUE POINT (123603.6 487073.4)
+```
 ---
 
 ## Visibility

@@ -270,6 +270,15 @@ The first example will show the default function of the accessibility function, 
 df_point <- df_points[8,]
 greenspace_access(df_point, buffer_distance = 300)
 ```
+**Example 2**
+
+The first example will use a network distance to the greenspace centroids, thus the network distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are in black. As you can see in the plot the lines do not intersect with the points, this is because the lines are retrieved from OSM network file and do the centroids of the parks and the address centroid are not on the line. 
+
+![](man/figures/Network_path_accessibility.png)
+
+```{r}
+greenspace_access(df_point, buffer_distance = 300, euclidean=F)
+```
 
 ---
 
