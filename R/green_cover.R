@@ -71,17 +71,18 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     ###### 2. Network buffer ######
     # If people want to calculate the network buffer.
     if (network_buffer) {
+      # Extracting OSM road structure to build isochrone polygona
+      iso_area <- sf::st_buffer(sf::st_convex_hull(
+        sf::st_union(sf::st_geometry(address_location))),
+        buffer_distance)
+      iso_area <- sf::st_transform(iso_area, crs = 4326)
       message('You will use a network to create a buffer around the address location(s),
               Keep in mind that for large files it can take a while to run the funciton.')
       # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
         ###### 2.1 Calculating the network buffer when missing ######
-        # Extracting OSM road structure to build isochrone polygona
-        iso_area <- sf::st_buffer(sf::st_convex_hull(
-          sf::st_union(sf::st_geometry(address_location))),
-          buffer_distance)
-        iso_area <- sf::st_transform(iso_area, crs = 4326)
+
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
           lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
@@ -101,7 +102,9 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
         if (sf::st_crs(address_location) != sf::st_crs(network_file))
         {
           print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
-          network_file <- sf::st_transform(network_file, sf::st_crs(address_location))
+          lines <- sf::st_transform(network_file, sf::st_crs(address_location))
+        } else{
+          lines <- network_file
         }
       }
 

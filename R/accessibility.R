@@ -64,18 +64,15 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     message('There are nonpoint geometries, they will be converted into centroids')
     address_location <- sf::st_centroid(address_location)
   }
+  iso_area <- sf::st_buffer(sf::st_convex_hull(
+    sf::st_union(sf::st_geometry(address_location))),
+    buffer_distance)
+  iso_area <- sf::st_transform(iso_area, crs = 4326)
+  # bbox might be redundant
+  bbox <- sf::st_bbox(iso_area)
 
   ##### 2. Network file #######
   if (missing(network_file)){
-
-
-
-    iso_area <- sf::st_buffer(sf::st_convex_hull(
-      sf::st_union(sf::st_geometry(address_location))),
-      buffer_distance)
-    iso_area <- sf::st_transform(iso_area, crs = 4326)
-    # bbox might be redundant
-    bbox <- sf::st_bbox(iso_area)
     # Use the osmextract package to extract the lines in the area.
     if (pseudo_entrance || !euclidean){
       if (!missing(city)) {
@@ -100,7 +97,9 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     if (sf::st_crs(address_location) != sf::st_crs(network_file))
     {
       print("The CRS of your network data set is geographic, CRS of main data set will be used to transform")
-      network_file <- sf::st_transform(network_file, projected_crs)
+      lines <- sf::st_transform(network_file, projected_crs)
+    } else{
+      lines <- network_file
     }
   }
   ##### 2.1 calculate the network file if we are using network distance or pseudo entrances ######

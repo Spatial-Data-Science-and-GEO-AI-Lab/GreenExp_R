@@ -67,7 +67,6 @@ library(GreenExp) # If GreenExp is not loaded yet
 The Ams_Houses contain houses that are created by taking the centroid of the aforementioned [Ams_Neighborhoods](#Ams_Neighborhoods)
 Run the following code for more information 
 ```{r}
-library(GreenExp) # If GreenExp is not loaded yet
 ?Ams_Houses
 ```
 
@@ -79,7 +78,6 @@ The Ams_Parks dataset is also retrieved from the [Gemeente Amsterdam](https://ma
 Run the following code for more information 
 
 ```{r}
-library(GreenExp) # If GreenExp is not loaded yet
 ?Ams_Parks
 ```
 
@@ -116,6 +114,8 @@ df_points <- sf::st_centroid(df)
 
 # Create the parks
 df_parks <- Ams_Parks
+
+
 
 map <- mapview::mapview(list(df, df_points), label = c("Buurt", "Buurtcode"),
                         alpha.regions=c(0,1),  legend=F, lwd=1)
@@ -170,9 +170,14 @@ If desired, users are able to switch the engine to `GEE` (Google Earth Engine) f
 Below you can find the code where the results correspond with the NDVI figure. 
 
 ```{r}
-GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE, UID=df$Buurt)
+ndvi_neighborhood <- GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE, UID=df$Buurt)
+ndvi_neighborhood
 ```
 
+```{r}
+ndvi_address <- GreenExp::calc_ndvi(df_points, buffer_distance=300)
+ndvi_address
+```
 
 ---
 
@@ -189,8 +194,10 @@ In the code chunk and figure below an example is given for the Amsterdam area. I
 ![](man/figures/land_cover_network.png) 
 
 ---
-```{r}
-GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T)
+```{r, warning=FALSE, message=FALSE}
+network_file <- network_file
+land_cover_values <- GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T, network_file = network_file)
+land_cover_values 
 ```
 
 
@@ -264,10 +271,93 @@ Three examples will be provided. For the sake of visualization, one address poin
 
 The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are black and the address location is red. 
 
+
+```{r, include=FALSE}
+library(sf)
+library(mapview)
+df_point <- df_points[8,]
+
+projected_crs <- sf::st_crs(df_point)
+
+address_locations <- df_point
+
+buffer_distance <- 300
+
+calculation_area <- sf::st_buffer(address_locations, dist = buffer_distance)
+
+calculation_area <- sf::st_transform(calculation_area, 4326)
+
+q1 <- osmdata::opq(sf::st_bbox(calculation_area)) %>%
+  osmdata::add_osm_feature(key = "landuse",
+                           value = c('allotments','forest',
+                                     'greenfield','village_green')) %>%
+  osmdata::osmdata_sf()
+
+q2 <- osmdata::opq(sf::st_bbox(calculation_area)) %>%
+  osmdata::add_osm_feature(key = "leisure",
+                           value = c('garden','fitness_station',
+                                     'nature_reserve','park','playground')) %>%
+  osmdata::osmdata_sf()
+
+q3 <- osmdata::opq(sf::st_bbox(calculation_area)) %>%
+  osmdata::add_osm_feature(key = "natural",
+                           value = c('grassland')) %>%
+  osmdata::osmdata_sf()
+
+res <- c(q1, q2, q3)
+
+
+# park_layer cleaning
+park_layer <- res$osm_polygons
+park_layer <- sf::st_make_valid(park_layer)
+
+park_layer_data <- park_layer %>%  sf::st_transform(crs=projected_crs) %>% sf::st_as_sf()
+
+park_layer_plot <- sf::st_geometry(park_layer)
+
+park_centroid <- sf::st_centroid(park_layer_plot)
+address <- sf::st_transform(address_locations, 4326)
+
+# Calculate Euclidean distances between address and park centroids
+distances <- st_distance(address, park_centroid)
+
+# Find the index of the park centroid with minimum distance
+closest_index <- which.min(distances)
+
+park_centroid <- sf::st_as_sf(park_centroid)
+closest_park <- park_centroid[closest_index,]
+
+park_layer_plot <- sf::st_transform(park_layer_plot, projected_crs)
+calc_area <- sf::st_transform(calculation_area, projected_crs)
+park_centroid <- sf::st_transform(park_centroid, projected_crs)
+closest_park <- sf::st_transform(closest_park, projected_crs)
+
+coords_address <- data.frame(sf::st_coordinates(address_locations))
+closest_park_coords <- data.frame(sf::st_coordinates(closest_park))
+
+line <- st_linestring(matrix(c(coords_address$X, closest_park_coords$X, coords_address$Y, closest_park_coords$Y), ncol = 2))
+line <- st_sfc(line, crs = projected_crs)
+line <- sf::st_as_sf(line)
+
+
+# Display the mapview plot with the legend
+m1 <- mapview(park_layer, col.regions='green', layer.name='Greenspace Polygon', legend=TRUE)
+m2 <- mapview(park_centroid, col.regions='black', cex=3, layer.name='Greenspace Centroid')
+m3 <- mapview(address_locations, col.regions='red', cex=3, layer.name='Address Location')
+m4 <- mapview(line, layer.name='Euclidean line')
+
+map <- m1+m2+m3+m4
+
+```
+
+```{r}
+map
+```
+
+
 ![](man/figures/accessibility_euclidean.png)
 
 ```{r}
-df_point <- df_points[8,]
 greenspace_access(df_point, buffer_distance = 300)
 ```
 **Example 2**
@@ -277,10 +367,22 @@ The first example will use a network distance to the greenspace centroids, thus 
 ![](man/figures/Network_path_accessibility.png)
 
 ```{r}
-greenspace_access(df_point, buffer_distance = 300, euclidean=F)
+greenspace_access(df_point, buffer_distance = 300, euclidean=F, network_file = network_file)
 ```
 
 ---
+
+**Example 3:**
+
+The last example will use a network distance to the pseudo entrances of the greenspace. In this instance the network distance to the nearest pseudo entrance point will be calculated 
+
+
+![](man/figures/accessibility_pseudo_network.png)
+
+```{r}
+greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T, network_file = network_file)
+```
+
 
 ## Visibility
  

@@ -51,3 +51,25 @@
 #' data(Ams_Parks)     # Lazy loading
 #'
 "Ams_Parks"
+
+
+
+#' an sf data frame of a small network in Amsterdam
+#' network is represented with linestrings
+#'
+#' Contains 3899 linestring of roads in Amsterdam
+#'
+#' @format A data frame with 3899 rows and 3 variables:
+#'  \describe{
+#'        \item{osm_id}{The ID of the street}
+#'        \item{name}{The name of the street}
+#'        \item{geom}{The geometry of the LINESTRING}
+#'        }
+#'
+#' @source {retrieved from osmextract, https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html}
+#'
+#' @examples
+#' data(network_file)     # Lazy loading
+#'
+"network_file"
+
