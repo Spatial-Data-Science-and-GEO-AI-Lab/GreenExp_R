@@ -5,16 +5,16 @@
 <!-- badges: end -->
 - [Installation](#installation)
 - [Data](#data)
-  * [Ams_Neighborhoods](#ams_neighborhoods)
-  * [Ams_Houses](#ams_houses)
-  * [Ams_Parks](#ams_parks)
+  * [Amsterdam Neighborhoods](#ams_neighborhoods)
+  * [Amsterdam Houses](#ams_houses)
+  * [Amsterdam Parks](#ams_parks)
 - [Functionalities](#functionalities)
   * [Preparation](#preparation)
   * [Availability](#availability)
     + [Calc NDVI](#calc-ndvi)
     + [Land Cover](#land-cover)
     + [Canopy coverage](#canopy-coverage)
-    + [Park percentage](#park-percentage)
+    + [Greenspace percentage](#greenspace-percentage)
   * [Accessibility](#accessibility)
     + [Park access](#park-access)
   * [Visibility](#visibility)
@@ -279,24 +279,51 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 ---
 
-### Park percentage
+### Greenspace percentage
 
-The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `park_layer` is not given, the parks will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
+The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). The features which are retrieved from OSM are found within the leisure, nature and land use categories. In line with the work of [Breekveldt](https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/Urban_Greenspace_Accessibility), the features need to adhere to the following requirements; 
 
-![](man/figures/parks_example.png)
+- Feature represents an area
+- The area is outdoor,
+- The area is (semi-)publicly available, 
+- The area is likely to contain trees, grass and/or greenery
+- The area can reasonably be used for walking or recreational activities
+
+After carefully considering the features in OSM, the following where used (also in line with Breekveldt);
+
+- Allotments 
+- Forest
+- Greenfield
+- Village green
+- Garden
+- Fitness station
+- Nature reserve
+- Playground
+- Grassland
+
+In the following example,
+
+
+
+![](man/figures/parks_euclidean.png)
 
 ``` r
-park_pct(address_3, buffer_distance=400)
-# Euclidean distance will be used to calculate the buffers around the address location that is given
-# Simple feature collection with 3 features and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
-# Projected CRS: Amersfoort / RD New
-#   UID  park_pct                  geometry
-# 1   1 23.743997 POINT (118231.8 487636.8)
-# 2   2 51.433460 POINT (119718.2 488790.5)
-# 3   3  4.827692 POINT (119659.3 487693.7)
+park_pct(df_points, speed = 5, time = 3)
+Simple feature collection with 9 features and 2 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
+Projected CRS: Amersfoort / RD New
+  UID   park_pct                  geometry
+1   1  0.3041257 POINT (122550.8 487284.1)
+2   2  2.5132996 POINT (122168.8 487033.6)
+3   3 11.5234716 POINT (122341.7 486895.6)
+4   4  7.1148883 POINT (122767.5 486602.6)
+5   5  3.7042571 POINT (122906.4 487497.6)
+6   6  8.5394656   POINT (123179.1 487316)
+7   7  7.8367531 POINT (123344.6 487201.2)
+8   8  7.0428552 POINT (123603.6 487073.4)
+9   9  2.8959452   POINT (123035 486830.7)
 
 ```
 
@@ -306,19 +333,12 @@ park_pct(address_3, buffer_distance=400)
 
 ### Park access
 
-In the `parks_access` functions, the nearest parks for the given address locations will be created and whether these parks are within a given buffer distance. To calculate the distance to the parks, fake entry points are created. These fake entrances are created by making a buffer of 20 meter around the park polygon. this buffer is intersected with the intersection nodes which is created by intersecting the network points created with the parks. 
+In the `parks_access` functions, the nearest parks for the given address locations will be created and whether these parks are within a given buffer distance. To calculate the distance to the parks, fake entry points are created. These fake entrances are created by making a buffer of 20 meter around the park polygon. This buffer is intersected with the intersection nodes which is created by intersecting the network points created with the parks. 
 
 
 ``` r
 parks_access(address_location, buffer_distance=350)
-# You did not provide a network file, a network will be created using osm.
-# If a city is missing, it will take more time to run the function
-# The input place was matched with Greater Manchester. 
-#   |===============================================================================| 100%
-# File downloaded!
-# Start with the vectortranslate operations on the input file!
-# 0...10...20...30...40...50...60...70...80...90...100 - done.
-# Finished the vectortranslate operations on the input file!
+
 # Simple feature collection with 3 features and 3 fields
 # Geometry type: POINT
 # Dimension:     XY
