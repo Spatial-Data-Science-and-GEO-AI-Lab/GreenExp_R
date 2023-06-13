@@ -22,6 +22,7 @@
 greenspace_access <- function(address_location, greenspace = NULL, buffer_distance = NULL, network_file=NULL,
                            epsg_code=NULL, download_dir = tempdir(), euclidean=TRUE,
                            pseudo_entrance=FALSE, entrances_within_buffer=TRUE,
+                           plot=FALSE,
                            speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
@@ -274,6 +275,34 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     closest_greenspace <- nearest_neighbours$nn.dist[,1]
     euclidean_dist_df <- as.data.frame(closest_greenspace)
     greenspace_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
+
+    if (plot) {
+      indeces <- nearest_neighbours$nn.index[, 1]
+      #greenspace_point<- as.matrix(greenspace_point)
+      closest_parks <- greenspace_point[indeces, ]
+      coords_address <- data.frame(sf::st_coordinates(address_location))
+      closest_park_coords <- data.frame(sf::st_coordinates(closest_parks))
+
+
+      lines_list <- list()  # Create an empty list to store the line objects
+
+      for (i in 1:nrow(coords_address)) {
+        line <- sf::st_linestring(matrix(c(coords_address$X[i], closest_park_coords$X[i], coords_address$Y[i], closest_park_coords$Y[i]), ncol = 2))
+        lines_list[[i]] <- line  # Store the line object in the list
+      }
+
+      lines <- sf::st_sfc(lines_list)
+      lines <- sf::st_as_sf(lines) %>% sf::st_set_crs(projected_crs)
+
+      greenspace <- sf::st_transform(greenspace, projected_crs)
+      # Display the mapview plot with the legend
+      m1 <- mapview::mapview(greenspace, col.regions='green', layer.name='Greenspace Polygon', legend=TRUE)
+      m2 <- mapview::mapview(greenspace_point, col.regions='black', cex=3, layer.name='Greenspace Point')
+      m3 <- mapview::mapview(address_location, col.regions='red', cex=3, layer.name='Address Location')
+      m4 <- mapview::mapview(lines, layer.name='Euclidean line')
+      print(m1+m2+m3+m4)
+
+    }
 
 
   }
