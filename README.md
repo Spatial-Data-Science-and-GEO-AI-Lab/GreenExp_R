@@ -353,20 +353,20 @@ Three examples will be provided. For the sake of visualization, one address poin
 
 The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are black and the address location is red. 
 
-![](man/figures/accessbility_euclidean.png)
+![](man/figures/accessibility_euclidean.png)
 
 
 ``` r
-df_point <- df_points[2,]
+df_point <- df_points[8,]
+greenspace_access(df_point, buffer_distance = 300)
 
-greenspace_access(df_point, buffer_distance=300)
 Simple feature collection with 1 feature and 3 fields
 Geometry type: POINT
 Dimension:     XY
-Bounding box:  xmin: 122168.8 ymin: 487033.6 xmax: 122168.8 ymax: 487033.6
+Bounding box:  xmin: 123603.6 ymin: 487073.4 xmax: 123603.6 ymax: 487073.4
 Projected CRS: Amersfoort / RD New
   UID closest_greenspace greenspace_in_300m_buffer                  geometry
-1   1           71.62767                      TRUE POINT (122168.8 487033.6)
+1   1           178.7477                      TRUE POINT (123603.6 487073.4)
 ```
 
 

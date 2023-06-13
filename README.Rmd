@@ -250,33 +250,26 @@ park_pct(df_points, )
 
 ## Accessibility
 
-### Park access
+### Greenspace access
 
-In the `parks_access` functions, the nearest parks for the given address locations will be created and whether these parks are within a given buffer distance. To calculate the distance to the parks, fake entry points are created. These fake entrances are created by making a buffer of 20 meter around the park polygon. this buffer is intersected with the intersection nodes which is created by intersecting the network points created with the parks. 
+In the `greenspace_access` functions, the nearest greenspaces for the given address locations will be created and whether these greenspaces are within a given buffer distance. By default, greenspace access will look at a euclidean buffer around the address locations and will use the centroid of the greenspaces to find the shortest distance. KNN will be used to calculate the euclidean distance from the address location to the greenspace
 
+Additionally it is possible to change the euclidean buffer to a network buffer. In this instance the distance will be calculated using the  [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package. This package uses the road networks to calculate the distance from point to point.
 
-``` r
-parks_access(address_location, buffer_distance=350)
-# You did not provide a network file, a network will be created using osm.
-# If a city is missing, it will take more time to run the function
-# The input place was matched with Greater Manchester. 
-#   |===============================================================================| 100%
-# File downloaded!
-# Start with the vectortranslate operations on the input file!
-# 0...10...20...30...40...50...60...70...80...90...100 - done.
-# Finished the vectortranslate operations on the input file!
-# Simple feature collection with 3 features and 3 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-# Projected CRS: OSGB36 / British National Grid
-#   UID closest_park parks_in_buffer                  geometry
-# 1   1     264.6468            TRUE POINT (388644.2 392861.6)
-# 2   2     167.2045            TRUE POINT (385981.9 393805.5)
-# 3   3     278.6349            TRUE POINT (388631.2 395322.2)
+Next, pseudo entry points can be used to calculate the distance to the greenspaces. These pseudo entrances are created by making a buffer of 10 meter around the greenspace polygon. This buffer is intersected with the intersection nodes which is created by intersecting the network points created with the greenspaces.
+
+Three examples will be provided. For the sake of visualization, one address point will be used to calculate the accessibility. 
+
+**Example 1:**
+
+The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are black and the address location is red. 
+
+![](man/figures/accessibility_euclidean.png)
+
+```{r}
+df_point <- df_points[8,]
+greenspace_access(df_point, buffer_distance = 300)
 ```
-
-
 
 ---
 
