@@ -124,7 +124,7 @@ map <- mapview::mapview(list(df, df_points), label = c("Buurt", "Buurtcode"),
 map
 ```
 
-
+Please note that the data serves as an illustration, and you may need to adapt the parameters and function usage to match your specific scenario.
 
 ---
 
@@ -224,10 +224,15 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `park_layer` is not given, the parks will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
 
-![](man/figures/parks_example.png)
+![](man/figures/parks_euclidean.png)
+
+
+```{r}
+park_pct(df_points, speed=5, time=3)
+```
 
 ``` r
-park_pct(address_3, buffer_distance=400)
+park_pct(df_points, )
 # Euclidean distance will be used to calculate the buffers around the address location that is given
 # Simple feature collection with 3 features and 2 fields
 # Geometry type: POINT

@@ -233,7 +233,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     } else {
       if (pseudo_entrance){
         message('Fake entrances for the given greenspace polygons will be created')
-        greenspace_buffer <- sf::st_buffer(greenspace, 20)
+        greenspace_buffer <- sf::st_buffer(greenspace, 10)
 
           # When greenspace are overlapping, combine them
         greenspace_combined <- sf::st_union(greenspace_buffer)

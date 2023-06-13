@@ -114,6 +114,7 @@ df_parks <- Ams_Parks
   
 ```
 
+Please note that the examples based on this data serves as an illustration, and you may need to adapt the parameters and function usage to match your specific scenario.
 
 
 
@@ -281,17 +282,25 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 ### Greenspace percentage
 
+The `park_pct` function calculates the percentage of park coverage within a specified buffer distance. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use, following the requirements outlined by Breekveldt:
+
+
+
+In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of a 3-minute walk (with a speed of 5 units and a time of 3 units). The greenspace data is obtained from the retrieved OSM data.
+
+
+
 The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). The features which are retrieved from OSM are found within the leisure, nature and land use categories. In line with the work of [Breekveldt](https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/Urban_Greenspace_Accessibility), the features need to adhere to the following requirements; 
 
-- Feature represents an area
-- The area is outdoor,
-- The area is (semi-)publicly available, 
-- The area is likely to contain trees, grass and/or greenery
-- The area can reasonably be used for walking or recreational activities
+1. The feature represents an area.
+2. The area is outdoors.
+3. The area is (semi-)publicly available.
+4. The area is likely to contain trees, grass, and/or greenery.
+5. The area can reasonably be used for walking or recreational activities.
 
-After carefully considering the features in OSM, the following where used (also in line with Breekveldt);
+Based on these criteria, the following features from OSM are used:
 
-- Allotments 
+- Allotments
 - Forest
 - Greenfield
 - Village green
@@ -301,8 +310,7 @@ After carefully considering the features in OSM, the following where used (also 
 - Playground
 - Grassland
 
-In the following example,
-
+In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of a 3-minute walk (speed = 5, time=3). The greenspace is based on the retrieved data from OSM. 
 
 
 ![](man/figures/parks_euclidean.png)
@@ -331,23 +339,34 @@ Projected CRS: Amersfoort / RD New
 
 ## Accessibility
 
-### Park access
+### Greenspace access
 
-In the `parks_access` functions, the nearest parks for the given address locations will be created and whether these parks are within a given buffer distance. To calculate the distance to the parks, fake entry points are created. These fake entrances are created by making a buffer of 20 meter around the park polygon. This buffer is intersected with the intersection nodes which is created by intersecting the network points created with the parks. 
+In the `greenspace_access` functions, the nearest greenspaces for the given address locations will be created and whether these greenspaces are within a given buffer distance. By default, greenspace access will look at a euclidean buffer around the address locations and will use the centroid of the greenspaces to find the shortest distance. KNN will be used to calculate the euclidean distance from the address location to the greenspace
+
+Additionally it is possible to change the euclidean buffer to a network buffer. In this instance the distance will be calculated using the  [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package. This package uses the road networks to calculate the distance from point to point.
+
+Next, pseudo entry points can be used to calculate the distance to the greenspaces. These pseudo entrances are created by making a buffer of 10 meter around the greenspace polygon. This buffer is intersected with the intersection nodes which is created by intersecting the network points created with the greenspaces.
+
+Three examples will be provided. For the sake of visualization, one address point will be used to calculate the accessibility. 
+
+**Example 1:**
+
+The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are black and the address location is red. 
+
+![](man/figures/accessbility_euclidean.png)
 
 
 ``` r
-parks_access(address_location, buffer_distance=350)
+df_point <- df_points[2,]
 
-# Simple feature collection with 3 features and 3 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-# Projected CRS: OSGB36 / British National Grid
-#   UID closest_park parks_in_buffer                  geometry
-# 1   1     264.6468            TRUE POINT (388644.2 392861.6)
-# 2   2     167.2045            TRUE POINT (385981.9 393805.5)
-# 3   3     278.6349            TRUE POINT (388631.2 395322.2)
+greenspace_access(df_point, buffer_distance=300)
+Simple feature collection with 1 feature and 3 fields
+Geometry type: POINT
+Dimension:     XY
+Bounding box:  xmin: 122168.8 ymin: 487033.6 xmax: 122168.8 ymax: 487033.6
+Projected CRS: Amersfoort / RD New
+  UID closest_greenspace greenspace_in_300m_buffer                  geometry
+1   1           71.62767                      TRUE POINT (122168.8 487033.6)
 ```
 
 
