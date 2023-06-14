@@ -520,33 +520,24 @@ The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GV
 
 ### Viewshed
 
-The viewshed function computes a binary viewshed of a single point on a Digital Surface Model (DSM) raster. A radial buffer is applied on the observer position, and visibility is being calculated usig a C++ implementation of Bresenham’s line algorithm [Bresenham 1965](https://ieeexplore.ieee.org/document/5388473) & [Bresenham 1977](https://doi.org/10.1145/359423.359432) and simple geometry. The
-result of the `viewshed` function is a radial raster where 0 =
-no-visible and 1 = visible area.
+The viewshed function computes a binary viewshed of a single point on a Digital Surface Model (DSM) raster. A radial buffer is applied on the observer position, and visibility is being calculated using a C++ implementation of Bresenham’s line algorithm [Bresenham 1965](https://ieeexplore.ieee.org/document/5388473) & [Bresenham 1977](https://doi.org/10.1145/359423.359432) and simple geometry. The
+result of the `viewshed` function is a radial raster where 0 = no-visible and 1 = visible area.
 
 For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) package.
 
 **EXAMPLE**
 
-Data can be retrieved from this [site](https://zenodo.org/record/5061257). 
-
-```r
-# Read in the digital eleveation model
-DEM <- terra::rast('data/GreaterManchester_DTM_5m.tif')
-# Read the digital surfaca model
-DSM <- terra::rast('data/GreaterManchester_DSM_5m.tif')
+```{r}
 # Read the greenspace 
-GS <- terra::rast('data/GreaterManchester_GreenSpace_5m.tif')
-
-# 
-observer <- sf::st_sf(sfheaders::sf_point(c(388644.2, 392862.7)), crs = sf::st_crs(terra::crs(DEM)))
-
-vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
+GS <- terra::rast('data/GS_AMS.tif')
+# Read the digital surfaca model
+DSM <- terra::rast('data/DSM_AMS.tif')
+# Read in the digital eleveation model
+DTM<- terra::rast('data/DTM_AMS.tif')
+vs <- GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dtm_rast = DTM,
                          max_distance = 200, observer_height = 1.7, plot = TRUE)
 ```
 
-
-![](man/figures/viewshed.png)
 
 The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visibile area and gray is not visible. 
 
@@ -558,23 +549,54 @@ Based on a viewshed and a binary greenspace raster, all visible points are class
 
 For more information about the VGVI please go to the [GVI](https://github.com/STBrinkmann/GVI) package. For more information about the algorithms look at the paper by [Brinkmann, 2022](https://doi.org/10.5194/agile-giss-3-27-2022)
 
-```r
-VGVI <- vgvi_from_sf(observer = observer,
-             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
-             max_distance = 200, observer_height = 1.7,
-             m = 0.5, b = 8, mode = "logit")
-# Simple feature collection with 1 feature and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 388644.2 ymin: 392862.7 xmax: 388644.2 ymax: 392862.7
-# Projected CRS: OSGB36 / British National Grid
-#   id      VGVI                  geometry
-# 1  1 0.3177667 POINT (388644.2 392862.7)
+**Example** 
+
+The figure below provides an overview of the data used for calculating the Vegetation-Ground View Index (VGVI). In the figure, you will find various elements that contribute to the analysis.
+
+1. Observer Points: The dots depicted in the figure represent the observer points. These points correspond to the addresses used in the examples discussed thus far. Each observer point serves as a starting location for measuring the VGVI.
+
+2. Address ID Numbers: The numbers assigned to the addresses in the plot correspond to the ID numbers used in the code chunk below the figure. These ID numbers uniquely identify each address and allow for easy referencing and analysis in the code.
+
+3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or parks, and is a crucial factor in determining the VGVI.DEM and 
+
+4. DSM: The figure also includes the Digital Elevation Model (DEM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DEM and DSM helps in understanding the topography of the region.
+
+By utilizing this information and the corresponding code, the VGVI can be calculated, providing insights into the vegetation-ground view characteristics at each observer point.
+
+
+
+
+![](man/figures/VGVI_AMS.png)
+
+```{r}
+VGVI <- GreenExp::vgvi_from_sf(observer = df_points,
+                     dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
+                     max_distance = 200, observer_height = 1.7,
+                     m = 0.5, b = 8, mode = "logit")
+
+VGVI
+
 ```
+
+
 
 --- 
 
-### streetview 
+### VGVI from address
+
+GVI from address function: In contrast, the VGVI from address function employs a broader approach. It samples multiple points around the address location within a defined buffer. This buffer represents a circular area around the address. The function collects data from various points within this buffer and calculates the VGVI by taking the mean of the collected values. By incorporating multiple sample points, it offers a more comprehensive representation of the VGVI within the vicinity of the address.
+
+The VGVI from sf function analyzes the VGVI at a specific observer point, while the VGVI from address function expands the analysis by sampling multiple points around the address location. The latter approach captures the variability in vegetation-ground view characteristics within a defined buffer and provides a more averaged assessment of the VGVI.
+
+
+```{r}
+mean_VGVI <- vgvi_from_address(address = df_points,
+                     dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
+                     max_distance = 200, observer_height = 1.7,
+                     m = 0.5, b = 8, mode = "logit")
+
+mean_VGVI
+```
 
 ---
 

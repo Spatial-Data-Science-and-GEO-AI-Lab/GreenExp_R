@@ -238,7 +238,7 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
   dsm_cpp_rast <- dsm_rast %>% terra::rast() %>% raster::raster()
   greenspace_cpp_rast <- greenspace_rast %>% terra::rast() %>% raster::raster()
 
-  random_points_df <- data.frame(ID = integer(), geometry = st_sfc(), stringsAsFactors = FALSE) %>% sf::st_as_sf() %>%
+  random_points_df <- data.frame(ID = integer(), geometry = sf::st_sfc(), stringsAsFactors = FALSE) %>% sf::st_as_sf() %>%
     sf::st_set_crs(sf::st_crs(address))
 
   calc_area <- sf::st_buffer(address, buffer_distance)
@@ -253,7 +253,7 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
     points_df <- data.frame(ID = i, geometry = random_points, stringsAsFactors = FALSE)
 
     # Append the points to the random_points_df data frame
-    random_points_df <- bind_rows(random_points_df, points_df)
+    random_points_df <- dplyr::bind_rows(random_points_df, points_df)
   }
 
 

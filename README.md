@@ -448,11 +448,11 @@ vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
 ```
 
 
-![](man/figures/viewshed.png)
+![](man/figures/viewshed_plot.png)
 
-The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visibile area and gray is not visible. 
+The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visible area and gray is not visible. 
 
-### VGVI
+### vgvi_from_sf
 
 The Viewshed Greenness Visibility Index (VGVI) represents the proportion of visible greenness to the total visible area based on the `viewshed`. The estimated VGVI values range between 0 and 1, where = no green cells and 1= all of the visible cells are green.
 
@@ -460,21 +460,80 @@ Based on a viewshed and a binary greenspace raster, all visible points are class
 
 For more information about the VGVI please go to the [GVI](https://github.com/STBrinkmann/GVI) package. For more information about the algorithms look at the paper by [Brinkmann, 2022](https://doi.org/10.5194/agile-giss-3-27-2022)
 
+**Example:**
+
+The figure below provides an overview of the data used for calculating the Vegetation-Ground View Index (VGVI). In the figure, you will find various elements that contribute to the analysis.
+
+1. Observer Points: The dots depicted in the figure represent the observer points. These points correspond to the addresses used in the examples discussed thus far. Each observer point serves as a starting location for measuring the VGVI.
+
+2. Address ID Numbers: The numbers assigned to the addresses in the plot correspond to the ID numbers used in the code chunk below the figure. These ID numbers uniquely identify each address and allow for easy referencing and analysis in the code.
+
+3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or parks, and is a crucial factor in determining the VGVI.  
+
+4. DEM and DSM: The figure also includes the Digital Elevation Model (DEM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DEM and DSM helps in understanding the topography of the region.
+
+By utilizing this information and the corresponding code, the VGVI can be calculated, providing insights into the vegetation-ground view characteristics at each observer point.
+
+![](man/figures/VGVI_AMS.png)
+
 ```r
-VGVI <- vgvi_from_sf(observer = observer,
+VGVI <- vgvi_from_sf(observer = df_points,
              dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
-# Simple feature collection with 1 feature and 2 fields
+# Simple feature collection with 9 features and 4 fields
 # Geometry type: POINT
 # Dimension:     XY
-# Bounding box:  xmin: 388644.2 ymin: 392862.7 xmax: 388644.2 ymax: 392862.7
-# Projected CRS: OSGB36 / British National Grid
-#   id      VGVI                  geometry
-# 1  1 0.3177667 POINT (388644.2 392862.7)
+# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
+# Projected CRS: Amersfoort / RD New
+# # A tibble: 9 × 5
+#      id   VGVI Buurtcode Buurt                               geom
+#   <int>  <dbl> <chr>     <chr>                        <POINT [m]>
+# 1     1 0.176  AF04      Rapenburg            (122550.8 487284.1)
+# 2     2 0.165  AF06      Uilenburg            (122168.8 487033.6)
+# 3     3 0.200  AF07      Valkenburg           (122341.7 486895.6)
+# 4     4 0.530  AJ02      Plantage             (122767.5 486602.6)
+# 5     5 0.324  AK01      Marine-Etablissement (122906.4 487497.6)
+# 6     6 0.200  AK02      Kattenburg             (123179.1 487316)
+# 7     7 0.0896 AK03      Wittenburg           (123344.6 487201.2)
+# 8     8 0      AK04      Oostenburg           (123603.6 487073.4)
+# 9     9 0.175  AK07      Kadijken               (123035 486830.7)
 ```
 
 --- 
+
+
+### VGVI from address
+
+GVI from address function: In contrast, the VGVI from address function employs a broader approach. It samples multiple points around the address location within a defined buffer. This buffer represents a circular area around the address. The function collects data from various points within this buffer and calculates the VGVI by taking the mean of the collected values. By incorporating multiple sample points, it offers a more comprehensive representation of the VGVI within the vicinity of the address.
+
+The VGVI from sf function analyzes the VGVI at a specific observer point, while the VGVI from address function expands the analysis by sampling multiple points around the address location. The latter approach captures the variability in vegetation-ground view characteristics within a defined buffer and provides a more averaged assessment of the VGVI.
+
+
+```r
+VGVI <- vgvi_from_address(address = df_points,
+             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
+             max_distance = 200, observer_height = 1.7,
+             m = 0.5, b = 8, mode = "logit")
+# Simple feature collection with 9 features and 2 fields
+# Geometry type: POINT
+# Dimension:     XY
+# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
+# Projected CRS: Amersfoort / RD New
+# # A tibble: 9 × 3
+#      ID mean_VGVI            geometry
+# * <int>     <dbl>         <POINT [m]>
+# 1     1    0.121  (122550.8 487284.1)
+# 2     2    0.0991 (122168.8 487033.6)
+# 3     3    0.131  (122341.7 486895.6)
+# 4     4    0.346  (122767.5 486602.6)
+# 5     5    0.272  (122906.4 487497.6)
+# 6     6    0.153    (123179.1 487316)
+# 7     7    0.0754 (123344.6 487201.2)
+# 8     8    0.0134 (123603.6 487073.4)
+# 9     9    0.165    (123035 486830.7)
+```
+
 
 ### streetview 
 
