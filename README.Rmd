@@ -7,16 +7,16 @@
 - [Data](#data)
   * [Ams_Neighborhoods](#ams_neighborhoods)
   * [Ams_Houses](#ams_houses)
-  * [Ams_Parks](#ams_parks)
+  * [Ams_greenspaces](#ams_greenspaces)
 - [Functionalities](#functionalities)
   * [Preparation](#preparation)
   * [Availability](#availability)
     + [Calc NDVI](#calc-ndvi)
     + [Land Cover](#land-cover)
     + [Canopy coverage](#canopy-coverage)
-    + [Park percentage](#park-percentage)
+    + [greenspace percentage](#greenspace-percentage)
   * [Accessibility](#accessibility)
-    + [Park access](#park-access)
+    + [greenspace access](#greenspace-access)
   * [Visibility](#visibility)
     + [Viewshed](#viewshed)
     + [VGVI](#vgvi)
@@ -44,7 +44,7 @@ This package is provided with three sf datasets:
 
 1. [Ams_Neighborhoods](#ams_neighborhoods)
 2. [Ams_Houses](#ams_houses)
-3. [Ams_Parks](#ams_parks)
+3. [Ams_greenspaces](#ams_greenspaces)
 
 These datasets will be used as example to explain the [Functionalities](#functionalities).
 
@@ -72,13 +72,13 @@ Run the following code for more information
 
 ---
 
-#### Ams_Parks
+#### Ams_greenspaces
 
-The Ams_Parks dataset is also retrieved from the [Gemeente Amsterdam](https://maps.amsterdam.nl/stadsparken/)
+The Ams_greenspaces dataset is also retrieved from the [Gemeente Amsterdam](https://maps.amsterdam.nl/stadsgreenspaceen/)
 Run the following code for more information 
 
 ```{r}
-?Ams_Parks
+?Ams_greenspaces
 ```
 
 ---
@@ -112,8 +112,8 @@ df <- Ams_Neighborhoods %>%
 # Create point locations in Amsterdam  
 df_points <- sf::st_centroid(df)
 
-# Create the parks
-df_parks <- Ams_Parks
+# Create the greenspaces
+#df_greenspaces <- Ams_greenspaces
 
 
 
@@ -135,7 +135,7 @@ Availability will be assessed using four functions:
 1. [Calc NDVI](#calc-ndvi)
 2. [Land Cover](#land-cover)
 3. [Canopy coverage](#canopy-coverage)
-4. [Park percentage](#park-percentage) 
+4. [greenspace percentage](#greenspace-percentage) 
 
 Each of these functions will provide an [sf](https://r-spatial.github.io/sf/articles/sf1.html) `dataframe` that includes the input location and the specific values requested within a defined buffer.
 
@@ -227,11 +227,11 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 ---
 
-### Park percentage
+### greenspace percentage
 
-The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `park_layer` is not given, the parks will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
+The `greenspace_pct` function gives the percentage of greenspace coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
 
-![](man/figures/parks_euclidean.png)
+![](man/figures/greenspaces_euclidean.png)
 
 
 ```{r}
@@ -246,7 +246,7 @@ park_pct(df_points, )
 # Dimension:     XY
 # Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
 # Projected CRS: Amersfoort / RD New
-#   UID  park_pct                  geometry
+#   UID  greenspace_pct                  geometry
 # 1   1 23.743997 POINT (118231.8 487636.8)
 # 2   2 51.433460 POINT (119718.2 488790.5)
 # 3   3  4.827692 POINT (119659.3 487693.7)
@@ -269,7 +269,7 @@ Three examples will be provided. For the sake of visualization, one address poin
 
 **Example 1:**
 
-The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are black and the address location is red. 
+The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the greenspaces are in green and the euclidean distance to the nearest greenspace centroid is shown with a blue line, the greenspace centroids are black and the address location is red. 
 
 
 ```{r, include=FALSE}
@@ -287,62 +287,73 @@ calculation_area <- sf::st_buffer(address_locations, dist = buffer_distance)
 
 calculation_area <- sf::st_transform(calculation_area, 4326)
 
-q1 <- osmdata::opq(sf::st_bbox(calculation_area)) %>%
-  osmdata::add_osm_feature(key = "landuse",
-                           value = c('allotments','forest',
-                                     'greenfield','village_green')) %>%
-  osmdata::osmdata_sf()
+iso_area <- sf::st_buffer(sf::st_convex_hull(
+    sf::st_union(sf::st_geometry(df_point))),
+    buffer_distance)
+  iso_area <- sf::st_transform(iso_area, crs = 4326)
+q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
+      osmdata::add_osm_feature(key = "landuse",
+                               value = c('allotments','forest',
+                                         'greenfield','village_green')) %>%
+      osmdata::osmdata_sf()
 
-q2 <- osmdata::opq(sf::st_bbox(calculation_area)) %>%
+q2 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
   osmdata::add_osm_feature(key = "leisure",
                            value = c('garden','fitness_station',
                                      'nature_reserve','park','playground')) %>%
   osmdata::osmdata_sf()
 
-q3 <- osmdata::opq(sf::st_bbox(calculation_area)) %>%
+q3 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
   osmdata::add_osm_feature(key = "natural",
                            value = c('grassland')) %>%
   osmdata::osmdata_sf()
-
 res <- c(q1, q2, q3)
 
 
-# park_layer cleaning
-park_layer <- res$osm_polygons
-park_layer <- sf::st_make_valid(park_layer)
 
-park_layer_data <- park_layer %>%  sf::st_transform(crs=projected_crs) %>% sf::st_as_sf()
+greenspace <- res$osm_polygons
+greenspace <- tidygraph::select(greenspace, "osm_id", "name")
+greenspace <- sf::st_make_valid(greenspace)
 
-park_layer_plot <- sf::st_geometry(park_layer)
-
-park_centroid <- sf::st_centroid(park_layer_plot)
+greenspace_centroid <- sf::st_centroid(greenspace)
 address <- sf::st_transform(address_locations, 4326)
 
-# Calculate Euclidean distances between address and park centroids
-distances <- st_distance(address, park_centroid)
+# Calculate Euclidean distances between address and greenspace centroids
+# Multiple distances 
+nearest_neighbours <- FNN::get.knnx(sf::st_coordinates(greenspace_centroid), sf::st_coordinates(address), k = 5)
 
-# Find the index of the park centroid with minimum distance
+indices <- nearest_neighbours$nn.index[, 1]  # Extract the indices from the first c
+
+greenspace_centroids <- sf::st_as_sf(greenspace_centroid)
+
+greenspace_centroid_matrix <- as.matrix(greenspace_centroid)
+selected_rows <- greenspace_centroid_matrix[indices, , drop = FALSE]
+
+
+
+distances <- st_distance(address, greenspace_centroid)
+
+# Find the index of the greenspace centroid with minimum distance
 closest_index <- which.min(distances)
 
-park_centroid <- sf::st_as_sf(park_centroid)
-closest_park <- park_centroid[closest_index,]
+greenspace_centroid <- sf::st_as_sf(greenspace_centroid)
+closest_greenspace <- greenspace_centroid[closest_index,]
 
-park_layer_plot <- sf::st_transform(park_layer_plot, projected_crs)
 calc_area <- sf::st_transform(calculation_area, projected_crs)
-park_centroid <- sf::st_transform(park_centroid, projected_crs)
-closest_park <- sf::st_transform(closest_park, projected_crs)
+greenspace_centroid <- sf::st_transform(greenspace_centroid, projected_crs)
+closest_greenspace <- sf::st_transform(closest_greenspace, projected_crs)
 
 coords_address <- data.frame(sf::st_coordinates(address_locations))
-closest_park_coords <- data.frame(sf::st_coordinates(closest_park))
+closest_greenspace_coords <- data.frame(sf::st_coordinates(closest_greenspace))
 
-line <- st_linestring(matrix(c(coords_address$X, closest_park_coords$X, coords_address$Y, closest_park_coords$Y), ncol = 2))
+line <- st_linestring(matrix(c(coords_address$X, closest_greenspace_coords$X, coords_address$Y, closest_greenspace_coords$Y), ncol = 2))
 line <- st_sfc(line, crs = projected_crs)
 line <- sf::st_as_sf(line)
 
-
+greenspace_layer <- sf::st_transform(greenspace, projected_crs)
 # Display the mapview plot with the legend
-m1 <- mapview(park_layer, col.regions='green', layer.name='Greenspace Polygon', legend=TRUE)
-m2 <- mapview(park_centroid, col.regions='black', cex=3, layer.name='Greenspace Centroid')
+m1 <- mapview(greenspace_layer, col.regions='green', layer.name='Greenspace Polygon', legend=TRUE)
+m2 <- mapview(greenspace_centroid, col.regions='black', cex=3, layer.name='Greenspace Centroid')
 m3 <- mapview(address_locations, col.regions='red', cex=3, layer.name='Address Location')
 m4 <- mapview(line, layer.name='Euclidean line')
 
@@ -354,20 +365,90 @@ map <- m1+m2+m3+m4
 map
 ```
 
-
-![](man/figures/accessibility_euclidean.png)
-
 ```{r}
 greenspace_access(df_point, buffer_distance = 300)
 ```
 **Example 2**
 
-The first example will use a network distance to the greenspace centroids, thus the network distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the parks are in green and the euclidean distance to the nearest park centroid is shown with a blue line, the park centroids are in black. As you can see in the plot the lines do not intersect with the points, this is because the lines are retrieved from OSM network file and do the centroids of the parks and the address centroid are not on the line. 
+The first example will use a network distance to the greenspace centroids, thus the network distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the greenspaces are in green and the euclidean distance to the nearest greenspace centroid is shown with a blue line, the greenspace centroids are in black. As you can see in the plot the lines do not intersect with the points, this is because the lines are retrieved from OSM network file and do the centroids of the greenspaces and the address centroid are not on the line. 
 
-![](man/figures/Network_path_accessibility.png)
+
+
+```{r, include=FALSE}
+lines <- GreenExp::network_file
+iso_area <- sf::st_buffer(sf::st_convex_hull(
+    sf::st_union(sf::st_geometry(df_point))),
+    buffer_distance)
+  iso_area <- sf::st_transform(iso_area, crs = 4326)
+region_shp <- sf::st_transform(iso_area, projected_crs)
+
+#Download osm used a square bounding box, now trim to the exact boundary
+#note that lines that that cross the boundary are still included
+lines <- lines[region_shp,]
+
+# Round coordinates to 0 digits.
+sf::st_geometry(lines) <- sf::st_geometry(lines) %>%
+  sf::st_sfc(crs = sf::st_crs(lines))
+
+# Network
+network_file <- sfnetworks::as_sfnetwork(lines, directed = FALSE)
+network_file <- tidygraph::convert(network_file, sfnetworks::to_spatial_subdivision)
+
+#convert network to an sf object of edge
+
+net_sf <- network_file %>% tidygraph::activate("edges") %>%
+  sf::st_as_sf()
+
+# Find which edges are touching each other
+touching_list <- sf::st_touches(net_sf)
+# create a graph from the touching list
+graph_list <- igraph::graph.adjlist(touching_list)
+# Identify the cpnnected components of the graph
+roads_group <- igraph::components(graph_list)
+# cont the number of edges in each component
+roads_table <- table(roads_group$membership)
+#order the components by size, largest to smallest
+roads_table_order <- roads_table[order(roads_table, decreasing = TRUE)]
+# get the name of the largest component
+biggest_group <- names(roads_table_order[1])
+
+# Subset the edges corresponding to the biggest connected component
+osm_connected_edges <- net_sf[roads_group$membership == biggest_group, ]
+# Filter nodes that are not connected to the biggest connected component
+network_file <- network_file %>%
+  tidygraph::activate("nodes") %>%
+  sf::st_filter(osm_connected_edges, .pred = sf::st_intersects)
+
+net_intersect <- sf::st_transform(network_file,  crs = 4326)
+net_points <- sf::st_geometry(net_intersect)
+# Compute the edge weights bsased on their length
+network_file <- tidygraph::mutate(tidygraph::activate(network_file, "edges"),
+                                  weight = sfnetworks::edge_length())
+
+distance_greenspaces<-sfnetworks::st_network_cost(network_file, from = df_point, to = greenspace_centroid)
+shortest_distances <- apply(distance_greenspaces, 1, which.min)
+greenspace_centroid_closest <- greenspace_centroid[shortest_distances, ]
+
+
+closest_greenspace <- sfnetworks::st_network_paths(network_file, from=df_point, to=greenspace_centroid_closest)
+node_path <- closest_greenspace  %>%
+  dplyr::slice(1) %>%
+  dplyr::pull(node_paths) %>%
+  unlist()
+line_network <- dplyr::slice(tidygraph::activate(network_file, "nodes"), node_path)
+final_line<- line_network %>% tidygraph::activate("edges") %>%
+       sf::st_as_sf() 
+m4 <- mapview(final_line, layer.name='Network line')
+
+map <- m1+m2+m3+m4
+```
 
 ```{r}
-greenspace_access(df_point, buffer_distance = 300, euclidean=F, network_file = network_file)
+map
+```
+
+```{r}
+greenspace_access(df_point, buffer_distance = 300, euclidean=F, network_file = GreenExp::network_file)
 ```
 
 ---
@@ -376,11 +457,64 @@ greenspace_access(df_point, buffer_distance = 300, euclidean=F, network_file = n
 
 The last example will use a network distance to the pseudo entrances of the greenspace. In this instance the network distance to the nearest pseudo entrance point will be calculated 
 
+```{r, include=FALSE}
+greenspace_buffer <- sf::st_buffer(greenspace, 20)
 
-![](man/figures/accessibility_pseudo_network.png)
+# When greenspace are overlapping, combine them
+greenspace_combined <- sf::st_union(greenspace_buffer)
+
+# make it a multipolygon
+greenspace_buffer <- sf::st_as_sf(sf::st_sfc(greenspace_combined))
+greenspace_buffer <- sf::st_make_valid(greenspace_buffer)
+
+st_intersection_faster <- function(x,y){
+  #faster replacement for st_intersection(x, y,...)
+  
+  y_subset <-
+    sf::st_intersects(x, y) %>%
+    unlist() %>%
+    unique() %>%
+    sort() %>%
+    {y[.,]}
+  
+  sf::st_intersection(x, y_subset)
+}
+greenspace_point <- st_intersection_faster(net_points, greenspace_buffer)
+greenspace_point <- greenspace_point %>% sf::st_transform(crs=projected_crs)
+
+
+distance_greenspaces<-sfnetworks::st_network_cost(network_file, from = df_point, to = greenspace_point)
+shortest_distances <- apply(distance_greenspaces, 1, which.min)
+greenspace_point <- sf::st_as_sf(greenspace_point)
+greenspace_centroid_closest <- greenspace_point[shortest_distances, ]
+
+
+closest_greenspace <- sfnetworks::st_network_paths(network_file, from=df_point, to=greenspace_centroid_closest)
+node_path <- closest_greenspace  %>%
+  dplyr::slice(1) %>%
+  dplyr::pull(node_paths) %>%
+  unlist()
+line_network <- dplyr::slice(tidygraph::activate(network_file, "nodes"), node_path)
+final_line<- line_network %>% tidygraph::activate("edges") %>%
+       sf::st_as_sf() 
+m4 <- mapview(final_line, layer.name='Network line')
+
+
+greenspace_pseudo <- sf::st_as_sf(greenspace_point)
+
+m2 <- mapview(greenspace_pseudo, col.regions='black', cex=3, layer.name='Pseudo entrances')
+
+map <- m1 + m2 + m3 + m4
+```
 
 ```{r}
-greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T, network_file = network_file)
+map
+```
+
+
+
+```{r}
+greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T, network_file = GreenExp::network_file)
 ```
 
 
