@@ -96,7 +96,7 @@ Rapenburg, Uilenburg, Valkenburg, Marine-Etablissement, Kadijken, Plantage, Katt
 
 The code below makes this dataset and showcases in the plot which neighborhoods are selected.
 
-```{r, warning=FALSE}
+```{r, warning =FALSE, message=FALSE}
 library(GreenExp) # If not loaded yet
 library(magrittr) # If not loaded yet (used for piping %>%)
 
@@ -169,12 +169,12 @@ If desired, users are able to switch the engine to `GEE` (Google Earth Engine) f
 
 Below you can find the code where the results correspond with the NDVI figure. 
 
-```{r}
+```{r, warning =FALSE, message=FALSE}
 ndvi_neighborhood <- GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE, UID=df$Buurt)
 ndvi_neighborhood
 ```
 
-```{r}
+```{r, warning =FALSE, message=FALSE}
 ndvi_address <- GreenExp::calc_ndvi(df_points, buffer_distance=300)
 ndvi_address
 ```
@@ -231,45 +231,34 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 The `greenspace_pct` function gives the percentage of greenspace coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). 
 
-![](man/figures/greenspaces_euclidean.png)
+![](man/figures/parks_euclidean.png)
 
 
-```{r}
+```{r, warning =FALSE, message=FALSE}
 park_pct(df_points, speed=5, time=3)
 ```
 
-``` r
-park_pct(df_points, )
-# Euclidean distance will be used to calculate the buffers around the address location that is given
-# Simple feature collection with 3 features and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 118231.8 ymin: 487636.8 xmax: 119718.2 ymax: 488790.5
-# Projected CRS: Amersfoort / RD New
-#   UID  greenspace_pct                  geometry
-# 1   1 23.743997 POINT (118231.8 487636.8)
-# 2   2 51.433460 POINT (119718.2 488790.5)
-# 3   3  4.827692 POINT (119659.3 487693.7)
-
-```
 
 ---
 
 ## Accessibility
-
 ### Greenspace access
 
-In the `greenspace_access` functions, the nearest greenspaces for the given address locations will be created and whether these greenspaces are within a given buffer distance. By default, greenspace access will look at a euclidean buffer around the address locations and will use the centroid of the greenspaces to find the shortest distance. KNN will be used to calculate the euclidean distance from the address location to the greenspace
 
-Additionally it is possible to change the euclidean buffer to a network buffer. In this instance the distance will be calculated using the  [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package. This package uses the road networks to calculate the distance from point to point.
+The greenspace_access function provide the ability to determine the nearest greenspaces to given address locations and assess their accessibility within a specified buffer distance. By default, the functions utilize a euclidean buffer around the address locations and calculate the shortest distance to the centroid of the greenspaces. This is achieved using the K-nearest neighbors (KNN) algorithm with the [FNN](https://rdrr.io/cran/FNN/man/knn.html) package, to calculate the euclidean distance between the address location and the greenspaces.
 
-Next, pseudo entry points can be used to calculate the distance to the greenspaces. These pseudo entrances are created by making a buffer of 10 meter around the greenspace polygon. This buffer is intersected with the intersection nodes which is created by intersecting the network points created with the greenspaces.
+
+Furthermore, the functions allow for the option to utilize a network buffer instead of the euclidean buffer. In this case, the distance calculation is performed using the [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package, which leverages road networks to calculate distances between points.
+
+Additionally, pseudo entry points can be employed to calculate the distance to the greenspaces. These pseudo entrances are created by generating a 10-meter buffer around the greenspace polygons and intersecting them with the network nodes obtained from the intersection of the network points with the greenspaces.
+
 
 Three examples will be provided. For the sake of visualization, one address point will be used to calculate the accessibility. 
 
-**Example 1:**
+**Example 1: Euclidean Distance Calculation**
 
-The first example will show the default function of the accessibility function, thus the euclidean distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the greenspaces are in green and the euclidean distance to the nearest greenspace centroid is shown with a blue line, the greenspace centroids are black and the address location is red. 
+In this example, the accessibility function is applied using the default settings, which involves calculating the euclidean distance from the address location to the nearest greenspace centroid. The figure below illustrates an example in Amsterdam, where the parks are represented by green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, while the address location is denoted by a red point. The code chunk beneath the plot provides the necessary code to receive the shortest distance from the address location. 
+
 
 
 ```{r, include=FALSE}
@@ -365,12 +354,16 @@ map <- m1+m2+m3+m4
 map
 ```
 
-```{r}
+```{r, warning =FALSE, message=FALSE}
 greenspace_access(df_point, buffer_distance = 300)
 ```
-**Example 2**
 
-The first example will use a network distance to the greenspace centroids, thus the network distance from the address location to the nearest greenspace centroid will be calculated. The figure below showcases an example in Amsterdam, where the greenspaces are in green and the euclidean distance to the nearest greenspace centroid is shown with a blue line, the greenspace centroids are in black. As you can see in the plot the lines do not intersect with the points, this is because the lines are retrieved from OSM network file and do the centroids of the greenspaces and the address centroid are not on the line. 
+---
+
+**Example 2: Network Distance Calculation**
+
+In this example, the accessibility function utilizes network distance to compute the distance from the address location to the nearest greenspace centroid. The figure below showcases an example in Amsterdam, where the parks are represented by green polygons. However, since the lines are retrieved from an OSM network file, the park centroids and address centroid may not align exactly with the network lines. As a result, you may notice that the lines do not intersect with the points in the plot. The park centroids are depicted as black points. The code chunk below the plot corresponds with the distance result of the plot
+
 
 
 
@@ -447,15 +440,15 @@ map <- m1+m2+m3+m4
 map
 ```
 
-```{r}
+```{r, warning =FALSE, message=FALSE}
 greenspace_access(df_point, buffer_distance = 300, euclidean=F, network_file = GreenExp::network_file)
 ```
 
 ---
 
-**Example 3:**
+**Example 3: Network Distance to Pseudo Entrances**
 
-The last example will use a network distance to the pseudo entrances of the greenspace. In this instance the network distance to the nearest pseudo entrance point will be calculated 
+In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the parks are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the parks, as roads passing through the parks can also serve as potential entrance points. 
 
 ```{r, include=FALSE}
 greenspace_buffer <- sf::st_buffer(greenspace, 20)
@@ -513,8 +506,9 @@ map
 
 
 
-```{r}
-greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T, network_file = GreenExp::network_file)
+```{r, warning =FALSE, message=FALSE}
+greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T, 
+                  network_file = GreenExp::network_file)
 ```
 
 

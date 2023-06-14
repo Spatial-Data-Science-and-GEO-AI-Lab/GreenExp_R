@@ -10,10 +10,13 @@ greenspace_access(
   buffer_distance = NULL,
   network_file = NULL,
   epsg_code = NULL,
-  download_dir = tempdir(),
+  folder_path_network = NULL,
   euclidean = TRUE,
+  minimum_greenspace_size = 0,
+  folder_path_greenspace = NULL,
   pseudo_entrance = FALSE,
   entrances_within_buffer = TRUE,
+  folder_path_lines = NULL,
   speed = NULL,
   time = NULL,
   city = NULL,
@@ -31,14 +34,20 @@ greenspace_access(
 
 \item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
-\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+\item{folder_path_network}{optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{euclidean}{Whether the distance between the fake entry points and the address location is euclidean, or calculated with the network.}
+
+\item{minimum_greenspace_size}{The minimum size of the greenspace in m2.}
+
+\item{folder_path_greenspace}{optional; Folder path to where the retrieved greenspaces should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{pseudo_entrance}{The possibility to calculate the distance to created pseudo entrances. These pseudo entrances are created,
 by intersecting a buffer that was created around a greenspace with network points. default is \code{FALSE}}
 
 \item{entrances_within_buffer}{The possibility to get the closest greenspace for every point. default is \code{FALSE}}
+
+\item{folder_path_lines}{optional; Folder path to where the shortest distance lines should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 

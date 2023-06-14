@@ -16,6 +16,7 @@
 #' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param folder_path_greenspace optional; Folder path to where the retrieved greenspaces should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param folder_path_lines optional; Folder path to where the shortest distance lines should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#' @param minimum_greenspace_size The minimum size of the greenspace in m2.
 #'
 #' @return The distance to the nearest greenspace and whether the greenspace are within the buffer distance that is given
 #' @export
@@ -23,6 +24,7 @@
 #' @examples
 greenspace_access <- function(address_location, greenspace = NULL, buffer_distance = NULL, network_file=NULL,
                            epsg_code=NULL, folder_path_network = NULL, euclidean=TRUE,
+                           minimum_greenspace_size=0,
                            folder_path_greenspace=NULL, pseudo_entrance=FALSE, entrances_within_buffer=TRUE,
                            folder_path_lines=NULL, speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
@@ -192,6 +194,10 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     greenspace <- res$osm_polygons
     greenspace <- tidygraph::select(greenspace, "osm_id", "name")
     greenspace <- sf::st_make_valid(greenspace)
+    threshold_units <- units::set_units(minimum_greenspace_size, "m^2")
+
+    # Filter greenspaces based on area
+    greenspace <- greenspace[sf::st_area(greenspace) > threshold_units, ]
 
     if (!is.null(folder_path_greenspace)) {
       if (!dir.exists(folder_path_greenspace)) {
@@ -244,6 +250,9 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     if ("POINT" %in% sf::st_geometry_type(greenspace)){
       # Do nothing
     } else {
+      threshold_units <- units::set_units(minimum_greenspace_size, "m^2")
+      # Filter greenspaces based on area
+      greenspace <- greenspace[sf::st_area(greenspace) > threshold_units, ]
       if (pseudo_entrance){
         message('Fake entrances for the given greenspace polygons will be created')
         greenspace_buffer <- sf::st_buffer(greenspace, 10)
