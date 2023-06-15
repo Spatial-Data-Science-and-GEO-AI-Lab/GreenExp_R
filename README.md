@@ -1,7 +1,7 @@
 
 # Greenness Exposure Assessment in R
 
-# Aim and bbjectives
+# Aim and objectives
 The aim of thi...
 
 # Table of contents
