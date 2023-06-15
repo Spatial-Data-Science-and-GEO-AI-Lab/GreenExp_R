@@ -26,7 +26,7 @@ The aim of thi...
     + [Viewshed](#viewshed)
     + [VGVI](#vgvi)
     + [Streetview](#streetview)
-- [Alternative Installation](#alternative-installation)
+- [Extended Installation](#alternative-installation)
   * [GEE](#gee)
   * [Rcpp](#rcpp)
 
@@ -544,7 +544,7 @@ VGVI <- vgvi_from_address(address = df_points,
 
 ---
 
-# Alternative installation
+# Extended installation
 
 To make optimal use of the package 
 
@@ -662,4 +662,6 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 
 To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
 
+## Acknowledgements and contact
+Email:
 
