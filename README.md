@@ -32,7 +32,7 @@ You can install the development version of GreenExp from [GitHub](https://github
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenEx_R")
+devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R")
 ```
 
 
