@@ -1,5 +1,5 @@
 
-# Green Exp
+# Greenness Exposure Assessment in R
 
 <!-- badges: start -->
 <!-- badges: end -->
