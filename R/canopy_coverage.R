@@ -19,7 +19,7 @@
 #' @examples
 
 
-canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
+canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
                         epsg_code=NULL, folder_path_network = NULL,
                         UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, city=NULL){
 
