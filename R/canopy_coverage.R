@@ -11,7 +11,7 @@
 #' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
-#' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #'
 #' @return The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
 #' @export
@@ -20,7 +20,7 @@
 
 
 canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
-                        epsg_code=NULL, download_dir = tempdir(),
+                        epsg_code=NULL, folder_path_network = NULL,
                         UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, city=NULL){
 
   ###### 1. Preperation + Cleaning #######
@@ -96,6 +96,13 @@ canopy_perc <- function(address_location, canopy_layer, buffer_distance=NULL, ne
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
                                       download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+        }
+        # save network file
+        if (!is.null(folder_path_network)) {
+          if (!dir.exists(folder_path_network)) {
+            dir.create(folder_path_network)
+          }
+          sf::st_write(lines, paste0(folder_path_network,'/','network.gpkg'))
         }
 
       }

@@ -2,8 +2,7 @@
 # Greenness Exposure Assessment in R
 
 # Aim and objectives
-The aim of thi...
-
+This package is developed to facilitate robust and transparent analysis in the field of greenspace and health research. It provides researchers with a collection of functionalities that can be applied across multiple countries, enabling comprehensive spatial analysis and enhancing the accuracy of results.
 # Table of contents
 
 <!-- badges: start -->
@@ -662,6 +661,10 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 
 To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
 
+## Sources 
+
 ## Acknowledgements and contact
-Email:
+Name: Martijn Koster
+Email: m.koster2@students.uu.nl 
+
 

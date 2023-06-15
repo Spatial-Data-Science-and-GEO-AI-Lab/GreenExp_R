@@ -1,26 +1,26 @@
 
-#' Park Coverage
+#' greenspace Coverage
 #'
 #' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param park_layer A park layer, the layer should be in projected coordinates
+#' @param greenspace_layer A greenspace layer, the layer should be in projected coordinates
 #' @param buffer_distance  A distance in meters to create a buffer or isochrone around the address location
 #' @param UID A character string representing a unique identifier for each point of interest
 #' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
 #' @param speed  A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time  numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
-#' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
+#' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
 #' @param download_dir A directory to download the network file, the default will be `tempdir()`.
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #'
-#' @return Returns the percentage of park coverage given a certain buffer.
+#' @return Returns the percentage of greenspace coverage given a certain buffer.
 #' @export
 #'
 #' @examples
 
 
-park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
+greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
                       speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_location_neighborhood=FALSE) {
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
@@ -85,12 +85,19 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
           lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
-                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
-                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      max_file_size = 5e+09, boundary_type = 'spat')
+        }
+        # Save network file
+        if (!is.null(folder_path_network)) {
+          if (!dir.exists(folder_path_network)) {
+            dir.create(folder_path_network)
+          }
+          sf::st_write(lines, paste0(folder_path_network,'/','network.gpkg'))
         }
 
       }
@@ -229,11 +236,11 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     calculation_area <- address_location
   }
 
-##### 4. Park layer #######
-  ### Creating park_layer set if not given
-  if (missing(park_layer)) {
+##### 4. greenspace layer #######
+  ### Creating greenspace_layer set if not given
+  if (missing(greenspace_layer)) {
     calculation_area_osm <- sf::st_transform(calculation_area, 4326)
-    # Initial load of park_layer
+    # Initial load of greenspace_layer
     q1 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "landuse",
                                value = c('allotments','forest',
@@ -253,30 +260,30 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
     res <- c(q1, q2, q3)
 
 
-    # park_layer cleaning
-    park_layer <- res$osm_polygons
-    park_layer <- tidygraph::select(park_layer, "osm_id", "name")
-    park_layer <- sf::st_make_valid(park_layer)
-    park_layer <- sf::st_transform(park_layer, projected_crs)
+    # greenspace_layer cleaning
+    greenspace_layer <- res$osm_polygons
+    greenspace_layer <- tidygraph::select(greenspace_layer, "osm_id", "name")
+    greenspace_layer <- sf::st_make_valid(greenspace_layer)
+    greenspace_layer <- sf::st_transform(greenspace_layer, projected_crs)
 
-    # print('time to clean park layer')
+    # print('time to clean greenspace layer')
     # print(Sys.time()-start)
 
   } else {
-    if (sf::st_crs(address_location) != sf::st_crs(park_layer))
+    if (sf::st_crs(address_location) != sf::st_crs(greenspace_layer))
     {
-      paste("The CRS of your park_layer data set is geographic, CRS of main data set will be used to transform")
-      park_layer <- sf::st_transform(park_layer, projected_crs)
+      paste("The CRS of your greenspace_layer data set is geographic, CRS of main data set will be used to transform")
+      greenspace_layer <- sf::st_transform(greenspace_layer, projected_crs)
     }
-    # Make sure the park layer are polygons and no points
-    park_geometries <- c("POLYGON", "MULTIPOLYGON")
-    if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% park_geometries){
-      stop('The povided park layer is not a polygon, or multipolygon, please provide a (multi)polygon file')
+    # Make sure the greenspace layer are polygons and no points
+    greenspace_geometries <- c("POLYGON", "MULTIPOLYGON")
+    if (!as.character(sf::st_geometry_type(address_location, by_geometry = FALSE)) %in% greenspace_geometries){
+      stop('The povided greenspace layer is not a polygon, or multipolygon, please provide a (multi)polygon file')
     }
   }
 
 ##### 5. Calculation #####
-  park_pct <- list()
+  greenspace_pct <- list()
 
   # if (nrow(calculation_area) > 1){
   n_iter <- nrow(calculation_area)
@@ -294,20 +301,20 @@ park_pct <- function(address_location, park_layer=NULL, buffer_distance=NULL, ne
   for (i in 1:n_iter) {
     pb$tick()
 
-    # Clip tree park to polygon
-    park_clip <- sf::st_intersection(park_layer, calculation_area[i,])
-    # Calculate area of clipped tree park
-    park_area <- sf::st_area(park_clip)
-    total_area <- sum(park_area)
+    # Clip tree greenspace to polygon
+    greenspace_clip <- sf::st_intersection(greenspace_layer, calculation_area[i,])
+    # Calculate area of clipped tree greenspace
+    greenspace_area <- sf::st_area(greenspace_clip)
+    total_area <- sum(greenspace_area)
     # Calculate area of polygon
     polygon_area <- sf::st_area(calculation_area[i,])
-    # Calculate tree park percentage
-    park_pct[i] <- total_area / polygon_area * 100
+    # Calculate tree greenspace percentage
+    greenspace_pct[i] <- total_area / polygon_area * 100
 
 
   }
   # Create a dataframe for the results
-  df <- data.frame(UID = nrow(calculation_area), park_pct = cbind(unlist(park_pct)),
+  df <- data.frame(UID = nrow(calculation_area), greenspace_pct = cbind(unlist(greenspace_pct)),
                    sf::st_geometry(address_location))
   df$UID <- seq.int(nrow(df))
   if (!missing(UID)){

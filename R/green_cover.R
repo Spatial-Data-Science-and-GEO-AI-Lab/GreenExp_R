@@ -11,7 +11,7 @@
 #' @param network_file n optional sfnetwork object representing a road network, If missing the road network will be created.
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param year The year of the satellite images. The years 2020 and 2021 can be used for the time being.
-#' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #' @param plot_landcover Option to plot the land cover, default is `FALSE`
 #'
@@ -21,7 +21,7 @@
 #'
 #' @examples
 
-land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
+land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
                           network_file=NULL, epsg_code=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL,
                           city=NULL, year='2021', plot_landcover=FALSE) {
   ###### 1. Preperation + Cleaning #######
@@ -86,12 +86,19 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
           lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
-                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
-                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      max_file_size = 5e+09, boundary_type = 'spat')
+        }
+        # Save network file
+        if (!is.null(folder_path_network)) {
+          if (!dir.exists(folder_path_network)) {
+            dir.create(folder_path_network)
+          }
+          sf::st_write(lines, paste0(folder_path_network,'/','network.gpkg'))
         }
 
       }

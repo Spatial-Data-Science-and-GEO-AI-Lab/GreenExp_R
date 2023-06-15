@@ -14,7 +14,7 @@
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param start_date The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
 #' @param end_date  The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
-#' @param download_dir A directory to download the network file, the default will be `tempdir()`.
+#' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param save_NDVI If you want to save the NDVI values, default is `FALSE`
 #' @param plot_NDVI If you want to plot the NDVI, default is `FALSE`
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
@@ -24,7 +24,7 @@
 #'
 #' @examples
 
-calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, download_dir = tempdir(),
+calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
                      epsg_code=NULL, network_file=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, engine='pc',
                            city=NULL, start_date='2020-01-01', end_date='2021-01-01', save_NDVI=FALSE, plot_NDVI=FALSE) {
 
@@ -96,6 +96,13 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
                                       download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+        }
+        # Save network file
+        if (!is.null(folder_path_network)) {
+          if (!dir.exists(folder_path_network)) {
+            dir.create(folder_path_network)
+          }
+          sf::st_write(lines, paste0(folder_path_network,'/','network.gpkg'))
         }
 
       }
