@@ -1,6 +1,11 @@
 
 # Greenness Exposure Assessment in R
 
+# Aim and bbjectives
+The aim of thi...
+
+# Table of contents
+
 <!-- badges: start -->
 <!-- badges: end -->
 - [Installation](#installation)
