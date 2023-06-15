@@ -9,7 +9,7 @@ calc_ndvi(
   raster,
   buffer_distance = NULL,
   network_buffer = FALSE,
-  download_dir = tempdir(),
+  folder_path_network = NULL,
   epsg_code = NULL,
   network_file = NULL,
   UID = NULL,
@@ -20,7 +20,7 @@ calc_ndvi(
   city = NULL,
   start_date = "2020-01-01",
   end_date = "2021-01-01",
-  save_NDVI = FALSE,
+  folder_path_ndvi = NULL,
   plot_NDVI = FALSE
 )
 }
@@ -33,7 +33,7 @@ calc_ndvi(
 
 \item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
 
-\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+\item{folder_path_network}{optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
@@ -55,7 +55,7 @@ calc_ndvi(
 
 \item{end_date}{The end date from when the satellite images will be filtered. \code{yyyy-mm-dd} default = \code{2021-01-01}}
 
-\item{save_NDVI}{If you want to save the NDVI values, default is \code{FALSE}}
+\item{folder_path_ndvi}{optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension}
 
 \item{plot_NDVI}{If you want to plot the NDVI, default is \code{FALSE}}
 }

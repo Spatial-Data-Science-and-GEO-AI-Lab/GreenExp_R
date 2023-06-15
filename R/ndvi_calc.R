@@ -15,7 +15,7 @@
 #' @param start_date The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
 #' @param end_date  The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
 #' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
-#' @param save_NDVI If you want to save the NDVI values, default is `FALSE`
+#' @param folder_path_ndvi  optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension
 #' @param plot_NDVI If you want to plot the NDVI, default is `FALSE`
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #'
@@ -26,7 +26,7 @@
 
 calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
                      epsg_code=NULL, network_file=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, engine='pc',
-                           city=NULL, start_date='2020-01-01', end_date='2021-01-01', save_NDVI=FALSE, plot_NDVI=FALSE) {
+                           city=NULL, start_date='2020-01-01', end_date='2021-01-01', folder_path_ndvi=NULL, plot_NDVI=FALSE) {
 
 
 ###### 1. Preperation + Cleaning #######
@@ -301,6 +301,16 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       # calculate the ndvi
       ndvi <- (nir-red) / (red+nir)
+
+      if (!is.null(folder_path_ndvi)) {
+        if (!dir.exists(folder_path_ndvi)) {
+          dir.create(folder_path_ndvi)
+        }
+        f <- file.path(paste0(folder_path_ndvi,'/','NDVI.tif'))
+        terra::writeRaster(ndvi, f, overwrite=T )
+        }
+
+
       # make sure the calculation area has the same crs as ndvi
       calculation_area_proj <- sf::st_transform(calculation_area, terra::crs(ndvi))
       # extract the ndvi values
@@ -309,10 +319,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       names(ndvi_values) <- c('ID', 'NDVI')
       # replace the missing values with 0.
       raster_values <- replace(ndvi_values, is.na(ndvi_values), 0)
-      if (save_NDVI){
-        # function to save the ndvi
 
-      }
       # Calculate the average NDVI
       average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI), .groups = 'drop')
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
@@ -341,6 +348,10 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       s2_NDVI <- s2_NDVI$select('NDVI')
       average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
+      if (!is.null(folder_path_ndvi)) {
+        message('The gee function is not compatible with saving the ndvi yet.')
+
+      }
 
       if(plot_NDVI) {
         message('The gee function is not compatible with plotting the ndvi yet.')

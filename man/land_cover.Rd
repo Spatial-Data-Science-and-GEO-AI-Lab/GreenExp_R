@@ -9,7 +9,8 @@ land_cover(
   raster,
   buffer_distance = NULL,
   network_buffer = FALSE,
-  download_dir = tempdir(),
+  folder_path_network = NULL,
+  folder_path_land_cover = NULL,
   network_file = NULL,
   epsg_code = NULL,
   UID = NULL,
@@ -30,7 +31,9 @@ land_cover(
 
 \item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
 
-\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+\item{folder_path_network}{optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
+
+\item{folder_path_land_cover}{optional; Folder path to where the retrieved land cover should be saved continuously. Must not include a filename extension.}
 
 \item{network_file}{n optional sfnetwork object representing a road network, If missing the road network will be created.}
 

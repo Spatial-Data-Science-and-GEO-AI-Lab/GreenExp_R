@@ -12,6 +12,7 @@
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
 #' @param year The year of the satellite images. The years 2020 and 2021 can be used for the time being.
 #' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#' @param folder_path_land_cover optional; Folder path to where the retrieved land cover should be saved continuously. Must not include a filename extension.
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #' @param plot_landcover Option to plot the land cover, default is `FALSE`
 #'
@@ -22,7 +23,8 @@
 #' @examples
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
-                          network_file=NULL, epsg_code=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL,
+                       folder_path_land_cover = NULL, network_file=NULL, epsg_code=NULL,  UID=NULL,
+                       address_location_neighborhood = FALSE, speed=NULL, time=NULL,
                           city=NULL, year='2021', plot_landcover=FALSE) {
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
@@ -271,6 +273,14 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     land_cover <- terra::rast( paste0("/vsicurl/", selected_item$assets$map$href))
     bbox_proj <- bbox %>%  sf::st_as_sfc() %>%  sf::st_transform(sf::st_crs(land_cover)) %>% terra::vect()
     land_cover <- terra::rast( paste0("/vsicurl/", selected_item$assets$map$href)) %>%  terra::crop(bbox_proj)
+
+    if (!is.null(folder_path_land_cover)) {
+      if (!dir.exists(folder_path_land_cover)) {
+        dir.create(folder_path_land_cover)
+      }
+      f <- file.path(paste0(folder_path_land_cover,'/','land_cover.tif'))
+      terra::writeRaster(land_cover, f, overwrite=T )
+    }
 
     if (plot_landcover){
 

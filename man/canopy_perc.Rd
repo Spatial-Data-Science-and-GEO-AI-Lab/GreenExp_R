@@ -11,7 +11,7 @@ canopy_perc(
   network_buffer = FALSE,
   network_file = NULL,
   epsg_code = NULL,
-  download_dir = tempdir(),
+  folder_path_network = NULL,
   UID = NULL,
   address_location_neighborhood = FALSE,
   speed = NULL,
@@ -32,7 +32,7 @@ canopy_perc(
 
 \item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
-\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+\item{folder_path_network}{optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{UID}{A character string representing a unique identifier for each point of interest}
 
