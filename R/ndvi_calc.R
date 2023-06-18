@@ -90,12 +90,12 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
         # Use the osmextract package to extract the lines in the area.
         if (!missing(city)) {
              lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
-                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                       max_file_size = 5e+09, boundary_type = 'spat')
 
         } else{
           message('If a city is missing, it will take more time to run the function')
           lines <- osmextract::oe_get(iso_area, stringsAsFactors=FALSE, boundary=iso_area,
-                                      download_directory=download_dir, max_file_size = 5e+09, boundary_type = 'spat')
+                                      max_file_size = 5e+09, boundary_type = 'spat')
         }
         # Save network file
         if (!is.null(folder_path_network)) {

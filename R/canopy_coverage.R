@@ -247,6 +247,8 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
 
   }
 
+  n_iter <- nrow(address_location)
+
   ### Make the calculations here
   canopy_pct <- list()
 
@@ -275,8 +277,6 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
       canopy_pct[i] <- total_area / polygon_area * 100
     }
     address_location <- sf::st_transform(address_location, projected_crs)
-    buffer <- calculation_area
-    names(buffer) <- "buffer"
     df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)),
                      sf::st_geometry(address_location))
     df$UID <- seq.int(nrow(df))
