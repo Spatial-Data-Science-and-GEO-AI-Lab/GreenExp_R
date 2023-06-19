@@ -269,7 +269,10 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
     # Select the year whcih is put in by the user, otherwise the default year.
     selected_item <- matches$features[[which(date_time == paste0(year,"-01-01T00:00:00Z"))]]
-    #
+
+    cat('The data is retrieved from the', selected_item$properties$description,
+    '\n The product is based on', selected_item$properties$mission,
+    '\n The data is retrieved in the year', year, '\n')
     land_cover <- terra::rast( paste0("/vsicurl/", selected_item$assets$map$href))
     bbox_proj <- bbox %>%  sf::st_as_sfc() %>%  sf::st_transform(sf::st_crs(land_cover)) %>% terra::vect()
     land_cover <- terra::rast( paste0("/vsicurl/", selected_item$assets$map$href)) %>%  terra::crop(bbox_proj)
