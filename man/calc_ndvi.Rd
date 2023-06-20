@@ -16,6 +16,7 @@ calc_ndvi(
   address_location_neighborhood = FALSE,
   speed = NULL,
   time = NULL,
+  add_sd = FALSE,
   engine = "pc",
   city = NULL,
   start_date = "2020-01-01",
@@ -46,6 +47,8 @@ calc_ndvi(
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{A numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+
+\item{add_sd}{optional; returns the standard deviation of the NDVI values within a buffer.}
 
 \item{engine}{When the raster is missing, users can choose whether they want to use Google Earth engine \code{gee} or Planetary Computer \code{pc} to calculate the ndvi}
 

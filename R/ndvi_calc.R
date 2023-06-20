@@ -18,6 +18,7 @@
 #' @param folder_path_ndvi  optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension
 #' @param plot_NDVI If you want to plot the NDVI, default is `FALSE`
 #' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param add_sd optional; returns the standard deviation of the NDVI values within a buffer.
 #'
 #' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
@@ -25,8 +26,8 @@
 #' @examples
 
 calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
-                     epsg_code=NULL, network_file=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, engine='pc',
-                           city=NULL, start_date='2020-01-01', end_date='2021-01-01', folder_path_ndvi=NULL, plot_NDVI=FALSE) {
+                     epsg_code=NULL, network_file=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, add_sd=FALSE,
+                     engine='pc', city=NULL, start_date='2020-01-01', end_date='2021-01-01', folder_path_ndvi=NULL, plot_NDVI=FALSE) {
 
 
 ###### 1. Preperation + Cleaning #######
@@ -322,6 +323,13 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       # Calculate the average NDVI
       average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI), .groups = 'drop')
+      # Calculate the sd here
+      if (add_sd) {
+        sd_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), sd_NDVI=sd(NDVI), .groups = 'drop')
+
+      }
+
+
       calculation_area <- sf::st_transform(calculation_area, projected_crs)
       if (plot_NDVI){
         terra::animate(ndvi, main='NDVI')
@@ -348,6 +356,10 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
       s2_NDVI <- s2_NDVI$select('NDVI')
       average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
+
+      if(add_sd){
+        sd_rast <- rgee::ee_extract(s2_NDVI, calculation_area, fun=ee$Reducer$sd())
+      }
       if (!is.null(folder_path_ndvi)) {
         message('The gee function is not compatible with saving the ndvi yet.')
 
@@ -380,7 +392,10 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
     raster_values <- replace(raster_values, is.na(raster_values), 0)
     # Calculate the average NDVI
     average_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), mean_NDVI=mean(NDVI_data_test), .groups = 'drop')
+    if(add_sd){
+      sd_rast <- dplyr::summarise(tidygraph::group_by(raster_values, ID), sd_NDVI=sd(NDVI_data_test), .groups = 'drop')
 
+    }
   }
 
 
@@ -393,8 +408,16 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
 
   address <- sf::st_geometry(address_location)
 
-  ndvi_avg <- data.frame(average_rast, address)
-  ndvi_avg <- sf::st_as_sf(ndvi_avg)
+  if (add_sd){
+    ndvi_avg <- data.frame(average_rast, sd_NDVI = sd_rast$sd_NDVI, address)
+    ndvi_avg <- sf::st_as_sf(ndvi_avg)
+
+  }else{
+    ndvi_avg <- data.frame(average_rast, address)
+    ndvi_avg <- sf::st_as_sf(ndvi_avg)
+    }
+
+
 
   paste(Sys.time()-start_function)
   paste('Amount of run time')
