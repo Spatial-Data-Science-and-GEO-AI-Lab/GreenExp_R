@@ -243,6 +243,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
            or set address_location_neighborhood to FALSE')
     }
+    message('You are using the provided area as buffer to extract the NDVI scores')
     calculation_area <- address_location
   }
 ###### 3. Raster for NDVI #######
@@ -358,7 +359,8 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
       average_rast <- rgee::ee_extract(s2_NDVI, calculation_area)
 
       if(add_sd){
-        sd_rast <- rgee::ee_extract(s2_NDVI, calculation_area, fun=ee$Reducer$sd())
+        warning('The gee function is not working optimally with the standard deviation yet.')
+        sd_rast <- rgee::ee_extract(s2_NDVI, calculation_area, fun=s2_NDVI$Reducer$stdDev())
       }
       if (!is.null(folder_path_ndvi)) {
         message('The gee function is not compatible with saving the ndvi yet.')
