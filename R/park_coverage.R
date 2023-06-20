@@ -72,12 +72,12 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
     # If people want to calculate the network buffer.
     if (network_buffer) {
       message('You will use a network to create a buffer around the address location(s),
-              Keep in mind that for large files it can take a while to run the funciton.')
+              Keep in mind that for large files it can take a while to run the function.')
       # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
         ###### 3.1 Calculating the network buffer when missing ######
-        # Extracting OSM road structure to build isochrone polygona
+        # Extracting OSM road structure to build isochrone polygon
         iso_area <- sf::st_buffer(sf::st_convex_hull(
           sf::st_union(sf::st_geometry(address_location))),
           buffer_distance)
@@ -233,6 +233,7 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
            or set address_location_neighborhood to FALSE')
     }
+    message('You are using the provided area as buffer to extract the greenspace percentage')
     calculation_area <- address_location
   }
 

@@ -73,13 +73,14 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     ###### 2. Network buffer ######
     # If people want to calculate the network buffer.
     if (network_buffer) {
+
       # Extracting OSM road structure to build isochrone polygona
       iso_area <- sf::st_buffer(sf::st_convex_hull(
         sf::st_union(sf::st_geometry(address_location))),
         buffer_distance)
       iso_area <- sf::st_transform(iso_area, crs = 4326)
       message('You will use a network to create a buffer around the address location(s),
-              Keep in mind that for large files it can take a while to run the funciton.')
+              Keep in mind that for large files it can take a while to run the function.')
       # If the network file is missing create the network file using osmextract
       if(missing(network_file)){
         message('You did not provide a network file, osm will be used to create a network file.')
@@ -236,6 +237,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
            or set address_location_neighborhood to TRUE')
     }
+    message('You are using the provided area as buffer to extract the land cover')
     calculation_area <- address_location
   }
 ###### 3. Raster for land cover #######

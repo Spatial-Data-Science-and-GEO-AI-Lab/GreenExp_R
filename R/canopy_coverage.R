@@ -236,6 +236,7 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
       stop('Your address location file is not a polygon, or multipolygon, either provide a polygon file,
            or set address_location_neighborhood to TRUE')
     }
+    message('You are using the provided area as buffer to extract the canopy percentage')
     calculation_area <- address_location
   }
 ##### 4. Canopy layer ####
