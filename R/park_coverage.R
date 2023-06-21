@@ -315,14 +315,13 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
 
 
   }
+  if (missing(UID)){
+    UID <- 1:nrow(calculation_area)}
+
   # Create a dataframe for the results
-  df <- data.frame(UID = nrow(calculation_area), greenspace_pct = cbind(unlist(greenspace_pct)),
-                   sf::st_geometry(address_location))
-  df$UID <- seq.int(nrow(df))
-  if (!missing(UID)){
-    df$UID <- UID}
-  # Make sure the dataframe is an sf dataframe
-  df <- sf::st_as_sf(df)
+  df <- data.frame(UID, greenspace_pct = cbind(unlist(greenspace_pct)),
+                   address_location) %>% sf::st_as_sf()
+
   print('running the function took:')
   print(Sys.time()-start_function)
 

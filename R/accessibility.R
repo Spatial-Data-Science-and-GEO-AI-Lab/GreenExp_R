@@ -403,15 +403,13 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     }
 
 
-
-
   if (missing(UID)) {
     UID <- 1:nrow(address_location)
   }
 
 
-  df <- data.frame(UID, sf::st_geometry(address_location), closest_greenspace, greenspace_in_buffer)
-  df <- sf::st_as_sf(df)
+  df <- data.frame(UID, closest_greenspace, greenspace_in_buffer,
+                   address_location) %>% sf::st_as_sf()
   colnames(df)[colnames(df) == "greenspace_in_buffer"] <- paste0('greenspace_in_',buffer_distance,'m_buffer')
 
 

@@ -352,18 +352,24 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
     missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
     missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
-    missings_df <- replace(missings_df, is.na(missings_df), 0)
-    address <- sf::st_geometry(address_location) %>% sf::st_transform(crs=projected_crs)
-
-    df <- data.frame(class_raster_values_perc, missings_df, address) %>% sf::st_as_sf()
+    #missings_df <- replace(missings_df, is.na(missings_df), 0)
+    address <- address_location %>% sf::st_transform(crs=projected_crs)
+    df <- data.frame(class_raster_values_perc, missings_df)
     #order the columns to give meaningful names to the columns
-    df <- df[(c("UID", "geometry", "X10", "X20",
+    df <- df[(c("UID", "X10", "X20",
                 "X30", "X40", "X50", "X60", "X70",
                 "X80", "X90", "X95", "X100"))]
     # Give the columns meaningful names
-    names(df) <- c("UID", "geometry", "tree_cover", "shrubland",
+    names(df) <- c("UID","tree_cover", "shrubland",
                    "grassland", "cropland", "built-up", "bare_vegetation", "snow_ice",
                    "perm_water_bodies", "herbaceous_wetland", "mangroves", "moss_lichen")
+
+    #Only keep columns that are present in analysis
+    empty_cols <- colSums(is.na(df)) == nrow(df)
+
+    # Subset the dataframe to exclude empty columns
+    df <- df[, !empty_cols]
+    df <- data.frame(df, address) %>% sf::st_as_sf()
 
   }
   else{
@@ -400,14 +406,9 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     missings <- setdiff(c("UID", codes), names(class_raster_values_perc))
     missings_df <- setNames(data.frame(matrix(ncol = length(missings), nrow = nrow(address_location))), missings)
     missings_df <- replace(missings_df, is.na(missings_df), 0)
-    address <- sf::st_geometry(address_location) %>% sf::st_transform(crs=projected_crs)
-
-    # names(address) <- "address"
-    #buffer <- calculation_area
-    #names(buffer) <- "buffer"
-    landcover_values_perc <- cbind(class_raster_values_perc, missings_df, address)
-
-    df <- sf::st_as_sf(landcover_values_perc)
+    address <- address_location %>% sf::st_transform(crs=projected_crs)
+    df <- data.frame(class_raster_values_perc, missings_df, address) %>%
+      sf::st_as_sf()
   }
 
   return(df)

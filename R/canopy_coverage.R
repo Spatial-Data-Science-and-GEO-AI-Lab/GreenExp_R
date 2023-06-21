@@ -278,12 +278,13 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
       canopy_pct[i] <- total_area / polygon_area * 100
     }
     address_location <- sf::st_transform(address_location, projected_crs)
-    df <- data.frame(UID = nrow(calculation_area), canopy_pct = cbind(unlist(canopy_pct)),
-                     sf::st_geometry(address_location))
-    df$UID <- seq.int(nrow(df))
-    if (!missing(UID)){
-      df$UID <- UID}
 
-    df <- sf::st_as_sf(df)
+    if (missing(UID)){
+      UID <- 1:nrow(address_location)}
+
+    df <- data.frame(UID = UID, canopy_pct = cbind(unlist(canopy_pct)),
+                     address_location) %>% sf::st_as_sf()
+
+
   return(df)
 }

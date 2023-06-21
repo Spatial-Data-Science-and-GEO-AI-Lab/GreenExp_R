@@ -404,19 +404,33 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   # Update UID
 
 
-  if (!missing(UID)){
-    average_rast$UID <- UID
+  if (missing(UID)){
+
+    UID <- 1:nrow(address_location)
   }
 
   address <- sf::st_geometry(address_location)
 
   if (add_sd){
-    ndvi_avg <- data.frame(average_rast, sd_NDVI = sd_rast$sd_NDVI, address)
-    ndvi_avg <- sf::st_as_sf(ndvi_avg)
+    # Prepare observer for output
+    df <- data.frame(UID, mean_NDVI = average_rast$mean_NDVI,
+                     sd_NDVI = sd_rast$sd_NDVI, address_location) %>%
+      sf::st_as_sf()
+
+
+    # address_location <- address_location %>%
+    #   dplyr::mutate(mean_ndvi = average_rast$mean_NDVI,
+    #                 sd_NDVI = sd_rast$sd_NDVI,
+    #                 UID = UID) %>%
+    #   dplyr::select(UID, mean_ndvi, sd_NDVI, dplyr::everything())
 
   }else{
-    ndvi_avg <- data.frame(average_rast, address)
-    ndvi_avg <- sf::st_as_sf(ndvi_avg)
+    df <- data.frame(UID, mean_NDVI = average_rast$mean_NDVI,
+                      address_location) %>% sf::st_as_sf()
+    # address_location <- address_location %>%
+    #   dplyr::mutate(mean_ndvi = average_rast$mean_NDVI,
+    #                 UID = UID) %>%
+    #   dplyr::select(UID, mean_ndvi, dplyr::everything())
     }
 
 
@@ -425,7 +439,7 @@ calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buf
   paste('Amount of run time')
 
   # Return the result
-  return(ndvi_avg)
+  return(df)
 }
 
 
