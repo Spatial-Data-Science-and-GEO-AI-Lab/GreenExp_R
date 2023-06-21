@@ -2,7 +2,9 @@
 # Greenness Exposure Assessment in R
 
 # Aim and objectives
+
 This package is developed to facilitate robust and transparent analysis in the field of greenspace and health research. It provides researchers with a collection of functionalities that can be applied across multiple countries, enabling comprehensive spatial analysis and enhancing the accuracy of results.
+
 # Table of contents
 
 <!-- badges: start -->
@@ -24,11 +26,11 @@ This package is developed to facilitate robust and transparent analysis in the f
   * [Visibility](#visibility)
     + [Viewshed](#viewshed)
     + [VGVI](#vgvi)
-    + [Streetview](#streetview)
 - [Extended Installation](#alternative-installation)
   * [GEE](#gee)
   * [Rcpp](#rcpp)
-
+- [Sources](#sources)
+- [Acknowledgements](#acknowledgements-and-contact)
 
 # Installation
 
@@ -154,64 +156,27 @@ The `calc_ndvi` function computes the average Normalized Difference Vegetation I
 
 You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figures below illustrate two examples of NDVI in Amsterdam. The first plot showcases the aforementioned neighborhoods in Amsterdam and there NDVI, the second one shows the address points within an euclidean buffer of 300 meters 
 
+
+Below you can find two code snippets that correspond to the figures under the code, the first code snippet corresponds with the neighborhood, whereas the second code snippet corresponds with address locations within the euclidean distance
+
+
+``` r
+# Calculate the NDVI for neighborhoods
+GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE)
+# Calculate the NDVI for buffer around address
+GreenExp::calc_ndvi(df_points, buffer_distance=300)
+```
+
+
+
 Neighborhood NDVI        |  Addresses within euclidean distance NDVI
 :-------------------------:|:-------------------------:
-![](man/figures/NDVI_neighborhoods.png)   |  ![](man/figures/NDVI_points_euclidean.png)
+![](man/figures/neighborhood_NDVI.png)   |  ![](man/figures/address_NDVI.png)
 
 
 
 If desired, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations
 
----
-
-Below you can find two code snippets that correspond to the figures above, the first code snippet corresponds with the neighborhood, whereas the second code snippet corresponds with address locations within the euclidean distance
-
-``` r
-GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE, UID=df$Buurt)
-# Sentinel-2-l2a data is used to retrieve the ndvi values. 
-#  The ID of the selected image is: S2B_MSIL2A_20201118T104329_R008_T31UFU_20201119T222019
-#  The date of the picture that was taken is: 2020-11-18T10:43:29.024000Z
-#  The cloud cover of this day was 0.118422% 
-# Simple feature collection with 9 features and 3 fields
-# Geometry type: POLYGON
-# Dimension:     XY
-# Bounding box:  xmin: 121895.4 ymin: 486266.6 xmax: 123998.4 ymax: 487863.7
-# Projected CRS: Amersfoort / RD New
-#   ID  mean_NDVI                  UID                       geometry
-# 1  1 0.06167251            Rapenburg POLYGON ((122254.7 487241.8...
-# 2  2 0.19874419            Uilenburg POLYGON ((121895.4 486971.2...
-# 3  3 0.21607993           Valkenburg POLYGON ((122088.4 486839.2...
-# 4  4 0.36863100             Plantage POLYGON ((122233.5 486651, ...
-# 5  5 0.23472975 Marine-Etablissement POLYGON ((122584.8 487858.4...
-# 6  6 0.34115585           Kattenburg POLYGON ((122804.3 487108.2...
-# 7  7 0.26490680           Wittenburg POLYGON ((122978.2 486996.9...
-# 8  8 0.16019079           Oostenburg POLYGON ((123194.2 486865.7...
-# 9  9 0.19806864             Kadijken POLYGON ((122546.8 486975.5...
-```
-
-```r
- GreenExp::calc_ndvi(df_points, buffer_distance=300)
-# Euclidean distance will be used to calculate the buffers around the address location that is given
-# Sentinel-2-l2a data is used to retrieve the ndvi values. 
-#  The ID of the selected image is: S2B_MSIL2A_20201118T104329_R008_T31UFU_20201119T222019
-#  The date of the picture that was taken is: 2020-11-18T10:43:29.024000Z
-#  The cloud cover of this day was 0.118422% 
-# Simple feature collection with 9 features and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
-# Projected CRS: Amersfoort / RD New
-#   ID mean_NDVI                  geometry
-# 1  1 0.0301934 POINT (122550.8 487284.1)
-# 2  2 0.1962309 POINT (122168.8 487033.6)
-# 3  3 0.2561348 POINT (122341.7 486895.6)
-# 4  4 0.3297733 POINT (122767.5 486602.6)
-# 5  5 0.2365295 POINT (122906.4 487497.6)
-# 6  6 0.3569576   POINT (123179.1 487316)
-# 7  7 0.2614934 POINT (123344.6 487201.2)
-# 8  8 0.1715756 POINT (123603.6 487073.4)
-# 9  9 0.2792275   POINT (123035 486830.7)
-```
 
 
 ---
@@ -226,61 +191,30 @@ You have the option to provide a raster file wiht land cover values. When this i
 In the code chunk and figure below an example is given for the Amsterdam area. It illustrates an example of land cover within a network buffer of 300m in Amsterdam. It showcases nine address locations, and the land cover is determined based on the surrounding road network obtained from the  [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package.
 
 
-![](man/figures/land_cover_network.png) 
-
----
-
 ``` r
 GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T)
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
-# Projected CRS: Amersfoort / RD New
-#   UID                  geometry tree_cover shrubland grassland cropland built-up bare_vegetation
-# 1   1 POINT (122550.8 487284.1)       0.04         0      0.00        0     0.73               0
-# 2   2 POINT (122168.8 487033.6)       0.11         0      0.00        0     0.83               0
-# 3   3 POINT (122341.7 486895.6)       0.09         0      0.00        0     0.87               0
-# 4   4 POINT (122767.5 486602.6)       0.39         0      0.00        0     0.61               0
-# 5   5 POINT (122906.4 487497.6)       0.25         0      0.04        0     0.55               0
-# 6   6   POINT (123179.1 487316)       0.44         0      0.01        0     0.53               0
-# 7   7 POINT (123344.6 487201.2)       0.00         0      0.00        0     0.69               0
-# 8   8 POINT (123603.6 487073.4)       0.16         0      0.00        0     0.83               0
-# 9   9   POINT (123035 486830.7)       0.15         0      0.00        0     0.72               0
-#   snow_ice perm_water_bodies herbaceous_wetland mangroves moss_lichen
-# 1        0              0.23                  0         0           0
-# 2        0              0.05                  0         0           0
-# 3        0              0.04                  0         0           0
-# 4        0              0.00                  0         0           0
-# 5        0              0.16                  0         0           0
-# 6        0              0.03                  0         0           0
-# 7        0              0.31                  0         0           0
-# 8        0              0.00                  0         0           0
-# 9        0              0.13                  0         0           0
 ```
+
+![](man/figures/land_cover.png) 
 
 ---
 
 ### Canopy coverage
 
 The `canopy_perc` function calculates the percentage of a canopy within a given buffer distance or location. 
+For the canopy percentage we will provide an example in Marine-Etablissement, which is a district in Amsterdam. In the code below we are calculating the canopy percentage.
 
 ``` r
-# Read the canopy dataset
-canopy <- sf::st_read("Data/CanopyTestArea.gpkg")
+# load canopy data
+canopy_layer <- sf::st_read('path/to/canopy_layer.gpkg')
 
-canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_distance = 500)
- 
+# Select Marine-Etablissement
+df_point_canopy <- df_points[df$Buurt=='Marine-Etablissement',]]
 
-# Simple feature collection with 3 features and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 385981.9 ymin: 392861.6 xmax: 388644.2 ymax: 395322.2
-# Projected CRS: OSGB36 / British National Grid
-#   UID canopy_pct                  geometry
-# 1   1   14.42063 POINT (388644.2 392861.6)
-# 2   2   19.27852 POINT (385981.9 393805.5)
-# 3   3   10.67145 POINT (388631.2 395322.2)
+canopy_pct(df_point_canopy, canopy_layer = canopy_layer, buffer_distance=200)
 ```
+
+![](man/figures/canopy.png)
 
 ---
 
@@ -288,11 +222,7 @@ canopy_perc(address_location = address_test, canopy_layer = canopy, buffer_dista
 
 The `park_pct` function calculates the percentage of park coverage within a specified buffer distance. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use, following the requirements outlined by Breekveldt:
 
-
-
-In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of a 3-minute walk (with a speed of 5 units and a time of 3 units). The greenspace data is obtained from the retrieved OSM data.
-
-
+In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace data is obtained from the retrieved OSM data.
 
 The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). The features which are retrieved from OSM are found within the leisure, nature and land use categories. In line with the work of [Breekveldt](https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/Urban_Greenspace_Accessibility), the features need to adhere to the following requirements; 
 
@@ -314,30 +244,15 @@ Based on these criteria, the following features from OSM are used:
 - Playground
 - Grassland
 
-In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of a 3-minute walk (speed = 5, time=3). The greenspace is based on the retrieved data from OSM. 
-
-
-![](man/figures/parks_euclidean.png)
+In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace is based on the retrieved data from OSM. 
 
 ``` r
-park_pct(df_points, speed = 5, time = 3)
-Simple feature collection with 9 features and 2 fields
-Geometry type: POINT
-Dimension:     XY
-Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
-Projected CRS: Amersfoort / RD New
-  UID   park_pct                  geometry
-1   1  0.3041257 POINT (122550.8 487284.1)
-2   2  2.5132996 POINT (122168.8 487033.6)
-3   3 11.5234716 POINT (122341.7 486895.6)
-4   4  7.1148883 POINT (122767.5 486602.6)
-5   5  3.7042571 POINT (122906.4 487497.6)
-6   6  8.5394656   POINT (123179.1 487316)
-7   7  7.8367531 POINT (123344.6 487201.2)
-8   8  7.0428552 POINT (123603.6 487073.4)
-9   9  2.8959452   POINT (123035 486830.7)
-
+greenspace_pct(df_points, buffer_distance=300)
 ```
+
+![](man/figures/Greenspace.png)
+
+
 
 ---
 
@@ -360,21 +275,15 @@ Three examples will be provided. For the sake of visualization, one address poin
 
 In this example, the accessibility function is applied using the default settings, which involves calculating the euclidean distance from the address location to the nearest greenspace centroid. The figure below illustrates an example in Amsterdam, where the parks are represented by green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, while the address location is denoted by a red point. The code chunk beneath the plot provides the necessary code to receive the shortest distance from the address location. 
 
-![](man/figures/Accesibility_euclidean.png)
-
-
 ``` r
 df_point <- df_points[8,]
 greenspace_access(df_point, buffer_distance = 300)
-
-Simple feature collection with 1 feature and 3 fields
-Geometry type: POINT
-Dimension:     XY
-Bounding box:  xmin: 123603.6 ymin: 487073.4 xmax: 123603.6 ymax: 487073.4
-Projected CRS: Amersfoort / RD New
-  UID closest_greenspace greenspace_in_300m_buffer                  geometry
-1   1           178.7477                      TRUE POINT (123603.6 487073.4)
 ```
+
+![](man/figures/access_euc_cen.png)
+
+
+
 
 --- 
 
@@ -383,28 +292,18 @@ Projected CRS: Amersfoort / RD New
 In this example, the accessibility function utilizes network distance to compute the distance from the address location to the nearest greenspace centroid. The figure below showcases an example in Amsterdam, where the parks are represented by green polygons. However, since the lines are retrieved from an OSM network file, the park centroids and address centroid may not align exactly with the network lines. As a result, you may notice that the lines do not intersect with the points in the plot. The park centroids are depicted as black points. The code chunk below the plot corresponds with the distance result of the plot
 
 
-
-![](man/figures/accessibility_network.png)
-
 ``` r
 greenspace_access(df_point, buffer_distance = 300, euclidean=F)
-
-Simple feature collection with 1 feature and 3 fields
-Geometry type: POINT
-Dimension:     XY
-Bounding box:  xmin: 123603.6 ymin: 487073.4 xmax: 123603.6 ymax: 487073.4
-Projected CRS: Amersfoort / RD New
-  UID closest_greenspace greenspace_in_300m_buffer                  geometry
-1   1           263.8876                      TRUE POINT (123603.6 487073.4)
 ```
+
+![](man/figures/access_net_cen.png)
+
+
 ---
 
 **Example 3: Network Distance to Pseudo Entrances**
 
 In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the parks are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the parks, as roads passing through the parks can also serve as potential entrance points. 
-
-
-![](man/figures/accessibility_pseudo_network.png)
 
 ```r
 greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T)
@@ -417,6 +316,9 @@ greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance 
 #   UID closest_greenspace greenspace_in_300m_buffer                  geometry
 # 1   1            230.747                      TRUE POINT (123603.6 487073.4)
 ```
+
+![](man/figures/access_net_pse.png)
+
 
 ## Visibility
  
@@ -452,7 +354,7 @@ vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
 ```
 
 
-![](man/figures/viewshed_plot.png)
+![](man/figures/viewshed.png)
 
 The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visible area and gray is not visible. 
 
@@ -657,14 +559,32 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 ```
 ---
 
-## Mapillary
-
-To use the [streetview](#streetview) function, data will be retrieved using the [mapillary](https://www.mapillary.com) API
 
 ## Sources 
 
+| Package       | Description                                                           |                                
+|---------------|-----------------------------------------------------------------------|
+| [**sf**](https://github.com/r-spatial/sf)| Simple features for R                                                 | 
+| [**terra**](https://cran.r-project.org/package=terra)| Creating, reading, manipulating, and writing raster data              |
+| [**sfnetworks**](https://cran.r-project.org/package=sfnetworks)| Tidy Geospatial Networks in R                                         | 
+| [**osmdata**](https://cran.r-project.org/package=osmdata)|Provides access to the vector data underlying OSM                     | 
+| [**osmextract**](https://cran.r-project.org/package=osmextract)| Download and import Open Street Map Data Extracts| 
+| [**dplyr**](https://cran.r-project.org/package=dplyr)    | Data manipulation                                                     |
+| [**magrittr**](https://cran.r-project.org/package=magrittr)| Forward-Pipe Operator                                                 | 
+| [**rgee**](https://cran.r-project.org/package=rgee)| Calling Google Earth Engine API                                       | 
+| [**rstac**](https://cran.r-project.org/package=rstac)|      Search and download spacetime earth observation data via STAC         |
+| [**FNN**](https://cran.r-project.org/package=FNN)   | Fast Nearest Neighbor Search Algorithms                               | 
+| [**tidygraph**](https://cran.r-project.org/package=tidygraph) | A tidy API for graph/network manipulation                            | 
+| [**tidyr**](https://cran.r-project.org/package=tidyr)    | Changing the shape and hierarchy of a dataset                        | 
+| [**Rcpp**](https://cran.r-project.org/package=Rcpp)     | R and C++ integration                                                 | 
+| [**progress**](https://cran.r-project.org/package=progress)  | Make a progress bar in loops                                          | 
+
+
+
+
 ## Acknowledgements and contact
-Name: Martijn Koster
-Email: m.koster2@students.uu.nl 
+
+- Name: Martijn Koster
+- Email: m.koster2@students.uu.nl 
 
 
