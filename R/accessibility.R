@@ -45,7 +45,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     projected_crs <- sf::st_crs(address_location)
   }
   # Make sure there is a buffer distance, or speed or time
-  message('You did not provide a network file, a network will be created using osm.')
+
   if (missing(buffer_distance)){
     if(missing(speed)||missing(time)){
       stop("You didn't enter speed and time or the buffer distance,
@@ -79,6 +79,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
   if (missing(network_file)){
     # Use the osmextract package to extract the lines in the area.
     if (pseudo_entrance || !euclidean){
+      message('You did not provide a network file, a network will be created using osm.')
       if (!missing(city)) {
 
         lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary=iso_area,
