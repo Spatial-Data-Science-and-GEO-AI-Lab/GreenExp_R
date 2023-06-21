@@ -240,6 +240,7 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
 ##### 4. greenspace layer #######
   ### Creating greenspace_layer set if not given
   if (missing(greenspace_layer)) {
+    message('You did not provide a greenspace layer, osmdata will be used to find greenspaces')
     calculation_area_osm <- sf::st_transform(calculation_area, 4326)
     # Initial load of greenspace_layer
     q1 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%

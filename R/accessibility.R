@@ -167,6 +167,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
   ##### 3. greenspace #######
   # When greenspace are missing take them from osmdata
   if (missing(greenspace)) {
+    message('You did not provide a greenspace layer, osmdata will be used to find greenspaces')
     ##### 3.1 If greenspace are not given ####
 
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
@@ -412,6 +413,28 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
   df <- data.frame(UID, sf::st_geometry(address_location), closest_greenspace, greenspace_in_buffer)
   df <- sf::st_as_sf(df)
   colnames(df)[colnames(df) == "greenspace_in_buffer"] <- paste0('greenspace_in_',buffer_distance,'m_buffer')
+
+
+  ###### Transparent about the usage in the interface ######
+  if(euclidean & !pseudo_entrance) {
+    message('To calculate the distance from the address to the greenspace,
+    euclidean distance to the centroid of the greenspaces is used.')
+  }
+
+  if(euclidean & pseudo_entrance) {
+    message('To calculate the distance from the address to the greenspace,
+    euclidean distancne to pseudo entrances of the greenspaces is used.')
+  }
+
+  if(!euclidean & !pseudo_entrance) {
+    message('To calculate the distance from the address to the greenspace,
+    network distance to centroid of the greenspaces is used.')
+  }
+
+  if(!euclidean & pseudo_entrance) {
+    message('To calculate the distance from the address to the greenspace,
+    network distance to pseudo entrances the greenspaces is used.')
+  }
 
 
   print(Sys.time()-start_function)
