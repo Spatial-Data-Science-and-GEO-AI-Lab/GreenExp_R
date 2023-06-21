@@ -336,21 +336,18 @@ For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) pa
 
 **EXAMPLE**
 
-Data can be retrieved from this [site](https://zenodo.org/record/5061257). 
 
 ```r
 # Read in the digital eleveation model
-DEM <- terra::rast('data/GreaterManchester_DTM_5m.tif')
+GS <- terra::rast('data/GS_AMS.tif')
 # Read the digital surfaca model
-DSM <- terra::rast('data/GreaterManchester_DSM_5m.tif')
+DSM <- terra::rast('data/DSM_AMS.tif')
 # Read the greenspace 
-GS <- terra::rast('data/GreaterManchester_GreenSpace_5m.tif')
+DTM<- terra::rast('data/DTM_AMS.tif')
 
-# 
-observer <- sf::st_sf(sfheaders::sf_point(c(388644.2, 392862.7)), crs = sf::st_crs(terra::crs(DEM)))
-
-vs <- GreenExp::viewshed(observer = observer, dsm_rast = DSM, dtm_rast = DEM,
+GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dtm_rast = DTM,
                          max_distance = 200, observer_height = 1.7, plot = TRUE)
+
 ```
 
 
