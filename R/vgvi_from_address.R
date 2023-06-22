@@ -338,6 +338,9 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
   valid_values <- unlist(lapply(vgvi_values, is.numeric), use.names = FALSE)
 
 
+  cat('The mean VGVI will be calculated using the mean of', sample_points, 'sample points within a euclidean buffer of', buffer_distance, 'meters around the address location \n')
+
+
 
   random_points_df[valid_values,2] <- vgvi_values[valid_values]
 
