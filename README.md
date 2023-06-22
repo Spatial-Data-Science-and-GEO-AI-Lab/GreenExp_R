@@ -575,6 +575,7 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 | [**tidyr**](https://cran.r-project.org/package=tidyr)    | Changing the shape and hierarchy of a dataset                        | 
 | [**Rcpp**](https://cran.r-project.org/package=Rcpp)     | R and C++ integration                                                 | 
 | [**progress**](https://cran.r-project.org/package=progress)  | Make a progress bar in loops                                          | 
+| [**GVI**](https://doi.org/10.1016/j.scitotenv.2020.143050)  | information about the calculation of the visiblity                                         | 
 
 
 
