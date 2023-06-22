@@ -180,12 +180,12 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
     folder_path <- tempfile(pattern = "VGVI_MEAN_", tmpdir = file.path(folder_path), fileext = ".gpkg")
   }
 
-  # folder_path_random_points
+  folder_path_random_points
   if (!is.null(folder_path_random_points)) {
     if (!dir.exists(folder_path_random_points)) {
       dir.create(folder_path_random_points)
     }
-    folder_path_random_points <- tempfile(pattern = "VGVI_", tmpdir = file.path(folder_path_random_points), fileext = ".gpkg")
+    folder_path_random_points <- tempfile(pattern = "VGVI_random_points_", tmpdir = file.path(folder_path_random_points), fileext = ".gpkg")
   }
 
 
@@ -342,7 +342,11 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
   random_points_df[valid_values,2] <- vgvi_values[valid_values]
 
   if(!is.null(folder_path_random_points)) {
-    sf::st_write(random_points_df, folder_path_random_points, append=TRUE, quiet = T)
+    df_save <- data.frame(UID = random_points_df$id, VGVI = random_points_df$VGVI,
+                          ID = random_points_df$ID, random_points_df$geometry ) %>% sf::st_as_sf()
+    sf::st_write(df_save, folder_path_random_points, append=TRUE, quiet = T)
+
+
   }
 
 
