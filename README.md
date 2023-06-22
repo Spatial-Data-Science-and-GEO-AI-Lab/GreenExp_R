@@ -365,7 +365,7 @@ For more information about the VGVI please go to the [GVI](https://github.com/ST
 
 **Example:**
 
-The figure below provides an overview of the data used for calculating the Vegetation-Ground View Index (VGVI). In the figure, you will find various elements that contribute to the analysis.
+The figure below provides an overview of the data used for calculating the VGVI. In the figure, you will find various elements that contribute to the analysis.
 
 1. Observer Points: The dots depicted in the figure represent the observer points. These points correspond to the addresses used in the examples discussed thus far. Each observer point serves as a starting location for measuring the VGVI.
 
