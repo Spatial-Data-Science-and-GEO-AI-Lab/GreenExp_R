@@ -211,8 +211,7 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
   }
   if (progress) setTxtProgressBar(pb, 1)
 
-  # Get the address geometry
-  address_geom <- sf::st_geometry(address)
+
 
 
   #### 3. Prepare data for viewshed analysis ####
@@ -353,13 +352,14 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
   }
 
 
-  address <- random_points_df %>%
+  random_points_df <- random_points_df %>%
     dplyr::group_by(ID) %>%
     dplyr::summarize(mean_VGVI = mean(VGVI))
 
-  colnames(address)[3] <- 'geometry'
 
-  address$geometry <- address_geom
+  address_df <- data.frame(UID = random_points_df$ID, mean_VGVI=random_points_df$mean_VGVI,
+                           address) %>% sf::st_as_sf()
+
 
 
 
@@ -393,5 +393,5 @@ vgvi_from_address <- function(address, dsm_rast, dtm_rast, greenspace_rast,
   invisible(gc())
   message('This code is retrieved from the GVI function, for more information look at https://github.com/STBrinkmann/GVI ')
 
-  return(address)
+  return(address_df)
 }
