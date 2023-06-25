@@ -7,7 +7,7 @@
 vgvi_from_sf(
   observer,
   dsm_rast,
-  dtm_rast,
+  dem_rast,
   greenspace_rast,
   max_distance = 800,
   observer_height = 1.7,
@@ -26,7 +26,7 @@ vgvi_from_sf(
 
 \item{dsm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM}
 
-\item{dtm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DTM}
+\item{dem_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DEM}
 
 \item{greenspace_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the binary Greenspace mask. Values of the Greenspace mask must be 1 for Green and 0 for No-Green}
 
@@ -67,4 +67,19 @@ The CRS (\code{\link[sf]{st_crs}}) needs to have a metric unit!
 
 The type of function, used for calculating the distance decay weights, can be defined with the \code{mode} parameter.
 The argument 'logit' uses the logistic function, d = 1 / (1 + e^(b * (x - m))) and 'exponential' the exponential function d = 1 / (1 + (b * x^m)).
+}
+\examples{
+# Load a sf dataframe
+df <- sf::st_read('path/to/data')
+
+# load the raster files
+DEM<- terra::rast('path/to/dem')
+DSM <- terra::rast('path/to/dsm')
+GS <- terra::rast('path/to/greenspace')
+
+# Calculate the vgvi
+vgvi_from_sf(df, dsm_rast = DSM, dem_rast = DEM, greenspace_rast = GS,
+                  mode = "logit")
+
+
 }

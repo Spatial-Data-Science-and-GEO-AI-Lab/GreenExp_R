@@ -1,6 +1,6 @@
-#' Distance to the nearest fake entries of greenspace
+#' Distance to the nearest green spaces
 #'
-#' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param address_location A spatial object representing the location of interest. The location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
 #' @param greenspace A spatial object representing greenspace
 #' @param UID A character string representing a unique identifier for each point of interest
@@ -22,6 +22,20 @@
 #' @export
 #'
 #' @examples
+#'
+#' # Load a dataframe
+#' df <- Ams_Houses[1:10, ]
+#'
+#' # Euclidean Distance to Centroid of Green spaces
+#' greenspace_access(address_location = df, buffer_distance=300)
+#'
+#' # Network Distance to Centroid of Green spaces
+#' greenspace_access(address_location=df, buffer_distance=300, euclidean = FALSE)
+#'
+#' #Network Distance to Pseudo entrance points, and the greenspaces should be at least 400m2
+#' greenspace_access(address_location=df, buffer_distance=300, euclidean=FALSE, pseudo_entrance=TRUE,
+#'   minimum_greenspace_size=400)
+#'
 greenspace_access <- function(address_location, greenspace = NULL, buffer_distance = NULL, network_file=NULL,
                            epsg_code=NULL, folder_path_network = NULL, euclidean=TRUE,
                            minimum_greenspace_size=0,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/accessibility.R
 \name{greenspace_access}
 \alias{greenspace_access}
-\title{Distance to the nearest fake entries of greenspace}
+\title{Distance to the nearest green spaces}
 \usage{
 greenspace_access(
   address_location,
@@ -24,7 +24,7 @@ greenspace_access(
 )
 }
 \arguments{
-\item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
+\item{address_location}{A spatial object representing the location of interest. The location should be in projected coordinates.}
 
 \item{greenspace}{A spatial object representing greenspace}
 
@@ -61,5 +61,21 @@ by intersecting a buffer that was created around a greenspace with network point
 The distance to the nearest greenspace and whether the greenspace are within the buffer distance that is given
 }
 \description{
-Distance to the nearest fake entries of greenspace
+Distance to the nearest green spaces
+}
+\examples{
+
+# Load a dataframe
+df <- Ams_Houses[1:10, ]
+
+# Euclidean Distance to Centroid of Green spaces
+greenspace_access(address_location = df, buffer_distance=300)
+
+# Network Distance to Centroid of Green spaces
+greenspace_access(address_location=df, buffer_distance=300, euclidean = FALSE)
+
+#Network Distance to Pseudo entrance points, and the greenspaces should be at least 400m2
+greenspace_access(address_location=df, buffer_distance=300, euclidean=FALSE, pseudo_entrance=TRUE,
+  minimum_greenspace_size=400)
+
 }

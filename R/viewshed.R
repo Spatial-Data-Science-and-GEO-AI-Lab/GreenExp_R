@@ -1,13 +1,24 @@
 #' Viewshed
-#' @description Computes a binary viewshed of a point on a Digital Surface Model (DSM). The observer height is based on the heigth of a Digital Terrain Model (DTM).
+#' @description Computes a binary viewshed of a point on a Digital Surface Model (DSM). The observer height is based on the heigth of a Digital Elevation Model (DEM).
 #'
 #' @param observer object of class \code{sf} with one point; Starting location
 #' @param max_distance numeric; Buffer distance to calculate the viewshed
 #' @param dsm_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM
-#' @param dtm_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DTM
+#' @param dem_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DEM
 #' @param observer_height numeric > 0; Height of the observer (e.g. 1.7 meters)
 #' @param raster_res optional; NULL or numeric > 0; Resolution that the viewshed raster should be aggregated to. Must be a multible of the dsm_rast resolution
 #' @param plot optional; Plot the intersect of the buffer around the observer location and the DSM (left DSM; right visibility raster)
+#'
+#' @examples
+#'# Load a sf dataframe
+#' df <- sf::st_read('path/to/data')
+#'
+#' # load the raster files
+#' DEM<- terra::rast('path/to/dem')
+#' DSM <- terra::rast('path/to/dsm')
+#'
+#'  GreenExp::viewshed(observer = df[1,], dsm_rast = DSM, dem_rast = DEM,
+#'                     plot = TRUE)
 #'
 #' @return object of class \code{\link[terra]{rast}}
 #' @export
@@ -36,7 +47,7 @@
 #' @importFrom graphics par
 #' @importFrom graphics points
 
-viewshed <- function(observer, dsm_rast, dtm_rast,
+viewshed <- function(observer, dsm_rast, dem_rast,
                      max_distance = 800, observer_height = 1.7,
                      raster_res = NULL, plot = FALSE) {
   #### 1. Check input ####
@@ -65,14 +76,14 @@ viewshed <- function(observer, dsm_rast, dtm_rast,
     stop("dsm_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }
 
-  # dtm_rast
-  if (!is(dtm_rast, "SpatRaster")) {
-    stop("dtm_rast needs to be a SpatRaster object")
-  } else if(sf::st_crs(terra::crs(dtm_rast))$epsg != sf::st_crs(observer)$epsg){
-    warning('The crs of your DTM raster is not the same as the projected crs of the input location,
+  # dem_rast
+  if (!is(dem_rast, "SpatRaster")) {
+    stop("dem_rast needs to be a SpatRaster object")
+  } else if(sf::st_crs(terra::crs(dem_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your DEM raster is not the same as the projected crs of the input location,
               the projected crs of the raster will be transformed into the projected crs of the address location')
-    epsg_dtm_rast <- sf::st_crs(observer)$epsg
-    dtm_rast <- terra::project(dtm_rast, paste0('EPSG:',epsg_dtm_rast))
+    epsg_dem_rast <- sf::st_crs(observer)$epsg
+    dem_rast <- terra::project(dem_rast, paste0('EPSG:',epsg_dem_rast))
 
   }
 
@@ -110,7 +121,7 @@ viewshed <- function(observer, dsm_rast, dtm_rast,
     terra::crop(dsm_rast)
 
   # Observer height
-  height0 <- as.numeric(terra::extract(dtm_rast, cbind(x0, y0))) + observer_height
+  height0 <- as.numeric(terra::extract(dem_rast, cbind(x0, y0))) + observer_height
 
   # If the resolution parameter differs from the input-DSM resolution,
   # resample the DSM to the lower resolution.
