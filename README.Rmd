@@ -235,7 +235,7 @@ The `greenspace_pct` function gives the percentage of greenspace coverage given 
 
 
 ```{r, warning =FALSE, message=FALSE}
-park_pct(df_points, speed=5, time=3)
+greenspace_pct(df_points, speed=5, time=3)
 ```
 
 
@@ -257,7 +257,7 @@ Three examples will be provided. For the sake of visualization, one address poin
 
 **Example 1: Euclidean Distance Calculation**
 
-In this example, the accessibility function is applied using the default settings, which involves calculating the euclidean distance from the address location to the nearest greenspace centroid. The figure below illustrates an example in Amsterdam, where the parks are represented by green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, while the address location is denoted by a red point. The code chunk beneath the plot provides the necessary code to receive the shortest distance from the address location. 
+In this example, the accessibility function is applied using the default settings, which involves calculating the euclidean distance from the address location to the nearest greenspace centroid. The figure below illustrates an example in Amsterdam, where the greenspaces are represented by green polygons. The blue lines indicate the euclidean distance from the address location to the nearest greenspace centroid. The greenspace centroids are depicted as black points, while the address location is denoted by a red point. The code chunk beneath the plot provides the necessary code to receive the shortest distance from the address location. 
 
 
 
@@ -362,7 +362,7 @@ greenspace_access(df_point, buffer_distance = 300)
 
 **Example 2: Network Distance Calculation**
 
-In this example, the accessibility function utilizes network distance to compute the distance from the address location to the nearest greenspace centroid. The figure below showcases an example in Amsterdam, where the parks are represented by green polygons. However, since the lines are retrieved from an OSM network file, the park centroids and address centroid may not align exactly with the network lines. As a result, you may notice that the lines do not intersect with the points in the plot. The park centroids are depicted as black points. The code chunk below the plot corresponds with the distance result of the plot
+In this example, the accessibility function utilizes network distance to compute the distance from the address location to the nearest greenspace centroid. The figure below showcases an example in Amsterdam, where the greenspaces are represented by green polygons. However, since the lines are retrieved from an OSM network file, the greenspace centroids and address centroid may not align exactly with the network lines. As a result, you may notice that the lines do not intersect with the points in the plot. The greenspace centroids are depicted as black points. The code chunk below the plot corresponds with the distance result of the plot
 
 
 
@@ -448,7 +448,7 @@ greenspace_access(df_point, buffer_distance = 300, euclidean=F, network_file = G
 
 **Example 3: Network Distance to Pseudo Entrances**
 
-In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the parks are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the parks, as roads passing through the parks can also serve as potential entrance points. 
+In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the greenspaces are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest greenspace centroid. The greenspace centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the greenspaces, as roads passing through the greenspaces can also serve as potential entrance points. 
 
 ```{r, include=FALSE}
 greenspace_buffer <- sf::st_buffer(greenspace, 20)
@@ -533,8 +533,8 @@ GS <- terra::rast('data/GS_AMS.tif')
 # Read the digital surfaca model
 DSM <- terra::rast('data/DSM_AMS.tif')
 # Read in the digital eleveation model
-DTM<- terra::rast('data/DTM_AMS.tif')
-vs <- GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dtm_rast = DTM,
+DEM<- terra::rast('data/DTM_AMS.tif')
+vs <- GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dem_rast = DEM,
                          max_distance = 200, observer_height = 1.7, plot = TRUE)
 ```
 
@@ -557,7 +557,7 @@ The figure below provides an overview of the data used for calculating the Veget
 
 2. Address ID Numbers: The numbers assigned to the addresses in the plot correspond to the ID numbers used in the code chunk below the figure. These ID numbers uniquely identify each address and allow for easy referencing and analysis in the code.
 
-3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or parks, and is a crucial factor in determining the VGVI.DEM and 
+3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or greenspaces, and is a crucial factor in determining the VGVI.DEM and 
 
 4. DSM: The figure also includes the Digital Elevation Model (DEM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DEM and DSM helps in understanding the topography of the region.
 
@@ -570,7 +570,7 @@ By utilizing this information and the corresponding code, the VGVI can be calcul
 
 ```{r}
 VGVI <- GreenExp::vgvi_from_sf(observer = df_points,
-                     dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
+                     dsm_rast = DSM, dem_rast = DEM, greenspace_rast = GS,
                      max_distance = 200, observer_height = 1.7,
                      m = 0.5, b = 8, mode = "logit")
 
@@ -591,7 +591,7 @@ The VGVI from sf function analyzes the VGVI at a specific observer point, while 
 
 ```{r}
 mean_VGVI <- vgvi_from_address(address = df_points,
-                     dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
+                     dsm_rast = DSM, dem_rast = DEM, greenspace_rast = GS,
                      max_distance = 200, observer_height = 1.7,
                      m = 0.5, b = 8, mode = "logit")
 
