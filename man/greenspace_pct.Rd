@@ -20,33 +20,51 @@ greenspace_pct(
 )
 }
 \arguments{
-\item{address_location}{A spatial object representing the location of interest, the location should be in projected coordinates.}
+\item{address_location}{A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.}
 
-\item{greenspace_layer}{A greenspace layer, the layer should be in projected coordinates}
+\item{greenspace_layer}{Optional; a \code{\link[sf]{sf}} object representing a greenspace layer, the layer should be in projected coordinates}
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
-\item{network_buffer}{A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
+\item{network_buffer}{Optional; a  logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
 
 \item{folder_path_network}{optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
-\item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
+\item{speed}{Optional; a  numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
-\item{time}{numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
+\item{time}{Optional; a numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
 
-\item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
+\item{epsg_code}{Optional; epsg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
-\item{UID}{A character string representing a unique identifier for each point of interest}
+\item{UID}{Optional; a  character string representing a unique identifier for each point of interest}
 
-\item{city}{When using a network buffer, you can add a city where your address points are to speed up the process}
+\item{network_file}{Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.}
 
-\item{address_location_neighborhood}{A logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
+\item{city}{Optional; when using a network buffer, you can add a city where your address points are to speed up the process}
 
-\item{download_dir}{A directory to download the network file, the default will be \code{tempdir()}.}
+\item{address_location_neighborhood}{Optional; a logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
+
+\item{download_dir}{Optional; a directory to download the network file, the default will be \code{tempdir()}.}
 }
 \value{
 Returns the percentage of greenspace coverage given a certain buffer.
 }
 \description{
 greenspace Coverage
+}
+\examples{
+# Read a dataset, in this instance we will use the first ten neighborhoods from the
+# Ams_Neighborhood dataset, which contains polygon geometry
+df <- Ams_Neighborhoods[1:10,]
+
+# calculate the greenspace percentage for the neighborhoods with default settings
+greenspace_pct(df, buffer_distance=300)
+
+# calculate the greenspace percentage for neighborhoods, using the neighborhood as buffer
+greenspace_pct(df, address_location_neighborhood = TRUE)
+
+# calculate the greenspace percentage for the neighborhoods, using the network as buffer
+greenspace_pct(df, buffer_distance=300, network_buffer=TRUE)
+
+
 }

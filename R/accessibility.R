@@ -1,10 +1,10 @@
 #' Distance to the nearest green spaces
 #'
-#' @param address_location A spatial object representing the location of interest. The location should be in projected coordinates.
+#' @param address_location A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param greenspace A spatial object representing greenspace
+#' @param greenspace Optional; a \code{\link[sf]{sf}} object representing a greenspace layer, the layer should be in projected coordinates
 #' @param UID A character string representing a unique identifier for each point of interest
-#' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
+#' @param network_file Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
 #' @param city When using a network buffer, you can add a city where your address points are to speed up the process
@@ -18,12 +18,8 @@
 #' @param folder_path_lines optional; Folder path to where the shortest distance lines should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param minimum_greenspace_size The minimum size of the greenspace in m2.
 #'
-#' @return The distance to the nearest greenspace and whether the greenspace are within the buffer distance that is given
-#' @export
-#'
 #' @examples
-#'
-#' # Load a dataframe
+#' #' # Load a dataframe
 #' df <- Ams_Houses[1:10, ]
 #'
 #' # Euclidean Distance to Centroid of Green spaces
@@ -35,6 +31,12 @@
 #' #Network Distance to Pseudo entrance points, and the greenspaces should be at least 400m2
 #' greenspace_access(address_location=df, buffer_distance=300, euclidean=FALSE, pseudo_entrance=TRUE,
 #'   minimum_greenspace_size=400)
+#'
+#'
+#' @return The distance to the nearest greenspace and whether the greenspace are within the buffer distance that is given
+#' @export
+#'
+#'
 #'
 greenspace_access <- function(address_location, greenspace = NULL, buffer_distance = NULL, network_file=NULL,
                            epsg_code=NULL, folder_path_network = NULL, euclidean=TRUE,

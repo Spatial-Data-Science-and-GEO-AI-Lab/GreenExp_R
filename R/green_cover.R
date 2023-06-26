@@ -1,26 +1,41 @@
 #' Calculate the percentage of area covered by each land cover class within a given buffer distance or location
 #'
-#' @param address_location A spatial object representing the location of interest, the location should be in projected coordinates.
+#' @param address_location A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
-#' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
-#' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
-#' @param raster raster file with land cover values, if raster file is missing planetary computer will be used.
-#' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
-#' @param network_file n optional sfnetwork object representing a road network, If missing the road network will be created.
-#' @param city When using a network buffer, you can add a city where your address points are to speed up the process
-#' @param year The year of the satellite images. The years 2020 and 2021 can be used for the time being.
+#' @param UID Optional; a  character string representing a unique identifier for each point of interest
+#' @param address_location_neighborhood Optional; a  logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
+#' @param speed Optional; a  numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
+#' @param time Optional; a  numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
+#' @param raster Optional; a object of class \code{\link[terra]{rast}} with land cover values, if missing planetary computer will be used to extract the land cover values.
+#' @param network_buffer Optional; a  logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
+#' @param network_file Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.
+#' @param city Optional; when using a network buffer, you can add a city where your address points are to speed up the process
+#' @param year Optional; The year of the satellite images. The years 2020 and 2021 can be used for the time being.
 #' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param folder_path_land_cover optional; Folder path to where the retrieved land cover should be saved continuously. Must not include a filename extension.
-#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
-#' @param plot_landcover Option to plot the land cover, default is `FALSE`
+#' @param epsg_code Optional; a  epsg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param plot_landcover Optional; to plot the land cover, default is `FALSE`
+#'
+#' @examples
+#' # Read a dataset, in this instance we will use the first ten neighborhoods from the
+#' # Ams_Neighborhood dataset, which contains polygon geometry
+#' df <- Ams_Neighborhoods[1:10,]
+#'
+#' # calculate the land cover values for the neighborhoods with default settings
+#' land_cover(df, buffer_distance=300)
+#'
+#' # calculate the land cover values for neighborhoods, using the neighborhood as buffer
+#' land_cover(df, address_location_neighborhood = TRUE)
+#'
+#' # calculate land_cover values for the neighborhood, using the network as buffer
+#' land_cover(df, buffer_distance=300, network_buffer=TRUE)
+#'
 #'
 #' @return The percentage of each land cover type within a given buffer or isochrone around a set of locations is printed.
 #' @export
 #'
 #'
-#' @examples
+
 
 land_cover <- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
                        folder_path_land_cover = NULL, network_file=NULL, epsg_code=NULL,  UID=NULL,

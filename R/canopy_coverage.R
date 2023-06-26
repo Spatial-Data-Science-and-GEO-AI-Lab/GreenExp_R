@@ -1,22 +1,36 @@
 
 #' Calculate the percentage of a canopy within a given buffer distance or location
 #'
-#' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param canopy_layer  A canopy layer that represents a canopy, the layer should be in projected coordinates
+#' @param address_location A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.
+#' @param canopy_layer  A \code{\link[sf]{sf}} that represents a canopy, the layer should be in projected coordinates
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
-#' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
-#' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
-#' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
-#' @param city When using a network buffer, you can add a city where your address points are to speed up the process
-#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
-#' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#' @param UID Optional; a character string representing a unique identifier for each point of interest
+#' @param address_location_neighborhood Optional; a logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
+#' @param time Optional; a  numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
+#' @param network_buffer Optional; a  logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
+#' @param network_file Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.
+#' @param city Optional; a when using a network buffer, you can add a city where your address points are to speed up the process
+#' @param epsg_code Optional; a epsg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param folder_path_network Optional; a Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#'
+#' @examples
+#' #' # Read the data
+#' df <- sf::st_read('path/to/data')
+#'
+#' # read the canopy layer
+#' canopy_layer <- sf::st_read('path/to/canopy')
+#'
+#' # calculate the canopy percentage for the POIs with default settings
+#' canopy_pct(address_locations=df, canopy=canopy_layer, buffer_distance=300)
+#'
+#' # calculate canopy percentage for the neighborhood, using the network as buffer
+#' canopy_pct(address_locations=df, buffer_distance=300, network_buffer=TRUE)
+#'
 #'
 #' @return The percentage of the canopy within a given buffer or isochrone around a set of locations is printed.
 #' @export
 #'
-#' @examples
+
 
 
 canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,

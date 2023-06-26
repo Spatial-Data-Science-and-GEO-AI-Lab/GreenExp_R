@@ -15,7 +15,7 @@ viewshed(
 )
 }
 \arguments{
-\item{observer}{object of class \code{sf} with one point; Starting location}
+\item{observer}{object of class \code{\link[sf]{sf}} with one point; Starting location}
 
 \item{dsm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM}
 

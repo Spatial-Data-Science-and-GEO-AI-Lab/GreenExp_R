@@ -1,7 +1,7 @@
 #' Viewshed
 #' @description Computes a binary viewshed of a point on a Digital Surface Model (DSM). The observer height is based on the heigth of a Digital Elevation Model (DEM).
 #'
-#' @param observer object of class \code{sf} with one point; Starting location
+#' @param observer object of class \code{\link[sf]{sf}} with one point; Starting location
 #' @param max_distance numeric; Buffer distance to calculate the viewshed
 #' @param dsm_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM
 #' @param dem_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DEM

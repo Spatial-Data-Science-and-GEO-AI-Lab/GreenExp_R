@@ -1,29 +1,42 @@
 
 #'  Creating average NDVI values per location
 #'
-#' @param address_location  A spatial object representing the location of interest, the location should be in projected coordinates.
-#' @param raster raster file with NDVI values
+#' @param address_location A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.
+#' @param raster Optional; a object of class \code{\link[terra]{rast}} with NDVI values
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param network_file An optional sfnetwork object representing a road network, If missing the road network will be created.
-#' @param UID A character string representing a unique identifier for each point of interest
-#' @param address_location_neighborhood A logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
-#' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
-#' @param time A numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
-#' @param engine When the raster is missing, users can choose whether they want to use Google Earth engine `gee` or Planetary Computer `pc` to calculate the ndvi
-#' @param network_buffer A logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
-#' @param city When using a network buffer, you can add a city where your address points are to speed up the process
-#' @param start_date The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
-#' @param end_date  The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
-#' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
-#' @param folder_path_ndvi  optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension
-#' @param plot_NDVI If you want to plot the NDVI, default is `FALSE`
-#' @param epsg_code A espg code to get a Projected CRS in the final output, If missing, the default is `3395`
-#' @param add_sd optional; returns the standard deviation of the NDVI values within a buffer.
+#' @param network_file Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.
+#' @param UID Optional; a  character string representing a unique identifier for each point of interest
+#' @param address_location_neighborhood Optional; a  logical, indicating whether to calculate with an address point or a neighborhood. default is `FALSE`
+#' @param speed Optional; a  numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
+#' @param time Optional; a  numeric value representing the travel time in minutes to calculate the buffer distance (required if `speed` is provided)
+#' @param engine Optional; When the raster is missing, users can choose whether they want to use Google Earth engine `gee` or Planetary Computer `pc` to calculate the ndvi
+#' @param network_buffer Optional; a logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.
+#' @param city Optional; when using a network buffer, you can add a city where your address points are to speed up the process
+#' @param start_date Optional; The start date from when the satellite images will be filtered `yyyy-mm-dd` default = `2020-01-01`
+#' @param end_date  Optional; The end date from when the satellite images will be filtered. `yyyy-mm-dd` default = `2021-01-01`
+#' @param folder_path_network Optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#' @param folder_path_ndvi Optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension
+#' @param plot_NDVI Optional; if you want to plot the NDVI, default is `FALSE`
+#' @param epsg_code Optional; a  espg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param add_sd Optional; returns the standard deviation of the NDVI values within a buffer.
+#'
+#' @examples
+#' # Read a dataset, in this instance we will use the first ten neighborhoods from the
+#' # Ams_Neighborhood dataset, which contains polygon geometry
+#' df <- Ams_Neighborhoods[1:10,]
+#'
+#' # calculate the mean ndvi for the neighborhoods with default settings
+#' calc_ndvi(df, buffer_distance=300)
+#'
+#' # calculate the mean ndvi for the neighborhoods, using the neigborhood as buffer
+#' calc_ndvi(df, address_location_neighborhood = TRUE)
+#'
+#' # calculate the mean and sd ndvi for the centroid neighborood, using the network as buffer
+#' calc_ndvi(df, buffer_distance=300, network_buffer=TRUE, add_sd=TRUE)
 #'
 #' @return A `sf` dataframe with the mean ndvi, the geometry and the buffer that was used
 #' @export
-#'
-#' @examples
+
 
 calc_ndvi<- function(address_location, raster, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
                      epsg_code=NULL, network_file=NULL,  UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, add_sd=FALSE,

@@ -24,13 +24,13 @@ greenspace_access(
 )
 }
 \arguments{
-\item{address_location}{A spatial object representing the location of interest. The location should be in projected coordinates.}
+\item{address_location}{A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.}
 
-\item{greenspace}{A spatial object representing greenspace}
+\item{greenspace}{Optional; a \code{\link[sf]{sf}} object representing a greenspace layer, the layer should be in projected coordinates}
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
-\item{network_file}{An optional sfnetwork object representing a road network, If missing the road network will be created.}
+\item{network_file}{Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.}
 
 \item{epsg_code}{A espg code to get a Projected CRS in the final output, If missing, the default is \code{3395}}
 
@@ -64,8 +64,7 @@ The distance to the nearest greenspace and whether the greenspace are within the
 Distance to the nearest green spaces
 }
 \examples{
-
-# Load a dataframe
+#' # Load a dataframe
 df <- Ams_Houses[1:10, ]
 
 # Euclidean Distance to Centroid of Green spaces
@@ -77,5 +76,6 @@ greenspace_access(address_location=df, buffer_distance=300, euclidean = FALSE)
 #Network Distance to Pseudo entrance points, and the greenspaces should be at least 400m2
 greenspace_access(address_location=df, buffer_distance=300, euclidean=FALSE, pseudo_entrance=TRUE,
   minimum_greenspace_size=400)
+
 
 }
