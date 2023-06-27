@@ -1,5 +1,9 @@
 
-# Greenness Exposure Assessment in R
+# Greenness Exposure Assessment in R [<img src="man/figures/logo_GreenExp.png" align="right" height="139"/>](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
+
+
+
 
 # Aim and objectives
 
