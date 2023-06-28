@@ -533,13 +533,13 @@ GS <- terra::rast('data/GS_AMS.tif')
 # Read the digital surfaca model
 DSM <- terra::rast('data/DSM_AMS.tif')
 # Read in the digital eleveation model
-DEM<- terra::rast('data/DTM_AMS.tif')
-vs <- GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dem_rast = DEM,
+DTM<- terra::rast('data/DTM_AMS.tif')
+vs <- GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dtm_rast = DTM,
                          max_distance = 200, observer_height = 1.7, plot = TRUE)
 ```
 
 
-The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visibile area and gray is not visible. 
+The left plot represents the Digital Surface Model (DSM), whereas the right plot represents the viewshed, where green is the visibile area and gray is not visible. 
 
 ### VGVI
 
@@ -557,9 +557,9 @@ The figure below provides an overview of the data used for calculating the Veget
 
 2. Address ID Numbers: The numbers assigned to the addresses in the plot correspond to the ID numbers used in the code chunk below the figure. These ID numbers uniquely identify each address and allow for easy referencing and analysis in the code.
 
-3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or greenspaces, and is a crucial factor in determining the VGVI.DEM and 
+3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or greenspaces, and is a crucial factor in determining the VGVI.DTM and 
 
-4. DSM: The figure also includes the Digital Elevation Model (DEM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DEM and DSM helps in understanding the topography of the region.
+4. DSM: The figure also includes the Digital Terrain Model (DTM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DTM and DSM helps in understanding the topography of the region.
 
 By utilizing this information and the corresponding code, the VGVI can be calculated, providing insights into the vegetation-ground view characteristics at each observer point.
 
@@ -570,7 +570,7 @@ By utilizing this information and the corresponding code, the VGVI can be calcul
 
 ```{r}
 VGVI <- GreenExp::vgvi_from_sf(observer = df_points,
-                     dsm_rast = DSM, dem_rast = DEM, greenspace_rast = GS,
+                     dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
                      max_distance = 200, observer_height = 1.7,
                      m = 0.5, b = 8, mode = "logit")
 
@@ -591,7 +591,7 @@ The VGVI from sf function analyzes the VGVI at a specific observer point, while 
 
 ```{r}
 mean_VGVI <- vgvi_from_address(address = df_points,
-                     dsm_rast = DSM, dem_rast = DEM, greenspace_rast = GS,
+                     dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
                      max_distance = 200, observer_height = 1.7,
                      m = 0.5, b = 8, mode = "logit")
 

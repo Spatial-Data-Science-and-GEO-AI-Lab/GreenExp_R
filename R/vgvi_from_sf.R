@@ -5,7 +5,7 @@
 #'
 #' @param observer object of class \code{sf}; Observer location(s) from where the VGVI should be computed. See ‘Details’ for valid sf geometry types
 #' @param dsm_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM
-#' @param dem_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DEM
+#' @param dtm_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DTM
 #' @param greenspace_rast object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the binary Greenspace mask. Values of the Greenspace mask must be 1 for Green and 0 for No-Green
 #' @param max_distance numeric; Buffer distance to calculate the viewshed
 #' @param observer_height numeric > 0; Height of the observer (e.g. 1.7 meters)
@@ -24,12 +24,12 @@
 #' df <- sf::st_read('path/to/data')
 #'
 #' # load the raster files
-#' DEM<- terra::rast('path/to/dem')
+#' DTM<- terra::rast('path/to/dtm')
 #' DSM <- terra::rast('path/to/dsm')
 #' GS <- terra::rast('path/to/greenspace')
 #'
 #' # Calculate the vgvi
-#' vgvi_from_sf(df, dsm_rast = DSM, dem_rast = DEM, greenspace_rast = GS,
+#' vgvi_from_sf(df, dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS,
 #'                   mode = "logit")
 #'
 #'
@@ -86,7 +86,7 @@
 #' @importFrom utils setTxtProgressBar
 #' @useDynLib GreenExp, .registration = TRUE
 
-vgvi_from_sf <- function(observer, dsm_rast, dem_rast, greenspace_rast,
+vgvi_from_sf <- function(observer, dsm_rast, dtm_rast, greenspace_rast,
                          max_distance = 800, observer_height = 1.7,
                          raster_res = NULL, spacing = raster_res,
                          m = 0.5, b = 8, mode = c("logit", "exponential"),
@@ -119,14 +119,14 @@ vgvi_from_sf <- function(observer, dsm_rast, dem_rast, greenspace_rast,
     stop("dsm_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }
 
-  # dem_rast
-  if (!is(dem_rast, "SpatRaster")) {
-    stop("dem_rast needs to be a SpatRaster object!")
-  } else if(sf::st_crs(terra::crs(dem_rast))$epsg != sf::st_crs(observer)$epsg){
-    warning('The crs of your DEM raster is not the same as the projected crs of the input location,
+  # dtm_rast
+  if (!is(dtm_rast, "SpatRaster")) {
+    stop("dtm_rast needs to be a SpatRaster object!")
+  } else if(sf::st_crs(terra::crs(dtm_rast))$epsg != sf::st_crs(observer)$epsg){
+    warning('The crs of your DTM raster is not the same as the projected crs of the input location,
               the projected crs of the raster will be transformed into the projected crs of the address location')
-    epsg_dem_rast <- sf::st_crs(observer)$epsg
-    dem_rast <- terra::project(dem_rast, paste0('EPSG:',epsg_dem_rast))
+    epsg_dtm_rast <- sf::st_crs(observer)$epsg
+    dtm_rast <- terra::project(dtm_rast, paste0('EPSG:',epsg_dtm_rast))
 
   }
 
@@ -241,15 +241,15 @@ vgvi_from_sf <- function(observer, dsm_rast, dem_rast, greenspace_rast,
   y0 <- sf::st_coordinates(observer)[,2]
 
   # Observer heights
-  height_0_vec <- unlist(terra::extract(dem_rast, cbind(x0, y0)), use.names = F) + observer_height
+  height_0_vec <- unlist(terra::extract(dtm_rast, cbind(x0, y0)), use.names = F) + observer_height
 
   if (progress) setTxtProgressBar(pb, 2)
 
 
-  #### 4. Remove points outside the DSM or DEM ####
+  #### 4. Remove points outside the DSM or DTM ####
   invalid_points <- unique(c(
     which(is.na(terra::extract(dsm_rast, cbind(x0, y0)))), # points outside the DSM
-    which(is.na(height_0_vec)) # points outside the dem
+    which(is.na(height_0_vec)) # points outside the DTM
   ))
 
   # Remove invalid points
@@ -285,9 +285,9 @@ vgvi_from_sf <- function(observer, dsm_rast, dem_rast, greenspace_rast,
     cat("\n")
   }
   if (length(invalid_points) == 1) {
-    message("1 point has been removed, because it was outside of the DSM or DEM")
+    message("1 point has been removed, because it was outside of the DSM or DTM")
   } else if (length(invalid_points) > 1) {
-    message(paste(length(invalid_points), "points have been removed, because they were outside of the DSM or DEM"))
+    message(paste(length(invalid_points), "points have been removed, because they were outside of the DSM or DTM"))
   }
   invisible(gc())
 

@@ -586,7 +586,10 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 
 ## Acknowledgements and contact
 
-- Name: Martijn Koster
-- Email: m.koster2@students.uu.nl 
+Project made in collaboration with Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab, conducted for the Applied Data Science MSc degree.
 
+| Name        | Email                       |
+|-------------|-----------------------------|
+| [Martijn Koster](https://github.com/MartijnKoster1)  | m.koster2@students.uu.nl |
+| S.M. Labib  | s.m.labib@uu.nl             |
 
