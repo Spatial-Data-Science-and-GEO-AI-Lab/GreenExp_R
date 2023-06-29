@@ -372,31 +372,16 @@ The figure below provides an overview of the data used for calculating the VGVI.
 
 By utilizing this information and the corresponding code, the VGVI can be calculated, providing insights into the vegetation-ground view characteristics at each observer point.
 
-<img src="man/figures/VGVI_ams.png" alt="Image" width="500" />
+<img src="man/figures/vgvi_sf.png" alt="Image" width="500" />
 
 ```r
 VGVI <- vgvi_from_sf(observer = df_points,
              dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
-# Simple feature collection with 9 features and 4 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
-# Projected CRS: Amersfoort / RD New
-# # A tibble: 9 × 5
-#      id   VGVI Buurtcode Buurt                               geom
-#   <int>  <dbl> <chr>     <chr>                        <POINT [m]>
-# 1     1 0.176  AF04      Rapenburg            (122550.8 487284.1)
-# 2     2 0.165  AF06      Uilenburg            (122168.8 487033.6)
-# 3     3 0.200  AF07      Valkenburg           (122341.7 486895.6)
-# 4     4 0.530  AJ02      Plantage             (122767.5 486602.6)
-# 5     5 0.324  AK01      Marine-Etablissement (122906.4 487497.6)
-# 6     6 0.200  AK02      Kattenburg             (123179.1 487316)
-# 7     7 0.0896 AK03      Wittenburg           (123344.6 487201.2)
-# 8     8 0      AK04      Oostenburg           (123603.6 487073.4)
-# 9     9 0.175  AK07      Kadijken               (123035 486830.7)
 ```
+
+
 
 --- 
 
@@ -413,25 +398,10 @@ VGVI <- vgvi_from_address(address = df_points,
              dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
-# Simple feature collection with 9 features and 2 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 122168.8 ymin: 486602.6 xmax: 123603.6 ymax: 487497.6
-# Projected CRS: Amersfoort / RD New
-# # A tibble: 9 × 3
-#      ID mean_VGVI            geometry
-# * <int>     <dbl>         <POINT [m]>
-# 1     1    0.121  (122550.8 487284.1)
-# 2     2    0.0991 (122168.8 487033.6)
-# 3     3    0.131  (122341.7 486895.6)
-# 4     4    0.346  (122767.5 486602.6)
-# 5     5    0.272  (122906.4 487497.6)
-# 6     6    0.153    (123179.1 487316)
-# 7     7    0.0754 (123344.6 487201.2)
-# 8     8    0.0134 (123603.6 487073.4)
-# 9     9    0.165    (123035 486830.7)
+
 ```
 
+<img src="man/figures/vgvi_address.png" alt="Image" width="500" />
 
 ---
 
