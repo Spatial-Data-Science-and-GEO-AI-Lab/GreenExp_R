@@ -7,7 +7,7 @@
 viewshed(
   observer,
   dsm_rast,
-  dem_rast,
+  dtm_rast,
   max_distance = 800,
   observer_height = 1.7,
   raster_res = NULL,
@@ -19,7 +19,7 @@ viewshed(
 
 \item{dsm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM}
 
-\item{dem_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DEM}
+\item{dtm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DTM}
 
 \item{max_distance}{numeric; Buffer distance to calculate the viewshed}
 
@@ -33,17 +33,17 @@ viewshed(
 object of class \code{\link[terra]{rast}}
 }
 \description{
-Computes a binary viewshed of a point on a Digital Surface Model (DSM). The observer height is based on the heigth of a Digital Elevation Model (DEM).
+Computes a binary viewshed of a point on a Digital Surface Model (DSM). The observer height is based on the heigth of a Digital Terrain Model (DTM).
 }
 \examples{
 # Load a sf dataframe
 df <- sf::st_read('path/to/data')
 
 # load the raster files
-DEM<- terra::rast('path/to/dem')
+DTM<- terra::rast('path/to/dtm')
 DSM <- terra::rast('path/to/dsm')
 
- GreenExp::viewshed(observer = df[1,], dsm_rast = DSM, dem_rast = DEM,
+ GreenExp::viewshed(observer = df[1,], dsm_rast = DSM, dtm_rast = DTM,
                     plot = TRUE)
 
 }

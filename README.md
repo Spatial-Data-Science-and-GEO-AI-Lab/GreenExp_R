@@ -29,7 +29,8 @@ This package is developed to facilitate robust and transparent analysis in the f
     + [Greenspace access](#greenspace-access)
   * [Visibility](#visibility)
     + [Viewshed](#viewshed)
-    + [VGVI](#vgvi)
+    + [vgvi from sf](#vgvi-from-sf)
+    + [vgvi from address](#vgvi-from-address)
 - [Extended Installation](#alternative-installation)
   * [GEE](#gee)
   * [Rcpp](#rcpp)
@@ -144,39 +145,30 @@ Each of these functions will provide an [sf](https://r-spatial.github.io/sf/arti
 
 The user has the option to input either a point geometry or a (multi)polygon geometry. By default, the address location will be transformed into a point geometry, and a buffer will be created around it to calculate the availability. However, users can choose to use the provided polygon geometry to calculate availability by setting the 'address_location_neighborhood' parameter to TRUE.
 
-By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilize a network buffer. The distinction between the two types of buffers is illustrated in the figure below. The Euclidean buffer in this instance has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over a duration of 10 minutes.
+By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilise a network buffer. The distinction between the two types of buffers is illustrated in the figure below. In this instance, the Euclidean buffer has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over 10 minutes.
 
 ![](man/figures/buffers_example.png)
 
 
-In the following subsections, a brief description of each availability function will be provided, along with examples extracted from the neighborhood polygons and points in Amsterdam. 
+The following subsections will briefly describe each availability function, along with examples extracted from the neighbourhood polygons and points in Amsterdam. 
 
 ---
 
 ### Calc NDVI 
 
-The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for given location(s). The input for the function is `address_location` which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
+The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for a given location(s). The input for the function is `address_location`, which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
 
 
-You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The figures below illustrate two examples of NDVI in Amsterdam. The first plot showcases the aforementioned neighborhoods in Amsterdam and there NDVI, the second one shows the address points within an euclidean buffer of 300 meters 
-
-
-Below you can find two code snippets that correspond to the figures under the code, the first code snippet corresponds with the neighborhood, whereas the second code snippet corresponds with address locations within the euclidean distance
-
+You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The code snippet below shows how to calculate the NDVI for the neighbourhoods.
 
 ``` r
 # Calculate the NDVI for neighborhoods
 GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE)
-# Calculate the NDVI for buffer around address
-GreenExp::calc_ndvi(df_points, buffer_distance=300)
 ```
 
+In the Figure below, you can find the Output after running the calc_ndvi function and a plot corresponding to the results.
 
-
-Neighborhood NDVI        |  Addresses within euclidean distance NDVI
-:-------------------------:|:-------------------------:
-![](man/figures/neighborhood_NDVI.png)   |  ![](man/figures/address_NDVI.png)
-
+<img src="man/figures/neighborhood_NDVI.png" alt="Image" width="500" />
 
 
 If desired, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations
@@ -199,7 +191,8 @@ In the code chunk and figure below an example is given for the Amsterdam area. I
 GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T)
 ```
 
-![](man/figures/land_cover.png) 
+<img src="man/figures/land_cover.png" alt="Image" width="500" />
+
 
 ---
 
@@ -218,7 +211,7 @@ df_point_canopy <- df_points[df$Buurt=='Marine-Etablissement',]]
 canopy_pct(df_point_canopy, canopy_layer = canopy_layer, buffer_distance=200)
 ```
 
-![](man/figures/canopy.png)
+<img src="man/figures/canopy.png" alt="Image" width="500" />
 
 ---
 
@@ -254,7 +247,7 @@ In the example below, the percentage of greenspaces is calculated for each addre
 greenspace_pct(df_points, buffer_distance=300)
 ```
 
-![](man/figures/Greenspace.png)
+<img src="man/figures/Greenspace.png" alt="Image" width="500" />
 
 
 
@@ -283,8 +276,7 @@ In this example, the accessibility function is applied using the default setting
 df_point <- df_points[8,]
 greenspace_access(df_point, buffer_distance = 300)
 ```
-
-![](man/figures/access_euc_cen.png)
+<img src="man/figures/access_euc_cen.png" alt="Image" width="500" />
 
 
 
@@ -300,8 +292,7 @@ In this example, the accessibility function utilizes network distance to compute
 greenspace_access(df_point, buffer_distance = 300, euclidean=F)
 ```
 
-![](man/figures/access_net_cen.png)
-
+<img src="man/figures/access_net_cen.png" alt="Image" width="500" />
 
 ---
 
@@ -321,7 +312,8 @@ greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance 
 # 1   1            230.747                      TRUE POINT (123603.6 487073.4)
 ```
 
-![](man/figures/access_net_pse.png)
+<img src="man/figures/access_net_pse.png" alt="Image" width="500" />
+
 
 
 ## Visibility
@@ -338,7 +330,7 @@ no-visible and 1 = visible area.
 
 For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) package.
 
-**EXAMPLE**
+
 
 
 ```r
@@ -354,16 +346,15 @@ GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dtm_rast = DTM,
 
 ```
 
-
-![](man/figures/viewshed.png)
+<img src="man/figures/viewshed.png" alt="Image" width="500" />
 
 The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visible area and gray is not visible. 
 
-### vgvi_from_sf
+### vgvi from sf
 
 The Viewshed Greenness Visibility Index (VGVI) represents the proportion of visible greenness to the total visible area based on the `viewshed`. The estimated VGVI values range between 0 and 1, where = no green cells and 1= all of the visible cells are green.
 
-Based on a viewshed and a binary greenspace raster, all visible points are classified as visible green and visible no-green. All values are summarized using a decay function, to account for the reducing visual prominence of an object in space with increasing distance from the observer. Currently two options are supported, a logistic and an exponential function.
+Based on a viewshed and a binary greenspace raster, all visible points are classified as visible green and visible no-green. All values are summarised using a decay function, to account for the reducing visual prominence of an object in space with increasing distance from the observer. Currently two options are supported, a logistic and an exponential function.
 
 For more information about the VGVI please go to the [GVI](https://github.com/STBrinkmann/GVI) package. For more information about the algorithms look at the paper by [Brinkmann, 2022](https://doi.org/10.5194/agile-giss-3-27-2022) and [Labib et al., 2021](https://doi.org/10.1016/j.scitotenv.2020.143050)
 
@@ -381,7 +372,7 @@ The figure below provides an overview of the data used for calculating the VGVI.
 
 By utilizing this information and the corresponding code, the VGVI can be calculated, providing insights into the vegetation-ground view characteristics at each observer point.
 
-![](man/figures/VGVI_AMS.png)
+<img src="man/figures/VGVI_ams.png" alt="Image" width="500" />
 
 ```r
 VGVI <- vgvi_from_sf(observer = df_points,
@@ -441,8 +432,6 @@ VGVI <- vgvi_from_address(address = df_points,
 # 9     9    0.165    (123035 486830.7)
 ```
 
-
-### streetview 
 
 ---
 

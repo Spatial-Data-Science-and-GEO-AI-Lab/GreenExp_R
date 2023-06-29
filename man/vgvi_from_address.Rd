@@ -7,7 +7,7 @@
 vgvi_from_address(
   address,
   dsm_rast,
-  dem_rast,
+  dtm_rast,
   greenspace_rast,
   buffer_distance = 50,
   sample_points = 30,
@@ -29,7 +29,7 @@ vgvi_from_address(
 
 \item{dsm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DSM}
 
-\item{dem_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DEM}
+\item{dtm_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the DTM}
 
 \item{greenspace_rast}{object of class \code{\link[terra]{rast}}; \code{\link[terra]{rast}} of the binary Greenspace mask. Values of the Greenspace mask must be 1 for Green and 0 for No-Green}
 
@@ -84,12 +84,12 @@ The decay function can be visualized using the \code{\link[GreenExp]{visualizeWe
 df <- sf::st_read('path/to/data')
 
 # load the raster files
-DEM <- terra::rast('path/to/dem')
+DTM <- terra::rast('path/to/dtm')
 DSM <- terra::rast('path/to/dsm')
 GS <- terra::rast('path/to/greenspace')
 
 # Calculate the vgvi
-vgvi_from_address(df, dsm_rast = DSM, dem_rast = dem, greenspace_rast = GS,
+vgvi_from_address(df, dsm_rast = DSM, dtm_rast = dtm, greenspace_rast = GS,
                   mode = "logit")
 
 }
