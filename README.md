@@ -168,7 +168,7 @@ GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE)
 
 In the Figure below, you can find the Output after running the calc_ndvi function and a plot corresponding to the results.
 
-<img src="man/figures/neighborhood_NDVI.png" alt="Image" width="500" />
+<img src="man/figures/neighborhood_ndvi.png" alt="Image" width="500" />
 
 
 If desired, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations
