@@ -66,7 +66,7 @@ The first dataset is an sf data frame of neighborhoods in Amsterdam. This datase
 Run the following code for more information 
 
 ```r
-library(GreenExp) # If GreenExp is not loaded yet
+library(GreenExp) 
 ?Ams_Neighborhoods
 ```
 
@@ -208,7 +208,7 @@ canopy_layer <- sf::st_read('path/to/canopy_layer.gpkg')
 # Select Marine-Etablissement
 df_point_canopy <- df_points[df$Buurt=='Marine-Etablissement',]]
 
-canopy_pct(df_point_canopy, canopy_layer = canopy_layer, buffer_distance=200)
+GreenExp::canopy_pct(df_point_canopy, canopy_layer = canopy_layer, buffer_distance=200)
 ```
 
 <img src="man/figures/canopy.png" alt="Image" width="500" />
@@ -244,7 +244,7 @@ Based on these criteria, the following features from OSM are used:
 In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace is based on the retrieved data from OSM. 
 
 ``` r
-greenspace_pct(df_points, buffer_distance=300)
+GreenExp::greenspace_pct(df_points, buffer_distance=300)
 ```
 
 <img src="man/figures/Greenspace.png" alt="Image" width="500" />
@@ -273,8 +273,9 @@ Three examples will be provided. For the sake of visualization, one address poin
 In this example, the accessibility function is applied using the default settings, which involves calculating the euclidean distance from the address location to the nearest greenspace centroid. The figure below illustrates an example in Amsterdam, where the parks are represented by green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, while the address location is denoted by a red point. The code chunk beneath the plot provides the necessary code to receive the shortest distance from the address location. 
 
 ``` r
-df_point <- df_points[8,]
-greenspace_access(df_point, buffer_distance = 300)
+df_point_access <- df_points[df$Buurt==’Oostenburg’, ]
+
+GreenExp::greenspace_access(df_point_access, buffer_distance = 300)
 ```
 <img src="man/figures/access_euc_cen.png" alt="Image" width="500" />
 
@@ -289,7 +290,7 @@ In this example, the accessibility function utilizes network distance to compute
 
 
 ``` r
-greenspace_access(df_point, buffer_distance = 300, euclidean=F)
+GreenExp::greenspace_access(df_point_access, buffer_distance = 300, euclidean=F)
 ```
 
 <img src="man/figures/access_net_cen.png" alt="Image" width="500" />
@@ -301,7 +302,7 @@ greenspace_access(df_point, buffer_distance = 300, euclidean=F)
 In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the parks are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the parks, as roads passing through the parks can also serve as potential entrance points. 
 
 ```r
-greenspace_access(df_point, buffer_distance=300, euclidean = F, pseudo_entrance = T)
+GreenExp::greenspace_access(df_point_access, buffer_distance=300, euclidean = F, pseudo_entrance = T)
 
 # Simple feature collection with 1 feature and 3 fields
 # Geometry type: POINT
@@ -375,7 +376,7 @@ By utilizing this information and the corresponding code, the VGVI can be calcul
 <img src="man/figures/vgvi_sf.png" alt="Image" width="500" />
 
 ```r
-VGVI <- vgvi_from_sf(observer = df_points,
+VGVI <- GreenExp::vgvi_from_sf(observer = df_points,
              dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
@@ -394,7 +395,7 @@ The VGVI from sf function analyzes the VGVI at a specific observer point, while 
 
 
 ```r
-VGVI <- vgvi_from_address(address = df_points,
+VGVI <- GreenExp::vgvi_from_address(address = df_points,
              dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
