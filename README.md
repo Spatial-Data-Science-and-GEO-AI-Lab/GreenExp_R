@@ -302,7 +302,8 @@ GreenExp::greenspace_access(df_point_access, buffer_distance = 300, euclidean=F)
 In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the parks are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the parks, as roads passing through the parks can also serve as potential entrance points. 
 
 ```r
-GreenExp::greenspace_access(df_point_access, buffer_distance=300, euclidean = F, pseudo_entrance = T)
+GreenExp::greenspace_access(df_point_access, buffer_distance=300,
+                            euclidean = F, pseudo_entrance = T)
 
 # Simple feature collection with 1 feature and 3 fields
 # Geometry type: POINT
