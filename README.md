@@ -1,6 +1,5 @@
 
-# Greenness Exposure Assessment in R [<img src="man/figures/GreenEXP_logo_R.png" align="right" height="139"/>](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-
+# Greenness Exposure Assessment in R [<img src="man/figures/GreenEXP_logo_R.png" align="right" height="139"/>]
 
 
 
