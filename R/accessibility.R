@@ -67,9 +67,9 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
       stop("You didn't enter speed and time or the buffer distance,
              please enter speed and time, or the buffer distance.")
     } else if (!speed > 0) {
-      stop("Speed must be a positive integer")
+      stop("Speed must be a positive number")
     } else if (!time > 0) {
-      stop("Time must be a positive integer")
+      stop("Time must be a positive number")
     } else{
       buffer_distance <- speed * 1000/ 60 * time
     }
