@@ -75,10 +75,6 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     }
   }
   if ("POINT" %in% sf::st_geometry_type(address_location)) {
-  }else if (missing(buffer_distance)) {
-    stop("You do not have a point geometry and did not provide a buffer,
-      or speed and time,
-           please provide a point geometry or a buffer distance (or spede and time)")
   }
   else {
     message('There are nonpoint geometries, they will be converted into centroids')
