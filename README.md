@@ -6,7 +6,7 @@
 
 # Aim and objectives
 
-This package is developed to facilitate robust and transparent analysis in the field of greenspace and health research. It provides researchers with a collection of functionalities that can be applied across multiple countries, enabling comprehensive spatial analysis and enhancing the accuracy of results.
+This package is developed to facilitate robust and transparent analysis in greenspace and vegetation in general. It provides researchers with a collection of multidimensional functionalities of greeness modeling that can be applied across multiple countries, enabling comprehensive spatial analysis and enhancing the accuracy of results.
 
 # Table of contents
 
@@ -39,10 +39,11 @@ This package is developed to facilitate robust and transparent analysis in the f
 # Installation
 
 You can install the development version of GreenExp from [GitHub](https://github.com/) with:
+For Windows installation, please install R-tools from (https://cran.r-project.org/bin/windows/Rtools/) before running the code below
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R")
+devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R", dependencies = TRUE)
 ```
 
 
@@ -50,19 +51,19 @@ devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R")
 
 # Data 
 
-This package is provided with three sf datasets:
+This package is provided with three sf datasets for example analyses:
 
 1. [Ams_Neighborhoods](#ams_neighborhoods)
 2. [Ams_Houses](#ams_houses)
 3. [Ams_Parks](#ams_parks)
 
-These datasets will be used as example to explain the [Functionalities](#functionalities).
+These datasets will be used as examples to explain the [Functionalities](#functionalities).
 
 #### Ams_Neighborhoods
 
 The first dataset is an sf data frame of neighborhoods in Amsterdam. This dataset is retrieved from [Gemeente Amsterdam](https://maps.amsterdam.nl/gebiedsindeling/). 
 
-Run the following code for more information 
+Run the following code for more information. 
 
 ```r
 library(GreenExp) 
@@ -74,7 +75,7 @@ library(GreenExp)
 #### Ams_Houses
 
 The Ams_Houses contain houses that are created by taking the centroid of the aforementioned [Ams_Neighborhoods](#Ams_Neighborhoods)
-Run the following code for more information 
+Run the following code for more information. 
 
 ```r
 library(GreenExp) # If GreenExp is not loaded yet
@@ -144,12 +145,12 @@ Each of these functions will provide an [sf](https://r-spatial.github.io/sf/arti
 
 The user has the option to input either a point geometry or a (multi)polygon geometry. By default, the address location will be transformed into a point geometry, and a buffer will be created around it to calculate the availability. However, users can choose to use the provided polygon geometry to calculate availability by setting the 'address_location_neighborhood' parameter to TRUE.
 
-By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilise a network buffer. The distinction between the two types of buffers is illustrated in the figure below. In this instance, the Euclidean buffer has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over 10 minutes.
+By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilize a network buffer. The distinction between the two types of buffers is illustrated in the figure below. In this instance, the Euclidean buffer has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over 10 minutes.
 
 ![](man/figures/buffers_example.png)
 
 
-The following subsections will briefly describe each availability function, along with examples extracted from the neighbourhood polygons and points in Amsterdam. 
+The following subsections will briefly describe each availability function and examples extracted from the neighborhood polygons and points in Amsterdam. 
 
 ---
 
@@ -158,7 +159,7 @@ The following subsections will briefly describe each availability function, alon
 The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for a given location(s). The input for the function is `address_location`, which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
 
 
-You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The code snippet below shows how to calculate the NDVI for the neighbourhoods.
+You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The code snippet below shows how to calculate the NDVI for the neighborhoods.
 
 ``` r
 # Calculate the NDVI for neighborhoods
