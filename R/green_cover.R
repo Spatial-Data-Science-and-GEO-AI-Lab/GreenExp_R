@@ -263,15 +263,9 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
       year <- is.character(year)
     }
 
-    if (year < '2020'||year > '2021'){
-      warning('The sattelite have images in 2020 and 2021, please select one of these years,
-             it will be set to default now, which is 2021.')
-      year <- '2021'
-
-    }
     address <- address_location
     address <- sf::st_transform(address, 4326)
-    #calculation_area <- sf::st_geometry(calculation_area)
+
     calculation_area <- sf::st_transform(calculation_area, 4326)
     bbox <- sf::st_bbox(address)
 
@@ -284,8 +278,23 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
     date_time <- matches %>%
       rstac::items_reap(field = c("properties", "start_datetime"))
 
+    date <- paste0(year,"-01-01T00:00:00Z")
+
+    if (date %in% date_time) {
+      # Do nothing
+    } else{
+      warning('The sattelite do not have images in the year selected by you,
+             it will be set to default year, which is 2021.')
+      # Also make variable year to 2021 for the message.
+      year <- "2021"
+      date <-"2021-01-01T00:00:00Z"
+    }
+
     # Select the year whcih is put in by the user, otherwise the default year.
-    selected_item <- matches$features[[which(date_time == paste0(year,"-01-01T00:00:00Z"))]]
+    selected_item <- matches$features[[which(date_time == date)]]
+
+    # # Select the year which is put in by the user, otherwise the default year.
+    # selected_item <- matches$features[[which(date_time == paste0(year,"-01-01T00:00:00Z"))]]
 
     cat('The data is retrieved from the', selected_item$properties$description,
     '\n The product is based on', selected_item$properties$mission,
