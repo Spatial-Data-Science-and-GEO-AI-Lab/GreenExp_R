@@ -32,7 +32,8 @@ Imports:
     rstac,
     tidygraph,
     osmextract,
-    FNN
+    FNN,
+    lubridate
 Depends:
     R (>= 3.3.0)
 LinkingTo:
