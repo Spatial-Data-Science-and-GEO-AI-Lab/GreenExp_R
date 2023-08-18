@@ -547,7 +547,7 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 
 ## Acknowledgements and contact
 
-Project made in collaboration with Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab, conducted for the Applied Data Science MSc degree.
+Project made in collaboration with Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab.
 
 | Name        | Email                       |
 |-------------|-----------------------------|
