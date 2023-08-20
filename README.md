@@ -45,7 +45,7 @@ For Windows installation, please install R-tools from (https://cran.r-project.or
 # install.packages("devtools")
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R", dependencies = TRUE)
 ```
-
+To use in MAC see the extended installation instruction.
 
 ---
 
