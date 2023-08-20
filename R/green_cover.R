@@ -280,7 +280,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
 
     # get the years in planetary computer
-    years <- substr(datetime, 1, 4)
+    years <- substr(date_time, 1, 4)
 
 
 
