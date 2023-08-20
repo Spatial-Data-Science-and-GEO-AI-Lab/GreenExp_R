@@ -337,7 +337,7 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
   # Create a dataframe for the results
   df <- data.frame(UID, greenspace_pct = cbind(unlist(greenspace_pct)),
                    address_location) %>% sf::st_as_sf()
-
+  df$greenspace_pct [df$greenspace_pct > 100] <- 100 #for the areas with more than 100% park area
   print('running the function took:')
   print(Sys.time()-start_function)
 
