@@ -31,6 +31,8 @@
 #'
 #' @return The percentage of each green cover and individual vegetation cover type within a given buffer each street.
 #' @export
+#'
+#'
 
 
 green_cover_streets <- function(city=NULL, buffer_distance=NULL, raster,
