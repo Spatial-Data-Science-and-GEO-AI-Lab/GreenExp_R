@@ -2,6 +2,7 @@
 
 export(calc_ndvi)
 export(canopy_pct)
+export(green_cover_streets)
 export(greenspace_access)
 export(greenspace_pct)
 export(land_cover)
