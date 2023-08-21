@@ -4,6 +4,8 @@ Version: 0.0.1
 Authors@R: 
     person("Martijn", "Koster", , "m.koster2@students.uu.nl", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
+    person("Labib", "SM", , "s.m.labib@uu.nl", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-4127-2075"))
 Description: A robust package to calculte the green spaces
 License: use_mit_license()
 Encoding: UTF-8
