@@ -16,7 +16,8 @@ greenspace_pct(
   UID = NULL,
   network_file = NULL,
   city = NULL,
-  address_location_neighborhood = FALSE
+  address_location_neighborhood = FALSE,
+  folder_path_greenspace = NULL
 )
 }
 \arguments{
@@ -44,7 +45,7 @@ greenspace_pct(
 
 \item{address_location_neighborhood}{Optional; a logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
 
-\item{download_dir}{Optional; a directory to download the network file, the default will be \code{tempdir()}.}
+\item{folder_path_greenspace}{optional; Folder path to where the retrieved OSM park data will be saved. Must not include name extension}
 }
 \value{
 Returns the percentage of greenspace coverage given a certain buffer.

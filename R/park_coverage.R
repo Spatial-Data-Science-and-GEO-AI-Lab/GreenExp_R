@@ -12,8 +12,8 @@
 #' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param city Optional; when using a network buffer, you can add a city where your address points are to speed up the process
 #' @param address_location_neighborhood Optional; a logical, indicating whether to calculate with an address point or a neighbourhood. default is `FALSE`
-#' @param download_dir Optional; a directory to download the network file, the default will be `tempdir()`.
 #' @param epsg_code Optional; epsg code to get a Projected CRS in the final output, If missing, the default is `3395`
+#' @param folder_path_greenspace optional; Folder path to where the retrieved OSM park data will be saved. Must not include name extension
 #'
 #' @examples
 #' # Read a dataset, in this instance we will use the first ten neighborhoods from the
@@ -37,7 +37,7 @@
 
 
 greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_distance=NULL, network_buffer=FALSE, folder_path_network = NULL,
-                      speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_location_neighborhood=FALSE) {
+                      speed=NULL, time=NULL, epsg_code=NULL, UID=NULL, network_file=NULL, city=NULL, address_location_neighborhood=FALSE, folder_path_greenspace = NULL) {
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
 
@@ -261,28 +261,45 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
     # Initial load of greenspace_layer
     q1 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "landuse",
-                               value = c('allotments','forest',
-                                         'greenfield','village_green')) %>%
+                               value = c('allotments', 'recreation_ground', 'grass', 'forest',
+                                         'greenfield','village_green', 'meadow', 'orchard')) %>%
       osmdata::osmdata_sf()
 
     q2 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "leisure",
-                               value = c('garden','fitness_station',
+                               value = c('garden','fitness_station', 'common', 'dog_park',
+                                         'greenfield', 'grassland', 'heath',
                                          'nature_reserve','park','playground')) %>%
       osmdata::osmdata_sf()
 
     q3 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "natural",
-                               value = c('grassland')) %>%
+                               value = c('grassland','wood', 'scrub', 'heath', 'moor')) %>%
       osmdata::osmdata_sf()
-    res <- c(q1, q2, q3)
+    #res <- c(q1, q2, q3)
+    #get individual layer for each green space information, there may be some overlap between layers
+    resq1 <- q1
+    resq2 <- q2
+    resq3 <- q3
 
+    greenlayer1 <- resq1$osm_polygons %>% dplyr::select (osm_id, name) #only select two columns to join
+    greenlayer2 <- resq2$osm_polygons %>% dplyr::select (osm_id, name) #only select two columns to join
+    greenlayer3 <- resq3$osm_polygons %>% dplyr::select (osm_id, name) #only select two columns to join
 
     # greenspace_layer cleaning
-    greenspace_layer <- res$osm_polygons
-    greenspace_layer <- tidygraph::select(greenspace_layer, "osm_id", "name")
+    greenspace_layer <- rbind(greenlayer1, greenlayer2, greenlayer3) #join all greenspace types
+
+    greenspace_layer <- greenspace_layer[!duplicated(greenspace_layer$osm_id), ] #if there is duplicate osm_id, keep one row
+
     greenspace_layer <- sf::st_make_valid(greenspace_layer)
     greenspace_layer <- sf::st_transform(greenspace_layer, projected_crs)
+
+    if (!is.null(folder_path_greenspace)) {
+      if (!dir.exists(folder_path_greenspace)) {
+        dir.create(folder_path_greenspace)
+      }
+      sf::st_write(greenspace_layer, paste0(folder_path_greenspace,'/','OSMgreenspace.gpkg'), delete_layer = TRUE)
+    }
 
     # print('time to clean greenspace layer')
     # print(Sys.time()-start)
@@ -319,9 +336,9 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
   for (i in 1:n_iter) {
     pb$tick()
 
-    # Clip tree greenspace to polygon
+    # Clip greenspace to polygon
     greenspace_clip <- sf::st_intersection(greenspace_layer, calculation_area[i,])
-    # Calculate area of clipped tree greenspace
+    # Calculate area of clipped greenspace
     greenspace_area <- sf::st_area(greenspace_clip)
     total_area <- sum(greenspace_area)
     # Calculate area of polygon
@@ -337,7 +354,7 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
   # Create a dataframe for the results
   df <- data.frame(UID, greenspace_pct = cbind(unlist(greenspace_pct)),
                    address_location) %>% sf::st_as_sf()
-  df$greenspace_pct [df$greenspace_pct > 100] <- 100 #for the areas with more than 100% park area
+  df$greenspace_pct [df$greenspace_pct > 100] <- 100 #for the areas with more than 100% park area due to OSM multiple polygons on the same place!
   print('running the function took:')
   print(Sys.time()-start_function)
 
