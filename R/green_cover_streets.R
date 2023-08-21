@@ -31,6 +31,13 @@
 #'
 #' @return The percentage of each green cover and individual vegetation cover type within a given buffer each street.
 #' @export
+#' @importFrom tmaptools geocode_OSM
+#' @importFrom sfnetworks as_sfnetwork
+#' @importFrom sfnetworks to_spatial_smooth
+#' @importFrom sfnetworks activate
+#' @importFrom tidygraph convert
+#'
+#'
 #'
 #'
 
