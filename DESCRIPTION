@@ -33,7 +33,8 @@ Imports:
     tidygraph,
     osmextract,
     FNN,
-    lubridate
+    lubridate,
+    tmaptools
 Depends:
     R (>= 3.3.0)
 LinkingTo:
