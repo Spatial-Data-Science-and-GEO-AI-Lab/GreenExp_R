@@ -1,6 +1,6 @@
 Package: GreenExp
 Title: Greenspace exposure
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: 
     person("Martijn", "Koster", , "m.koster2@students.uu.nl", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
