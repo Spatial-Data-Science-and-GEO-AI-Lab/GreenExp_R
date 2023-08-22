@@ -285,8 +285,8 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
           y_subset <-
             sf::st_intersects(x, y) %>%
             unlist() %>%
+            unique() %>%
             sort() %>%
-            rle() %>%
             {y[.,]}
 
           sf::st_intersection(x, y_subset)
