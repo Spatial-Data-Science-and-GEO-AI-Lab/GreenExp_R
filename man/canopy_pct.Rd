@@ -8,10 +8,12 @@ canopy_pct(
   address_location,
   canopy_layer,
   buffer_distance = NULL,
+  avgcanopyRedii = NULL,
   network_buffer = FALSE,
   network_file = NULL,
   epsg_code = NULL,
   folder_path_network = NULL,
+  folder_path_osmtrees = NULL,
   UID = NULL,
   address_location_neighborhood = FALSE,
   speed = NULL,
@@ -26,6 +28,8 @@ canopy_pct(
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
+\item{avgcanopyRedii}{Optional; A distance in meters to create a buffer around each tree points, useful in case there is no canopy polygon layer and no canopy radius information}
+
 \item{network_buffer}{Optional; a  logical, the default is an euclidean buffer, when TRUE, a network buffer will be used.}
 
 \item{network_file}{Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.}
@@ -34,9 +38,13 @@ canopy_pct(
 
 \item{folder_path_network}{Optional; a Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
+\item{folder_path_osmtrees}{Optional; a Folder path to where the retrieved OSM tree points will be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
+
 \item{UID}{Optional; a character string representing a unique identifier for each point of interest}
 
 \item{address_location_neighborhood}{Optional; a logical, indicating whether to calculate with an address point or a neighbourhood. default is \code{FALSE}}
+
+\item{speed}{Optional; a  numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
 \item{time}{Optional; a  numeric value representing the travel time in minutes to calculate the buffer distance (required if \code{speed} is provided)}
 
