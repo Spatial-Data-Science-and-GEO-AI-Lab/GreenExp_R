@@ -185,19 +185,20 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
 
     q1 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "landuse",
-                               value = c('allotments','forest',
-                                         'greenfield','village_green')) %>%
+                               value = c('allotments', 'recreation_ground', 'grass', 'forest',
+                                         'greenfield','village_green', 'meadow', 'orchard')) %>%
       osmdata::osmdata_sf()
 
     q2 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "leisure",
-                               value = c('garden','fitness_station',
+                               value = c('garden','fitness_station', 'common', 'dog_park',
+                                         'greenfield', 'grassland', 'heath',
                                          'nature_reserve','park','playground')) %>%
       osmdata::osmdata_sf()
 
     q3 <- osmdata::opq(sf::st_bbox(iso_area)) %>%
       osmdata::add_osm_feature(key = "natural",
-                               value = c('grassland')) %>%
+                               value = c('grassland','wood', 'scrub', 'heath', 'moor')) %>%
       osmdata::osmdata_sf()
     res <- c(q1, q2, q3)
 
