@@ -257,18 +257,12 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, avg
   ##### 4. Canopy layer ####
   if (missing(canopy_layer)) {
     message('You did not provide a canopy layer, osmdata will be used to find tree points')
-    #calculation_area_bbox <- sf::st_bbox(calculation_area)
-    # calculation_area_osm <- sf::st_polygon(list(rbind(
-    #   c(calculation_area_osm$xmin, calculation_area_osm$ymin),
-    #   c(calculation_area_osm$xmax, calculation_area_osm$ymin),
-    #   c(calculation_area_osm$xmax, calculation_area_osm$ymax),
-    #   c(calculation_area_osm$xmin, calculation_area_osm$ymax),
-    #   c(calculation_area_osm$xmin, calculation_area_osm$ymin)
-    # )))
 
-    calculation_area_osm <- sf::st_as_sfc(st_bbox(calculation_area)) %>% sf::st_as_sf() #get the bound box to extract tree points
+    #get the bound box to extract tree points
+    calculation_area_osm <- sf::st_as_sfc(st_bbox(calculation_area)) %>% sf::st_as_sf()
 
-    calculation_area_osm <- sf::st_buffer (calculation_area_osm, dist = 1000) #add extra area to account for edge effect
+    #add extra area to account for edge effect
+    calculation_area_osm <- sf::st_buffer (calculation_area_osm, dist = 1000)
     calculation_area_osm <- sf::st_transform(calculation_area_osm, 4326)
 
     # Initial load of canopy_layer
