@@ -61,7 +61,6 @@ green_cover_streets <- function(city=NULL, buffer_distance=NULL, raster,
   net = sfnetworks::as_sfnetwork(lines) #create a network file
 
   #now do the cleaning for edges that has loop or multiple
-  library(tidygraph)
   simple = net %>%
     activate("edges") %>%
     filter(!edge_is_multiple()) %>%
