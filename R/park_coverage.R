@@ -69,7 +69,7 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
       address_location <- sf::st_centroid(address_location)
     }
 
-    # If buffer distnace is missing, make sure to calculate it with time and speed,
+    # If buffer distance is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
         stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
@@ -294,6 +294,7 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
     greenspace_layer <- sf::st_make_valid(greenspace_layer)
     greenspace_layer <- sf::st_transform(greenspace_layer, projected_crs)
 
+    #to save the extracted OSM green space polygon
     if (!is.null(folder_path_greenspace)) {
       if (!dir.exists(folder_path_greenspace)) {
         dir.create(folder_path_greenspace)

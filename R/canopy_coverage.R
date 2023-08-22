@@ -12,6 +12,9 @@
 #' @param city Optional; a when using a network buffer, you can add a city where your address points are to speed up the process
 #' @param epsg_code Optional; a epsg code to get a Projected CRS in the final output, If missing, the default is `3395`
 #' @param folder_path_network Optional; a Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#' @param avgcanopyRedii Optional; A distance in meters to create a buffer around each tree points, useful in case there is no canopy polygon layer and no canopy radius information
+#' @param folder_path_osmtrees Optional; a Folder path to where the retrieved OSM tree points will be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
+#' @param speed Optional; a  numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
 #'
 #' @examples
 #' #' # Read the data
@@ -33,9 +36,9 @@
 
 
 
-canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, network_buffer=FALSE, network_file=NULL,
-                        epsg_code=NULL, folder_path_network = NULL,
-                        UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, city=NULL){
+canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, avgcanopyRedii = NULL, network_buffer=FALSE, network_file=NULL,
+                       epsg_code=NULL, folder_path_network = NULL, folder_path_osmtrees = NULL,
+                       UID=NULL, address_location_neighborhood = FALSE, speed=NULL, time=NULL, city=NULL){
 
   ###### 1. Preperation + Cleaning #######
   start_function <- Sys.time()
@@ -55,10 +58,6 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
     projected_crs <- sf::st_crs(address_location)
   }
 
-  if (missing(canopy_layer)){
-    stop('You did not provide a canopy layer')
-  }
-
 
   if (!address_location_neighborhood) {
     ###### 2. Address points ######
@@ -72,7 +71,7 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
       address_location <- sf::st_centroid(address_location)
     }
 
-    # If buffer distnace is missing, make sure to calculate it with time and speed,
+    # If buffer distance is missing, make sure to calculate it with time and speed,
     if (missing(buffer_distance)){
       if(missing(speed)||missing(time)){
         stop("You didn't enter speed or time, please enter speed or time, of the buffer distance.")
@@ -253,20 +252,79 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
     message('You are using the provided area as buffer to extract the canopy percentage')
     calculation_area <- address_location
   }
-##### 4. Canopy layer ####
-  if(sf::st_crs(terra::crs(canopy_layer))$epsg != sf::st_crs(calculation_area)$epsg){
-    warning('The crs of your canopy layer is not the same as the projected crs of the input location,
-              the projected crs of the canopy layer will be transformed into the projected crs of the address location')
-    epsg_raster <- sf::st_crs(calculation_area)$epsg
-    canopy_layer <- terra::project(canopy_layer, paste0('EPSG:',epsg_raster))
 
+
+  ##### 4. Canopy layer ####
+  if (missing(canopy_layer)) {
+    message('You did not provide a canopy layer, osmdata will be used to find tree points')
+    #calculation_area_bbox <- sf::st_bbox(calculation_area)
+    # calculation_area_osm <- sf::st_polygon(list(rbind(
+    #   c(calculation_area_osm$xmin, calculation_area_osm$ymin),
+    #   c(calculation_area_osm$xmax, calculation_area_osm$ymin),
+    #   c(calculation_area_osm$xmax, calculation_area_osm$ymax),
+    #   c(calculation_area_osm$xmin, calculation_area_osm$ymax),
+    #   c(calculation_area_osm$xmin, calculation_area_osm$ymin)
+    # )))
+
+    calculation_area_osm <- sf::st_as_sfc(st_bbox(calculation_area)) %>% sf::st_as_sf() #get the bound box to extract tree points
+
+    calculation_area_osm <- sf::st_buffer (calculation_area_osm, dist = 1000) #add extra area to account for edge effect
+    calculation_area_osm <- sf::st_transform(calculation_area_osm, 4326)
+
+    # Initial load of canopy_layer
+    q <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
+      osmdata::add_osm_feature(key = "natural",
+                               value = c('tree')) %>%
+      osmdata::osmdata_sf()
+
+    res <- q
+
+    #extract the tree points
+    OSMtree <- res$osm_points
+
+    #project the trees
+    OSMtree <-  sf::st_transform (OSMtree, projected_crs)
+
+    #if average canopy is not given then put a 3m buffer
+    if (missing(avgcanopyRedii)) {
+      message('osmdata tree points do not have a canopy area, we will use an average canopy radius to create canopy area; you did not give a raius so, the default 3m is used, you can give other radius')
+      avgcanopyRedii <- 3 #this default value is selected based on Pretzsch et al., (2015) paper https://doi.org/10.1016/j.ufug.2015.04.006
+    } else {
+      avgcanopyRedii <- avgcanopyRedii
+    }
+
+    #As OSM trees are point location, to have an estimated area we used an average Redii
+    OSMtreecanopy <- sf::st_buffer(OSMtree, dist = avgcanopyRedii)
+
+
+    # greenspace_layer cleaning
+    canopy_layer <- OSMtreecanopy #estimated canopy layer from OSM
+    canopy_layer <- sf::st_transform(canopy_layer, projected_crs)
+
+  } else {
+
+    if(sf::st_crs(terra::crs(canopy_layer))$epsg != sf::st_crs(calculation_area)$epsg){
+      warning('The crs of your canopy layer is not the same as the projected crs of the input location,
+              the projected crs of the canopy layer will be transformed into the projected crs of the address location')
+      epsg_raster <- sf::st_crs(calculation_area)$epsg
+      canopy_layer <- sf::st_transform(canopy_layer, paste0('EPSG:',epsg_raster))
+    }
   }
 
-  n_iter <- nrow(address_location)
+  #to save the extracted OSM tree points
+  if (!is.null(folder_path_osmtrees)) {
+    if (!dir.exists(folder_path_osmtrees)) {
+      dir.create(folder_path_osmtrees)
+    }
+    sf::st_write(OSMtree, paste0(folder_path_osmtrees,'/','OSMtrees.gpkg'), delete_layer = TRUE)
+  }
+
+
 
   ### Make the calculations here
   canopy_pct <- list()
 
+  n_iter <- nrow(address_location)
 
   # second progress bar
   pb3 <- progress::progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
@@ -277,27 +335,27 @@ canopy_pct <- function(address_location, canopy_layer, buffer_distance=NULL, net
                                     clear = FALSE,    # If TRUE, clears the bar when finish
                                     width = 100)      # Width of the progress bar
 
-##### 5. calculation #####
+  ##### 5. calculation #####
 
-    for (i in 1:n_iter) {
-      pb3$tick()
-      # Clip tree canopy to polygon
-      canopy_clip <- sf::st_intersection(canopy_layer, calculation_area[i,])
-      # Calculate area of clipped tree canopy
-      canopy_area <- sf::st_area(canopy_clip)
-      total_area <- sum(canopy_area)
-      # Calculate area of polygon
-      polygon_area <- sf::st_area(calculation_area[i,])
-      # Calculate tree canopy percentage
-      canopy_pct[i] <- total_area / polygon_area * 100
-    }
-    address_location <- sf::st_transform(address_location, projected_crs)
+  for (i in 1:n_iter) {
+    pb3$tick()
+    # Clip tree canopy to polygon
+    canopy_clip <- sf::st_intersection(canopy_layer, calculation_area[i,])
+    # Calculate area of clipped tree canopy
+    canopy_area <- sf::st_area(canopy_clip)
+    total_area <- sum(canopy_area)
+    # Calculate area of polygon
+    polygon_area <- sf::st_area(calculation_area[i,])
+    # Calculate tree canopy percentage
+    canopy_pct[i] <- total_area / polygon_area * 100
+  }
+  address_location <- sf::st_transform(address_location, projected_crs)
 
-    if (missing(UID)){
-      UID <- 1:nrow(address_location)}
+  if (missing(UID)){
+    UID <- 1:nrow(address_location)}
 
-    df <- data.frame(UID = UID, canopy_pct = cbind(unlist(canopy_pct)),
-                     address_location) %>% sf::st_as_sf()
+  df <- data.frame(UID = UID, canopy_pct = cbind(unlist(canopy_pct)),
+                   address_location) %>% sf::st_as_sf()
 
 
   return(df)
