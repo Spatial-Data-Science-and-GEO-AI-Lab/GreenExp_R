@@ -90,7 +90,7 @@ The following subsections will briefly describe each availability function and e
 ---
 
 ### Green Cover Streets
-
+**[Global Coverage]** <br />
 The `green_cover_streets` function measure available greenery along streets in any city. Here we can use OSM street network for any city and connecting with European Space Agency's Worldcover map at 10m spatial resolution (https://esa-worldcover.org/en), we can measure how much trees, grass or shrubs are present around each street segment. We are going to use a buffer distance or a buffer zone of analysis around each street segment to estimate the percentage of tree, grass and shrubs and sum the total of these vegetation type to obtain total green coverage around each street segment. For that we are going to use the green_cover_streets() function.
 Here is an example for Amsterdam. To find the name of the place you are interested in try to use OSM address finder at exact place name using this link: https://nominatim.openstreetmap.org/ui/search.html 
 
@@ -122,6 +122,7 @@ In the Figure below, we can find the Output after running the green_cover_street
 ---
 
 ### Calc NDVI 
+**[Global Coverage]** <br />
 While street greenery is only one way of representing greenery in a place, GreenExp provide advance function to use Satellite image to estimate amount of vegetation using Normalized Difference Vegetation Index (NDVI). This data is Globally available, and can be used in urban and rural places to find presence and amount of greenness within a given area of analysis. 
 The `calc_ndvi` function computes the average NDVI [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified buffer distance for a given location(s). The input for the function is `address_location`, which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
 
@@ -191,26 +192,52 @@ In the following figure shows the mean NDVI values for all the Neighborhoods of 
 
 
 ### Land Cover
+**[Global Coverage]** <br />
+While NDVI is a widely used metric for greenness assessment but it cannot differentiate between different vegetation types, such as tree vs grass. Here we added the `land_cover` function that percentage of different land cover types (vegetation and other types of land cover/land use) within a specified distance for given location(s). The input for the function is address_location, which should be an `sf dataframe` either point or polygon with projected Coordinate Reference System (CRS) information. If no CRS/projection information is provided, the function will automatically project the address location to WGS 84 / World Mercator.
 
+The user have the option to provide a raster file with land cover values. When this is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover.
 
-The `land_cover` function calculates the average land cover within a specified distance for given location(s). The input for the function is address_location, which should be an `sf dataframe` with projected Coordinate Reference System (CRS) information. If no CRS is provided, the function will automatically project the address location to WGS 84 / World Mercator.
-
-You have the option to provide a raster file wiht land cover values. When this is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover.
-
-In the code chunk and figure below an example is given for the Amsterdam area. It illustrates an example of land cover within a network buffer of 300m in Amsterdam. It showcases nine address locations, and the land cover is determined based on the surrounding road network obtained from the  [osmextract](https://cran.r-project.org/web/packages/osmextract/vignettes/osmextract.html) package.
-
+In the code chunk and figure below an example is given for the Amsterdam area, where we estimated different land cover types present around each buildings within the given search area. It illustrates an example of land cover within a Euclidean buffer of 300m. It showcases more than 25k buildings, and the land cover is determined based on the given buffer zone. 
 
 ``` r
-GreenExp::land_cover(df_points, buffer_distance=300, network_buffer=T)
+#We can use the OSM to extract building footprint data
+#fist determind the bounding box to get OSM buildings within Central Amsterdam
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
+
+#download building data
+buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox)) %>%
+  osmdata::add_osm_feature(key = "building") %>%
+  osmdata::osmdata_sf()
+
+#get the building footprint 
+buildings <- buildings$osm_polygons
+
+#estimate the land cover from ESA's land cover data
+# Note: for given polygon file, this funtion autometically convert polygon to centroid point
+build_land_cover <- GreenExp::land_cover (buildings,  buffer_distance = 300)
+
+#print the result
+build_land_cover
+
+#for mapping to the building footprint we joined the land cover data to downloaded building file
+#firt convert the projection to downloaded building files (as both need to be in same projection)
+build_land_cover <-  sf::st_transform(build_land_cover, sf::st_crs(buildings))
+
+#spatially join them
+buildigs_ladcover <- sf::st_join (buildings, build_land_cover, join= st_intersects)
+
+#Now mapping the tree cover only, while we can explore different land cover types by clicking on each building! 
+mapview::mapview(buildigs_ladcover, zcol = "tree_cover")
+
 ```
+The above code produce the following result, where we can visualize how much tree cover is available within 300 m of each building. The values range between 0 to 1, where 0 equals no tree cover, 1 equals 100% tree cover. 
 
-<img src="man/figures/land_cover.png" alt="Image" width="500" />
-
+<img src="man/figures/2_landcover_buildings.png" alt="Image" width="1000" />
 
 ---
 
 ### Canopy coverage
-
+**[Limited Coverage, dependent of the availability of tree data]** <br />
 The `canopy_perc` function calculates the percentage of a canopy within a given buffer distance or location. 
 For the canopy percentage we will provide an example in Marine-Etablissement, which is a district in Amsterdam. In the code below we are calculating the canopy percentage.
 
@@ -229,12 +256,12 @@ GreenExp::canopy_pct(df_point_canopy, canopy_layer = canopy_layer, buffer_distan
 ---
 
 ### Greenspace percentage
-
-The `park_pct` function calculates the percentage of park coverage within a specified buffer distance. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use, following the requirements outlined by Breekveldt:
+**[Global Coverage]** <br />
+The `greenspace_pct` function calculates the percentage of park coverage within a specified buffer distance. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use, following the requirements outlined by Breekveldt:
 
 In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace data is obtained from the retrieved OSM data.
 
-The `park_pct` function gives the percentage of park coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). The features which are retrieved from OSM are found within the leisure, nature and land use categories. In line with the work of [Breekveldt](https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/Urban_Greenspace_Accessibility), the features need to adhere to the following requirements; 
+The `greenspace_pct` function gives the percentage of park coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). The features which are retrieved from OSM are found within the leisure, nature and land use categories. In line with the work of [Breekveldt](https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/Urban_Greenspace_Accessibility), the features need to adhere to the following requirements; 
 
 1. The feature represents an area.
 2. The area is outdoors.
@@ -269,10 +296,8 @@ GreenExp::greenspace_pct(df_points, buffer_distance=300)
 ## Accessibility
 
 ### Greenspace access
-
-
+**[Global Coverage]** <br />
 The greenspace_access function provide the ability to determine the nearest greenspaces to given address locations and assess their accessibility within a specified buffer distance. By default, the functions utilize a euclidean buffer around the address locations and calculate the shortest distance to the centroid of the greenspaces. This is achieved using the K-nearest neighbors (KNN) algorithm with the [FNN](https://rdrr.io/cran/FNN/man/knn.html) package, to calculate the euclidean distance between the address location and the greenspaces.
-
 
 Furthermore, the functions allow for the option to utilize a network buffer instead of the euclidean buffer. In this case, the distance calculation is performed using the [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package, which leverages road networks to calculate distances between points.
 
@@ -332,7 +357,7 @@ GreenExp::greenspace_access(df_point_access, buffer_distance=300,
 
 
 ## Visibility
- 
+[Local Coverage- Dependent on availability of input data]
 The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
 
 ---
@@ -565,5 +590,5 @@ Project made in collaboration with Dr. SM Labib from the Department of Human Geo
 | Name        | Email                       |
 |-------------|-----------------------------|
 | [Martijn Koster](https://github.com/MartijnKoster1)  | m.koster2@students.uu.nl |
-| S.M. Labib  | s.m.labib@uu.nl             |
+| [S.M. Labib](https://www.smlabib.com/)  | s.m.labib@uu.nl             |
 
