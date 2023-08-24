@@ -36,6 +36,8 @@
 #' @importFrom sfnetworks activate
 #' @importFrom tidygraph convert
 #' @importFrom tidygraph filter
+#' @importFrom tidygraph edge_is_multiple
+#' @importFrom tidygraph edge_is_loop
 #'
 #'
 #'
