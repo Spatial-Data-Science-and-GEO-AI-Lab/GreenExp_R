@@ -224,10 +224,10 @@ build_land_cover
 build_land_cover <-  sf::st_transform(build_land_cover, sf::st_crs(buildings))
 
 #spatially join them
-buildigs_ladcover <- sf::st_join (buildings, build_land_cover, join= st_intersects)
+buildigs_landcover <- sf::st_join (buildings, build_land_cover, join= st_intersects)
 
 #Now mapping the tree cover only, while we can explore different land cover types by clicking on each building! 
-mapview::mapview(buildigs_ladcover, zcol = "tree_cover")
+mapview::mapview(buildigs_landcover, zcol = "tree_cover")
 
 ```
 The above code produce the following result, where we can visualize how much tree cover is available within 300 m of each building. The values range between 0 to 1, where 0 equals no tree cover, 1 equals 100% tree cover. 
@@ -238,31 +238,38 @@ The above code produce the following result, where we can visualize how much tre
 
 ### Canopy coverage
 **[Limited Coverage, dependent of the availability of tree data]** <br />
-The `canopy_perc` function calculates the percentage of a canopy within a given buffer distance or location. 
-For the canopy percentage we will provide an example in Marine-Etablissement, which is a district in Amsterdam. In the code below we are calculating the canopy percentage.
+While the land cover function automatically estimate tree cover from ESA, in some location user might have canopy polygon file, which might indicate better coverage of tree canopies. To use such as data, we introduced the `canopy_perc` function that calculates the percentage of a canopy within a given buffer distance or location from polygon tree canopy layer. 
+However, in case canopy layer is unavailable, the functions also provide option to use OSM tree data. OSM trees are usually represented as point location, and do not have canopy radius. In such as case, the user can still use the `canopy_perc` function by providing an average tree canopy radius information. The function's `avgcanopyRedii` option take input for average canopy radius, default value is set to 3m based on the study by [Pretzsch et al., (2015)](https://doi.org/10.1016/j.ufug.2015.04.006)
 
+The following code provide example of using `canopy_perc` function using OSM for Amsterdam neighborhoods
 ``` r
-# load canopy data
-canopy_layer <- sf::st_read('path/to/canopy_layer.gpkg')
+# load neighborhoods data (given with the package)
+AMS_NH <- Ams_Neighborhoods
 
-# Select Marine-Etablissement
-df_point_canopy <- df_points[df$Buurt=='Marine-Etablissement',]]
+#If we want to save the OSM tree data we have to provide a path info
+path <- getwd () #for now, let us use the working directory, user can give other paths
 
-GreenExp::canopy_pct(df_point_canopy, canopy_layer = canopy_layer, buffer_distance=200)
+#run the function
+AMS_NH_canopy_cover <- GreenExp::canopy_pct(AMS_NH, address_location_neighborhood = TRUE, avgcanopyRedii = 3.5, folder_path_osmtrees = path)
+
+#the file will save as "OSMtrees.gpkg"
+#let us bring the saved tree file for visualization 
+AMS_trees <- sf::st_read ("OSMtrees.gpkg")
+
+#let us map both the canopy cover and OSM trees used to estimate the coverage
+mapview::mapview (AMS_trees) + mapview::mapview (AMS_NH_canopy_cover, zcol = "canopy_pct")
+
 ```
-
-<img src="man/figures/canopy.png" alt="Image" width="500" />
-
+The above code present the following figure. It is noticeable that compared the tree cover variability we observed in land cover function, this function shows way less canopy coverage. There might be two major issues here, (1) the OSM tree data are inadequate or missing many trees, and the average canopy radius used in the process is not reflecting true canopy coverage, (2) the Neighborhood area is too large to aggregate the canopy coverage. So the buffer based approach might have indicated greater variability 
+<img src="man/figures/2_CanopyCover.png" alt="Image" width="1000" />
+<br />
 ---
 
 ### Greenspace percentage
 **[Global Coverage]** <br />
-The `greenspace_pct` function calculates the percentage of park coverage within a specified buffer distance. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use, following the requirements outlined by Breekveldt:
+The `greenspace_pct` function calculates the percentage of greenspace coverage within a specified buffer distance. This function is inspired to estimate overall green space land use within a given area. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use.We followed the OSM Green space access ITO map classification scheme to select the green spaces. Details of the class can be found at: https://wiki.openstreetmap.org/wiki/Green_space_access_ITO_map 
 
-In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace data is obtained from the retrieved OSM data.
-
-The `greenspace_pct` function gives the percentage of park coverage given a certain buffer. If the `greenspace_layer` is not given, the greenspaces will be retrieved using features from [osmdata](https://wiki.openstreetmap.org/wiki/Map_features). The features which are retrieved from OSM are found within the leisure, nature and land use categories. In line with the work of [Breekveldt](https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/Urban_Greenspace_Accessibility), the features need to adhere to the following requirements; 
-
+We generally considered the following criteria: 
 1. The feature represents an area.
 2. The area is outdoors.
 3. The area is (semi-)publicly available.
@@ -271,24 +278,20 @@ The `greenspace_pct` function gives the percentage of park coverage given a cert
 
 Based on these criteria, the following features from OSM are used:
 
-- Allotments
-- Forest
-- Greenfield
-- Village green
-- Garden
-- Fitness station
-- Nature reserve
-- Playground
-- Grassland
-
+From Land use class: allotments, recreation_ground, grass, forest, greenfield,village_green, meadow, orchard.
+From leisure class: garden,dog_park, grassland, heath, nature_reserve, park, playground.
+From natural class: 'wood', 'scrub', 'moor'
+<br/>
 In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace is based on the retrieved data from OSM. 
 
 ``` r
 GreenExp::greenspace_pct(df_points, buffer_distance=300)
+
+
+
 ```
 
 <img src="man/figures/Greenspace.png" alt="Image" width="500" />
-
 
 
 ---
@@ -299,7 +302,7 @@ GreenExp::greenspace_pct(df_points, buffer_distance=300)
 **[Global Coverage]** <br />
 The greenspace_access function provide the ability to determine the nearest greenspaces to given address locations and assess their accessibility within a specified buffer distance. By default, the functions utilize a euclidean buffer around the address locations and calculate the shortest distance to the centroid of the greenspaces. This is achieved using the K-nearest neighbors (KNN) algorithm with the [FNN](https://rdrr.io/cran/FNN/man/knn.html) package, to calculate the euclidean distance between the address location and the greenspaces.
 
-Furthermore, the functions allow for the option to utilize a network buffer instead of the euclidean buffer. In this case, the distance calculation is performed using the [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package, which leverages road networks to calculate distances between points.
+Furthermore, the functions allow for the option to utilize a network distance instead of the euclidean distance. In this case, the distance calculation is performed using the [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package, which leverages road networks to calculate distances between points. It should be noted that, network distance calculation is very time consuming for large number of address locations. 
 
 Additionally, pseudo entry points can be employed to calculate the distance to the greenspaces. These pseudo entrances are created by generating a 10-meter buffer around the greenspace polygons and intersecting them with the network nodes obtained from the intersection of the network points with the greenspaces.
 
@@ -357,7 +360,7 @@ GreenExp::greenspace_access(df_point_access, buffer_distance=300,
 
 
 ## Visibility
-[Local Coverage- Dependent on availability of input data]
+**[Local Coverage- Dependent on availability of input data]** <br/ >
 The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
 
 ---
