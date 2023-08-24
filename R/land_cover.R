@@ -407,6 +407,7 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 
   }
   else{
+    class_raster <- raster
 
     if(sf::st_crs(terra::crs(class_raster))$epsg != sf::st_crs(calculation_area)$epsg){
       warning('The crs of your raster is not the same as the projected crs of the input location,
@@ -424,9 +425,11 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
 #####  4. Calculations #####
 
 
-    class_raster_values <- terra::extract(class_raster, calculation_area)
+    class_raster_value <- terra::extract(class_raster, calculation_area)
     # count the amount of land cover values per polygon
-    class_raster_values <- dplyr::count(class_raster_values, ID, N = get(rast_value_name))
+    names(class_raster_value) <- c('ID', 'land_cover') #the whole code has some issue with given land cover data
+    raster_values <- class_raster_value
+    class_raster_values <- dplyr::count(raster_values, ID, N = get(land_cover)) #something wrong here
     # Convert to wide format + replacing NA
     class_raster_values_wide <- tidygraph::mutate_all(tidyr::spread(class_raster_values, N, n), ~tidyr::replace_na(.,0))
     # Calculate the %
