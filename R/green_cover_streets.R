@@ -35,6 +35,7 @@
 #' @importFrom sfnetworks to_spatial_smooth
 #' @importFrom sfnetworks activate
 #' @importFrom tidygraph convert
+#' @importFrom tidygraph filter
 #'
 #'
 #'
