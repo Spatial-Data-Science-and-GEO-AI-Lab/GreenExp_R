@@ -15,7 +15,7 @@ This package is developed to facilitate robust and transparent analysis in green
 - [Installation](#installation)
 - [Functionalities](#functionalities)
   * [Availability](#availability)
-    + [Green Cover Streets](#green_cover_streets)
+    + [Green Cover Streets](#green-cover-streets)
     + [Calc NDVI](#calc-ndvi)
     + [Land Cover](#land-cover)
     + [Canopy coverage](#canopy-coverage)
@@ -48,7 +48,10 @@ To use in MAC see the extended installation instruction.
 
 
 # Functionalities 
-The idea of GreenExp package is to provide with multiple approaches in measure greenness in diverse locations building mostly on Openly available global data set and software tools and platforms. It provides functions to measure how much greenery is available, accessible, and visible at varying locations, from residential address, to streets. From urban areas to rural regions. It was wider connections with OpenStreetMap, Microsoft Planetary Computer Database and you can also use your own files to define home address, neighborhoods or even streets using local files.  
+The idea of GreenExp package is to provide with multiple approaches in measure greenness in diverse locations building mostly on Openly available global data set and software tools and platforms. It provides functions to measure how much greenery is available, accessible, and visible at varying locations, from residential address, to streets. From urban areas to rural regions. It was wider connections with OpenStreetMap, Microsoft Planetary Computer Database and you can also use your own files to define home address, neighborhoods or even streets using local files. The package provides three broad spatial measures of greenness exposure as illustrated in the figure below based on the definition from 
+[Labib et al., 2020](https://research.manchester.ac.uk/en/publications/spatial-dimensions-of-the-influence-of-urban-green-blue-spaces-on)
+
+<img src="man/figures/0_allfunctionbasis.png" alt="Image" width="1000" />
 
 ---
 
@@ -61,6 +64,7 @@ First load the libraries
 library(GreenExp) # If not loaded yet
 library(magrittr) # If not loaded yet (used for piping %>%)
 library (sf) #Need for most spatial operation
+library (sfheaders) #for additional functions to work with sf package
 
 ```
 Please note that the examples based on this data serves as an illustration, and you may need to adapt the parameters and function usage to match your specific scenario.
@@ -68,7 +72,7 @@ Please note that the examples based on this data serves as an illustration, and 
 
 ---
 
-## Availability of greenery or greenness on streets, home & neighborhoods
+## Availability
 
 Availability of greenness (reflecting the presence and amount of vegetation) will be assessed using four functions:
 
@@ -88,11 +92,12 @@ The following subsections will briefly describe each availability function and e
 ### Green Cover Streets
 
 The `green_cover_streets` function measure available greenery along streets in any city. Here we can use OSM street network for any city and connecting with European Space Agency's Worldcover map at 10m spatial resolution (https://esa-worldcover.org/en), we can measure how much trees, grass or shrubs are present around each street segment. We are going to use a buffer distance or a buffer zone of analysis around each street segment to estimate the percentage of tree, grass and shrubs and sum the total of these vegetation type to obtain total green coverage around each street segment. For that we are going to use the green_cover_streets() function.
-Here is an example: 
+Here is an example for Amsterdam. To find the name of the place you are interested in try to use OSM address finder at exact place name using this link: https://nominatim.openstreetmap.org/ui/search.html 
 
 ```r
 
-#Measuring the green coverage around each street for the city, for a buffer distance of 30 m; can try small area for fast implementation, try "Harmelen, Utrecht"
+#Measuring the green coverage around each street for the city, for a buffer distance of 30 m; 
+# can try small area for fast implementation, try "Harmelen, Utrecht"
 
 #for Cental Amsterdam
 GreenStcoverSt <- GreenExp::green_cover_streets ("Centrum, Amsterdam", buffer_distance = 30) 
@@ -105,37 +110,85 @@ mapview::mapview(GreenStcoverSt, zcol = "greencover")
 path <- getwd() #change the path if you want to save it in specific folder
 
 #save as in any GIS file format
-st_write(GreenStcoverSt, paste0(path,'/','GreenStcoverSt.shp'), delete_layer = TRUE) 
+st_write(GreenStcoverSt, paste0(path,'/','GreenStcoverSt.gpkg'), delete_layer = TRUE) 
 #can also be saved as shapefile, use GreenStcoverSt.shp
 
+
 ```
-In the Figure below, you can find the Output after running the green_cover_streets function and a plot corresponding to the results.
+In the Figure below, we can find the Output after running the green_cover_streets function and a plot corresponding to the results.Here 0 values indicates no greenery within the buffer around the street, 100 indicates 100% presence of greenery within the given buffer zone around the street segment. We can change the background map to explore why some streets has high green coverage where others do not. Also on the interactive map we can click of each line to see what land cover type (i.e., tree, grass, shrub) contributes to overall green coverage. It also shows the presence of other land cover such as Cropland, which has not been considered for overall green coverage calculation.
 
 <img src="man/figures/1_Green_streets.png" alt="Image" width="1000" />
 
+---
 
 ### Calc NDVI 
+While street greenery is only one way of representing greenery in a place, GreenExp provide advance function to use Satellite image to estimate amount of vegetation using Normalized Difference Vegetation Index (NDVI). This data is Globally available, and can be used in urban and rural places to find presence and amount of greenness within a given area of analysis. 
+The `calc_ndvi` function computes the average NDVI [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified buffer distance for a given location(s). The input for the function is `address_location`, which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
 
-The `calc_ndvi` function computes the average Normalized Difference Vegetation Index [(NDVI)](https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index) within a specified distance for a given location(s). The input for the function is `address_location`, which should be an `sf dataframe`. It is recommended to provide the `address location` with a projected Coordinate Reference System [(CRS)](https://docs.qgis.org/3.28/en/docs/gentle_gis_introduction/coordinate_reference_systems.html#:~:text=In%20layman%27s%20term%2C%20map%20projections,real%20places%20on%20the%20earth). If no projected CRS is provided, the address location will be automatically projected to [WGS 84 / World Mercator](https://epsg.io/3395). 
+We have the option to provide a local raster file (from your own computer) containing NDVI values, but the projection for given raster needs to be consistent with given address files (e.g., points or polygons representing a location or an area). However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) data set from Planetary Computer as the default data source for calculating NDVI. The code snippet below shows how to calculate the NDVI for the neighborhoods.
+Here is an example for a single in Amsterdam
 
-
-You have the option to provide a raster file containing NDVI values. However, if no raster file is provided, the function will use the [Sentinel-2-l2a](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a) dataset from Planetary Computer as the default data source for calculating NDVI. The code snippet below shows how to calculate the NDVI for the neighborhoods.
 
 ``` r
-# Calculate the NDVI for neighborhoods
-GreenExp::calc_ndvi(df, address_location_neighborhood = TRUE)
+#you can test your home address! For now let us go with an example
+#Example Address point: Van Gogh Museum, Amsterdam 
+addresspoint <- sf::st_sf(sfheaders::sf_point(c(4.881076, 52.358416)), crs = st_crs(4326))
+
+#single address NDVI, no local NDVI file provided, Autometically extracted NDVI from Sentinel-2 Satellite images (with lowest cloud cover) found between given start and end date
+
+#mean NDVI at single address point, here no NDVI file given so the start and end date inidicate the range within which satellite images will be search on Planetary Computer
+address_ndvi <- GreenExp::calc_ndvi(addresspoint,  buffer_distance = 300, start_date = "2020-08-01", end_date = "2020-09-30")
+#print the result
+address_ndvi
+
 ```
 
-In the Figure below, you can find the Output after running the calc_ndvi function and a plot corresponding to the results.
+In the Figure below, shows the Output while running the calc_ndvi function and printing the results. While running, the function provides enough information about what type of buffer used, which image was selected, the date and time of image captured and also the cloud cover of that image on that day. The result return a sf data object which can be saved locally as illustrated earlier. It include the 'mean_NDVI' column to present the average NDVI value around that address within 300 m Euclidean buffer. Note: the user can also select street network buffer (see the function details for more)
 
-<img src="man/figures/neighborhood_ndvi.png" alt="Image" width="500" />
+<img src="man/figures/2_NDVISinglelocation.png" alt="Image" width="600" />
 
+It should be noted, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations. Which need advanced installation. 
 
-If desired, users are able to switch the engine to `GEE` (Google Earth Engine) for performing the calculations
+#### Multi-address location NDVI
+While the previous example indicated NDVI results for a single address point. We can also calculate mean NDVI for many given address locations, here is an example for NDVI calculation at 1000 random points within Amsterdam. The user can provide their own address locations or coordinates. 
 
+``` r
+#create random points within in a city to test
+# can try: "Centrum, Amsterdam" or "Washington, DC" or "Kampala, Uganda" or "Bogura, Bangladesh" and more...!
+#first get the OSM city geocoded bounding box
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
 
+#generate random points within the bounding box
+RandomPoints <- sf::st_sample(getcityboudingbox, size = 1000) %>% st_as_sf()
+
+#Calculate mean NDVI at many address points
+Randomaddresses_ndvi <- GreenExp::calc_ndvi(RandomPoints,  buffer_distance = 300, start_date = "2020-08-01", end_date = "2020-09-30")
+
+#map the result using the amazing mapview 
+mapview::mapview(Randomaddresses_ndvi, zcol = "mean_NDVI")
+
+```
+In the Figure illustrates the variations of mean NDVI at many different locations within the city area. 
+<img src="man/figures/2_NDVImultilocations.png" alt="Image" width="1000" />
+We can test this approach in most locations around the world, given the user has an address location file either in point or polygon format. Here is an example of how to run the same function for the Neighborhood polygons for the Amsterdam city area. The package has the Neighborhood polygons attached within it for testing the approach. 
+
+``` r
+#Attch the data file
+?Ams_Neighborhoods #explore the data if needed
+AMS_NH <- Ams_Neighborhoods #load the file
+
+#Calculate mean NDVI for Neighborhood polygons, here we need to metion the given address file is Neighborhood zone, so no buffer distance will be needed. 
+AMS_NH_ndvi <- GreenExp::calc_ndvi(AMS_NH,  address_location_neighborhood = TRUE, start_date = "2020-08-01", end_date = "2020-09-30")
+
+#map the result using mapview 
+mapview::mapview(AMS_NH_ndvi, zcol = "mean_NDVI")
+
+```
+In the following figure shows the mean NDVI values for all the Neighborhoods of Amsterdam area. 
+<img src="man/figures/2_NDVI_NH.png" alt="Image" width="1000" />
 
 ---
+
 
 ### Land Cover
 
