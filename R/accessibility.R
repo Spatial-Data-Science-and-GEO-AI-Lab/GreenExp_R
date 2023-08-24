@@ -2,7 +2,7 @@
 #'
 #' @param address_location A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.
 #' @param buffer_distance A distance in meters to create a buffer or isochrone around the address location
-#' @param greenspace Optional; a \code{\link[sf]{sf}} object representing a greenspace layer, the layer should be in projected coordinates
+#' @param greenspace Optional; a \code{\link[sf]{sf}} object (e.g., polygon) representing a greenspace layer, the layer should be in projected coordinates
 #' @param UID A character string representing a unique identifier for each point of interest
 #' @param network_file Optional; a \code{\link[sfnetworks]{sfnetwork}} object representing a road network, If missing the road network will be created.
 #' @param speed A numeric value representing the speed in km/h to calculate the buffer distance (required if `time` is provided)
@@ -15,7 +15,6 @@
 #' @param entrances_within_buffer The possibility to get the closest greenspace for every point. default is `FALSE`
 #' @param folder_path_network optional; Folder path to where the retrieved network should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param folder_path_greenspace optional; Folder path to where the retrieved greenspaces should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
-#' @param folder_path_lines optional; Folder path to where the shortest distance lines should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').
 #' @param minimum_greenspace_size The minimum size of the greenspace in m2.
 #'
 #' @examples
@@ -39,10 +38,10 @@
 #'
 #'
 greenspace_access <- function(address_location, greenspace = NULL, buffer_distance = NULL, network_file=NULL,
-                           epsg_code=NULL, folder_path_network = NULL, euclidean=TRUE,
-                           minimum_greenspace_size=0,
-                           folder_path_greenspace=NULL, pseudo_entrance=FALSE, entrances_within_buffer=TRUE,
-                           folder_path_lines=NULL, speed=NULL, time=NULL, city=NULL, UID=NULL) {
+                               epsg_code=NULL, folder_path_network = NULL, euclidean=TRUE,
+                               minimum_greenspace_size=0,
+                               pseudo_entrance=FALSE, entrances_within_buffer=TRUE,
+                               folder_path_greenspace=NULL, speed=NULL, time=NULL, city=NULL, UID=NULL) {
   # timer for function
   start_function <- Sys.time()
   ##### 1. preparation and cleaning #######
@@ -218,7 +217,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
       if (!dir.exists(folder_path_greenspace)) {
         dir.create(folder_path_greenspace)
       }
-      sf::st_write(greenspace, paste0(folder_path_lines,'/','greenspace.gpkg'))
+      sf::st_write(greenspace, paste0(folder_path_greenspace,'/','greenspace.gpkg'))
     }
     ##### 3.1.1 greenspace entrances for psuedo entrances #####
     if (pseudo_entrance){
@@ -237,8 +236,8 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
         y_subset <-
           sf::st_intersects(x, y) %>%
           unlist() %>%
+          unique() %>%
           sort() %>%
-          rle() %>%
           {y[.,]}
 
         sf::st_intersection(x, y_subset)
@@ -272,7 +271,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
         message('Fake entrances for the given greenspace polygons will be created')
         greenspace_buffer <- sf::st_buffer(greenspace, 10)
 
-          # When greenspace are overlapping, combine them
+        # When greenspace are overlapping, combine them
         greenspace_combined <- sf::st_union(greenspace_buffer)
 
         # make it a multipolygon
@@ -301,10 +300,10 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     }
   }
 
-##### 4. Calculations #####
+  ##### 4. Calculations #####
   address_location <- sf::st_transform(address_location, projected_crs)
 
-##### 4.1 Euclidean distance calculations #####
+  ##### 4.1 Euclidean distance calculations #####
   if (euclidean) {
 
     # get the nearest neighbhors of the address_location + greenspace
@@ -313,34 +312,9 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
     euclidean_dist_df <- as.data.frame(closest_greenspace)
     greenspace_in_buffer <- ifelse((rowSums(units::drop_units(euclidean_dist_df) < buffer_distance) > 0), TRUE, FALSE)
 
-    if (!is.null(folder_path_lines)) {
-      if (!dir.exists(folder_path_lines)) {
-        dir.create(folder_path_lines)
-      }
-      indeces <- nearest_neighbours$nn.index[, 1]
-      closest_greenspace <- greenspace_point[indeces, ]
-      coords_address <- data.frame(sf::st_coordinates(address_location))
-      closest_greenspace_coords <- data.frame(sf::st_coordinates(closest_greenspace))
-
-
-      lines_list <- list()  # Create an empty list to store the line objects
-
-      for (i in 1:nrow(coords_address)) {
-        line <- sf::st_linestring(matrix(c(coords_address$X[i], closest_greenspace_coords$X[i],
-                                           coords_address$Y[i], closest_greenspace_coords$Y[i]), ncol = 2))
-        lines_list[[i]] <- line  # Store the line object in the list
-      }
-
-      lines <- sf::st_sfc(lines_list)
-      lines <- sf::st_as_sf(lines) %>% sf::st_set_crs(projected_crs)
-      sf::st_write(lines, paste0(folder_path_lines,'/','lines.gpkg'))
-    }
-
-
-
 
   }
-##### 4.2 Network distance calclulations ######
+  ##### 4.2 Network distance calclulations ######
   else{
     # When the entrances are within the given buffer
     if (entrances_within_buffer) {
@@ -382,39 +356,7 @@ greenspace_access <- function(address_location, greenspace = NULL, buffer_distan
       greenspace_in_buffer <- ifelse((rowSums(units::drop_units(add_greenspace_dist) < buffer_distance) > 0), TRUE, FALSE)
 
     }
-    if (!is.null(folder_path_lines)) {
-      if (!dir.exists(folder_path_lines)) {
-        dir.create(folder_path_lines)
-      }
-
-      distance_parks<-sfnetworks::st_network_cost(network_file, from = address_location, to = greenspace_point)
-      shortest_distances <- apply(distance_parks, 1, which.min)
-      park_centroid_closest <- greenspace_centroid[shortest_distances, ]
-
-
-      final_lines_list <- list()
-      for (i in 1:nrow(address_location)) {
-        closest_park <- st_network_paths(network_file, from = address_location[i, ], to = park_centroid_closest[i, ])
-
-        node_path <- closest_park %>%
-          dplyr::slice(1) %>%
-          dplyr::pull(node_paths) %>%
-          unlist()
-
-        line_network <- tidygraph::activate(network_file, "nodes") %>%
-          dplyr::slice(node_path)
-
-        final_line <- line_network %>%
-          tidygraph::activate("edges") %>%
-          sf::st_as_sf()
-
-        final_lines_list[[i]] <- final_line
-      }
-
-      final_lines_sf <- sf::st_sf(do.call(rbind, final_lines_list))
-      sf::st_write(final_lines_sf, paste0(folder_path_lines,'/','lines.gpkg'), append=FALSE)
-    }
-    }
+  }
 
 
   if (missing(UID)) {
