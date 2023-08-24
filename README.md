@@ -1,5 +1,5 @@
 
-# Greenness Exposure Assessment in R <img src="man/figures/GreenEXP_logo_R.png" align="right" height="139"/>
+# Greenness Exposure Assessment in R <img src="man/figures/GreeExp_R_logo.png" align="right" height="139"/>
 
 
 
