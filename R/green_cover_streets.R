@@ -51,6 +51,8 @@ green_cover_streets <- function(city=NULL, buffer_distance=NULL, raster,
   library(magrittr)
   start_function <- Sys.time()
 
+  projected_crs<-sf::st_crs(epsg_code)
+
   boundbox <- tmaptools::geocode_OSM(city, as.sf = T,  geometry = c("bbox"))
 
   lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary = boundbox,
