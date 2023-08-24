@@ -7,7 +7,6 @@
 green_cover_streets(
   city = NULL,
   buffer_distance = NULL,
-  raster,
   folder_path_land_cover = NULL,
   epsg_code = NULL,
   UID = NULL,
@@ -19,8 +18,6 @@ green_cover_streets(
 \item{city}{A city or place name as string to set the bounding are of the city to extract OSM streets}
 
 \item{buffer_distance}{A distance in meters to create a buffer around each street segment to defined an area within which the green coverage will be assess. Usually smaller values preferred (e.g., 30, 50)}
-
-\item{raster}{Optional; a object of class \code{\link[terra]{rast}} with land cover values, if the user do not have such raster, Microsoft planetary computer will be used to extract the land cover data from ESA's World Cover data set.}
 
 \item{folder_path_land_cover}{Folder path to where the retrieved land cover should be saved continuously. Must not include a filename extension.}
 

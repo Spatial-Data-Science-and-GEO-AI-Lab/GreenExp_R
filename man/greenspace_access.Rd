@@ -13,10 +13,9 @@ greenspace_access(
   folder_path_network = NULL,
   euclidean = TRUE,
   minimum_greenspace_size = 0,
-  folder_path_greenspace = NULL,
   pseudo_entrance = FALSE,
   entrances_within_buffer = TRUE,
-  folder_path_lines = NULL,
+  folder_path_greenspace = NULL,
   speed = NULL,
   time = NULL,
   city = NULL,
@@ -26,7 +25,7 @@ greenspace_access(
 \arguments{
 \item{address_location}{A \code{\link[sf]{sf}} object representing the location of interest, the location should be in projected coordinates.}
 
-\item{greenspace}{Optional; a \code{\link[sf]{sf}} object representing a greenspace layer, the layer should be in projected coordinates}
+\item{greenspace}{Optional; a \code{\link[sf]{sf}} object (e.g., polygon) representing a greenspace layer, the layer should be in projected coordinates}
 
 \item{buffer_distance}{A distance in meters to create a buffer or isochrone around the address location}
 
@@ -40,14 +39,12 @@ greenspace_access(
 
 \item{minimum_greenspace_size}{The minimum size of the greenspace in m2.}
 
-\item{folder_path_greenspace}{optional; Folder path to where the retrieved greenspaces should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
-
 \item{pseudo_entrance}{The possibility to calculate the distance to created pseudo entrances. These pseudo entrances are created,
 by intersecting a buffer that was created around a greenspace with network points. default is \code{FALSE}}
 
 \item{entrances_within_buffer}{The possibility to get the closest greenspace for every point. default is \code{FALSE}}
 
-\item{folder_path_lines}{optional; Folder path to where the shortest distance lines should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
+\item{folder_path_greenspace}{optional; Folder path to where the retrieved greenspaces should be saved continuously. Must not include a filename extension (e.g. '.shp', '.gpkg').}
 
 \item{speed}{A numeric value representing the speed in km/h to calculate the buffer distance (required if \code{time} is provided)}
 
