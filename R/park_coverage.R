@@ -267,14 +267,14 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
 
     q2 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "leisure",
-                               value = c('garden','fitness_station', 'common', 'dog_park',
+                               value = c('garden','dog_park',
                                          'greenfield', 'grassland', 'heath',
                                          'nature_reserve','park','playground')) %>%
       osmdata::osmdata_sf()
 
     q3 <- osmdata::opq(sf::st_bbox(calculation_area_osm)) %>%
       osmdata::add_osm_feature(key = "natural",
-                               value = c('grassland','wood', 'scrub', 'heath', 'moor')) %>%
+                               value = c('wood', 'scrub', 'moor')) %>%
       osmdata::osmdata_sf()
     #res <- c(q1, q2, q3)
     #get individual layer for each green space information, there may be some overlap between layers
