@@ -6,20 +6,16 @@
 
 # Aim and objectives
 
-This package is developed to facilitate robust and transparent analysis in greenspace and vegetation in general. It provides researchers with a collection of multidimensional functionalities of greeness modeling that can be applied across multiple countries, enabling comprehensive spatial analysis and enhancing the accuracy of results.
+This package is developed to facilitate robust and transparent analysis in greenspace and vegetation in general. It provides researchers with a collection of multidimensional functionalists of greenness modeling that can be applied across multiple cities, rural areas, countries, enabling comprehensive spatial analysis and enhancing the accuracy of results.
 
 # Table of contents
 
 <!-- badges: start -->
 <!-- badges: end -->
 - [Installation](#installation)
-- [Data](#data)
-  * [Amsterdam Neighborhoods](#ams_neighborhoods)
-  * [Amsterdam Houses](#ams_houses)
-  * [Amsterdam Parks](#ams_parks)
 - [Functionalities](#functionalities)
-  * [Preparation](#preparation)
   * [Availability](#availability)
+    + [Green Cover Streets](#green_cover_streets)
     + [Calc NDVI](#calc-ndvi)
     + [Land Cover](#land-cover)
     + [Canopy coverage](#canopy-coverage)
@@ -44,115 +40,79 @@ For Windows installation, please install R-tools from (https://cran.r-project.or
 ``` r
 # install.packages("devtools")
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R", dependencies = TRUE)
+
 ```
 To use in MAC see the extended installation instruction.
 
 ---
 
-# Data 
-
-This package is provided with three sf datasets for example analyses:
-
-1. [Ams_Neighborhoods](#ams_neighborhoods)
-2. [Ams_Houses](#ams_houses)
-3. [Ams_Parks](#ams_parks)
-
-These datasets will be used as examples to explain the [Functionalities](#functionalities).
-
-#### Ams_Neighborhoods
-
-The first dataset is an sf data frame of neighborhoods in Amsterdam. This dataset is retrieved from [Gemeente Amsterdam](https://maps.amsterdam.nl/gebiedsindeling/). 
-
-Run the following code for more information. 
-
-```r
-library(GreenExp) 
-?Ams_Neighborhoods
-```
-
----
-
-#### Ams_Houses
-
-The Ams_Houses contain houses that are created by taking the centroid of the aforementioned [Ams_Neighborhoods](#Ams_Neighborhoods)
-Run the following code for more information. 
-
-```r
-library(GreenExp) # If GreenExp is not loaded yet
-?Ams_Houses
-```
----
-
-#### Ams_Parks
-
-The Ams_Parks dataset is also retrieved from the [Gemeente Amsterdam](https://maps.amsterdam.nl/stadsparken/)
-Run the following code for more information 
-```r
-library(GreenExp) # If GreenExp is not loaded yet
-?Ams_Parks
-```
-
 
 # Functionalities 
+The idea of GreenExp package is to provide with multiple approaches in measure greenness in diverse locations building mostly on Openly available global data set and software tools and platforms. It provides functions to measure how much greenery is available, accessible, and visible at varying locations, from residential address, to streets. From urban areas to rural regions. It was wider connections with OpenStreetMap, Microsoft Planetary Computer Database and you can also use your own files to define home address, neighborhoods or even streets using local files.  
 
 ---
 
-## Preparation
+The Functionalists, which will be treated in the next subsections, will be provided with examples.For reproducibility  and easier implementation we are providing example for a case city, Amsterdam. 
 
-The Functionalities, which will be treated in the next subsections, will be provided with examples.
-To avoid computationally heavy examples, a few neighborhoods in Amsterdam will be selected, namely: 
-Rapenburg, Uilenburg, Valkenburg, Marine-Etablissement, Kadijken, Plantage, Kattenburg, Wittenburg and Oostenburg. 
-
+First load the libraries
 
 ```r
+#Load libraries
 library(GreenExp) # If not loaded yet
 library(magrittr) # If not loaded yet (used for piping %>%)
+library (sf) #Need for most spatial operation
 
-
-neighborhoods <- c('Rapenburg', 'Uilenburg', 'Valkenburg', 
-            'Marine-Etablissement', 'Kadijken', 'Plantage', 
-            'Kattenburg', 'Wittenburg', 'Oostenburg')
-
-# Filter the neighborhoods
-df <- Ams_Neighborhoods %>%
-  dplyr::filter(Buurt %in% neighborhoods)
-
-# Create point locations in Amsterdam  
-df_points <- sf::st_centroid(df)
-
-# Create the parks
-df_parks <- Ams_Parks
-  
 ```
-
 Please note that the examples based on this data serves as an illustration, and you may need to adapt the parameters and function usage to match your specific scenario.
 
 
-
 ---
 
-## Availability
+## Availability of greenery or greenness on streets, home & neighborhoods
 
-Availability will be assessed using four functions:
+Availability of greenness (reflecting the presence and amount of vegetation) will be assessed using four functions:
 
-1. [Calc NDVI](#calc-ndvi)
-2. [Land Cover](#land-cover)
-3. [Canopy coverage](#canopy-coverage)
-4. [Park percentage](#park-percentage) 
+1. [Green Cover Streets](#green_cover_streets)
+2. [Calc NDVI](#calc-ndvi)
+3. [Land Cover](#land-cover)
+4. [Canopy coverage](#canopy-coverage)
+5. [Park percentage](#park-percentage) 
 
-Each of these functions will provide an [sf](https://r-spatial.github.io/sf/articles/sf1.html) `dataframe` that includes the input location and the specific values requested within a defined buffer.
+Each function provide opportunity to measure greenness presence and amount in varying ways. 
 
-
-The user has the option to input either a point geometry or a (multi)polygon geometry. By default, the address location will be transformed into a point geometry, and a buffer will be created around it to calculate the availability. However, users can choose to use the provided polygon geometry to calculate availability by setting the 'address_location_neighborhood' parameter to TRUE.
-
-By default, the buffer around the input location is measured in Euclidean distance. However, it can be modified to utilize a network buffer. The distinction between the two types of buffers is illustrated in the figure below. In this instance, the Euclidean buffer has a fixed radius of 1000 meters, while the network buffer is calculated based on a speed of 5 km/h over 10 minutes.
-
-![](man/figures/buffers_example.png)
-
-
+The user has the option to input, location name, point geometry or a (multi)polygon geometry to defined their area of analysis. 
 The following subsections will briefly describe each availability function and examples extracted from the neighborhood polygons and points in Amsterdam. 
 
 ---
+
+### Green Cover Streets
+
+The `green_cover_streets` function measure available greenery along streets in any city. Here we can use OSM street network for any city and connecting with European Space Agency's Worldcover map at 10m spatial resolution (https://esa-worldcover.org/en), we can measure how much trees, grass or shrubs are present around each street segment. We are going to use a buffer distance or a buffer zone of analysis around each street segment to estimate the percentage of tree, grass and shrubs and sum the total of these vegetation type to obtain total green coverage around each street segment. For that we are going to use the green_cover_streets() function.
+Here is an example: 
+
+```r
+
+#Measuring the green coverage around each street for the city, for a buffer distance of 30 m; can try small area for fast implementation, try "Harmelen, Utrecht"
+
+#for Cental Amsterdam
+GreenStcoverSt <- GreenExp::green_cover_streets ("Centrum, Amsterdam", buffer_distance = 30) 
+
+#map the result using the amazing mapview library for interactve mapping of the streets
+mapview::mapview(GreenStcoverSt, zcol = "greencover")
+
+#Save the street file
+#To save the file we have to provide a path, for now, let us save it in current working diractory path
+path <- getwd() #change the path if you want to save it in specific folder
+
+#save as in any GIS file format
+st_write(GreenStcoverSt, paste0(path,'/','GreenStcoverSt.shp'), delete_layer = TRUE) 
+#can also be saved as shapefile, use GreenStcoverSt.shp
+
+```
+In the Figure below, you can find the Output after running the green_cover_streets function and a plot corresponding to the results.
+
+<img src="man/figures/1_Green_streets.png" alt="Image" width="1000" />
+
 
 ### Calc NDVI 
 
