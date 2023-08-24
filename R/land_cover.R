@@ -408,11 +408,11 @@ land_cover <- function(address_location, raster, buffer_distance=NULL, network_b
   }
   else{
 
-    if(sf::st_crs(terra::crs(class_raster))$epsg != sf::st_crs(calculation_area)$epsg){
+    if(sf::st_crs(terra::crs(raster))$epsg != sf::st_crs(calculation_area)$epsg){
       warning('The crs of your raster is not the same as the projected crs of the input location,
               the projected crs of the raster will be transformed into the projected crs of the address location')
       epsg_raster <- sf::st_crs(calculation_area)$epsg
-      class_raster <- terra::project(class_raster, paste0('EPSG:',epsg_raster))
+      class_raster <- terra::project(raster, paste0('EPSG:',epsg_raster))
 
     }
     # Extract the landcover values within the buffer
