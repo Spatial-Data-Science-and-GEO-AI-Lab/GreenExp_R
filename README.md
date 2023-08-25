@@ -573,8 +573,10 @@ The results showing mean VGVI value for each points based on sample points gener
 # Performance-errors-limitation-notes
 GreenExp is in still development phase, and have ongoing issues that we are progressing. So the package has some performance issues and limitations. Here are some common limitations and errors might happen when you are testing the package. You can help improving it in future! 
 - Running Speed: Some large areas extracted from OSM, might take a long time to run different metrics. Such as the street green cover function takes a long time for very large area. We suggest you can test it in small areas.
-- Missing 
-
+- City bounding box issue: If the geo-coder does not find the boundary area from OSM, you will encounter error, check the bounding box of the city area 
+- Satellite image not found: if the user gave a large area to measure NDVI on many locations, the function might not find exact match for satellite image that cover all the given locations. In such case, multiple matching satellite images are found in planetary computer, and the function cannot adopt multiple satellite images for calculation
+- Saving files locally: Many of the functions allows us to save downloaded files (e.g., lines/greenspace from OSM, NDVI file, land cover file). But the path need to defined properly, also for different operating system (e.g., Windows, MAC, Linux) the path can be defined differently, and the code might run into issues with varying style of defining paths (we are working on this issue) 
+- Overall: The package is at the very early development stage, might have some bugs in different parts, please report an issue as you find them. 
 
 
 # Extended installation
@@ -713,14 +715,15 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 | [**GVI**](https://doi.org/10.1016/j.scitotenv.2020.143050)  | information about the calculation of the visibility                                         | 
 
 
-
-
 ## Acknowledgements and contact
 
-Project conducted user the supervision and in collaboration with Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab at Utrecht University.
+The package is developed by Martijn Koster &  Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab at Utrecht University.
 
 | Name        | Email                       |
 |-------------|-----------------------------|
-| [Martijn Koster](https://github.com/MartijnKoster1)  | m.koster2@students.uu.nl |
+| [Martijn Koster](https://github.com/MartijnKoster1)  |  |
 | [S.M. Labib](https://www.smlabib.com/)  | s.m.labib@uu.nl             |
+
+We also acknowledge the contribution of [Sebastian Brinkmann](https://github.com/STBrinkmann) for the VGVI functions.
+
 
