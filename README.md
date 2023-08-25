@@ -185,7 +185,7 @@ AMS_NH_ndvi <- GreenExp::calc_ndvi(AMS_NH,  address_location_neighborhood = TRUE
 mapview::mapview(AMS_NH_ndvi, zcol = "mean_NDVI")
 
 ```
-In the following figure shows the mean NDVI values for all the Neighborhoods of Amsterdam area. 
+The following figure shows the mean NDVI values for all the Neighborhoods of Amsterdam area. 
 <img src="man/figures/2_NDVI_NH.png" alt="Image" width="1000" />
 
 ---
@@ -260,7 +260,9 @@ AMS_trees <- sf::st_read ("OSMtrees.gpkg")
 mapview::mapview (AMS_trees) + mapview::mapview (AMS_NH_canopy_cover, zcol = "canopy_pct")
 
 ```
-The above code present the following figure. It is noticeable that compared the tree cover variability we observed in land cover function, this function shows way less canopy coverage. There might be two major issues here, (1) the OSM tree data are inadequate or missing many trees, and the average canopy radius used in the process is not reflecting true canopy coverage, (2) the Neighborhood area is too large to aggregate the canopy coverage. So the buffer based approach might have indicated greater variability 
+
+The above code present the following figure. It is noticeable that compared the tree cover variability we observed in land cover function, this function shows way less canopy coverage. There might be two major issues here, (1) the OSM tree data are inadequate or missing many trees, and the average canopy radius used in the process is not reflecting true canopy coverage, (2) the Neighborhood area is too large to aggregate the canopy coverage. So the buffer based approach might have indicated greater variability.
+
 <img src="man/figures/2_CanopyCover.png" alt="Image" width="1000" />
 <br />
 ---
@@ -285,14 +287,28 @@ From natural class: 'wood', 'scrub', 'moor'
 In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace is based on the retrieved data from OSM. 
 
 ``` r
-GreenExp::greenspace_pct(df_points, buffer_distance=300)
+#get the OSM city geocoded bounding box, can be other cities too
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
 
+#generate random points within the bounding box
+RandomPoints <- sf::st_sample(getcityboudingbox, size = 1000) %>% st_as_sf()
 
+#calucate address points greenspace percentage within 300 m buffer and save the OSM file to local working directory 
+#path to save the OSM file
+path <- getwd()
+
+Randompoint_greenpct <- GreenExp::greenspace_pct (RandomPoints,  buffer_distance = 300, folder_path_greenspace = path)
+
+#bring the saved green space file, which is saved as "OSMgreenspace.gpkg" file
+
+OSMgreenspace <- sf::st_read("OSMgreenspace.gpkg")
+
+#map the results
+mapview::mapview (OSMgreenspace, color = "green") + mapview::mapview (Randompoint_greenpct, zcol = "greenspace_pct")
 
 ```
-
-<img src="man/figures/Greenspace.png" alt="Image" width="500" />
-
+The following figure shows the greenspace percentage value within 300m at each random sampled locations. We can also measure such green space coverage at each neighborhood polygons! Give it a try!  
+<img src="man/figures/2_GreenCoverageOSM.png" alt="Image" width="1000" />
 
 ---
 
