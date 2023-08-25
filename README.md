@@ -38,7 +38,7 @@ You can install the development version of GreenExp from [GitHub](https://github
 For Windows installation, please install R-tools from (https://cran.r-project.org/bin/windows/Rtools/) before running the code below
 
 ``` r
-# install.packages("devtools")
+# install.packages("devtools") # do it once
 devtools::install_github("Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R", dependencies = TRUE)
 
 ```
@@ -65,6 +65,7 @@ library(GreenExp) # If not loaded yet
 library(magrittr) # If not loaded yet (used for piping %>%)
 library (sf) #Need for most spatial operation
 library (sfheaders) #for additional functions to work with sf package
+library(tmaptools) #do some geo-coding for OSM
 
 ```
 Please note that the examples based on this data serves as an illustration, and you may need to adapt the parameters and function usage to match your specific scenario.
@@ -330,9 +331,9 @@ In this example, the accessibility function is applied using the default setting
 
 ``` r
 #Get the location bounding box to extrat data from OSM
-getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox"))
 
-#download building data, it may take 2-3 min, as there are about 25k buildings in this area
+#download building data, it may take 1-2 min, as there are about 25k buildings in this area
 buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox)) %>%
   osmdata::add_osm_feature(key = "building") %>%
   osmdata::osmdata_sf()
@@ -340,48 +341,82 @@ buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox)) %>%
 #get the building footprint 
 buildings <- buildings$osm_polygons
 
-#select random 1000 building, as distance calcuation is takes longer time, we first test on smaller smaple
-randombuildings <- buildings %>% dplyr::sample_n (1000)
+#let us run the Euclidan distance based accessibility, here we are only considering greenspace with size at least 400 m2 or 0.4 ha (based on WHO guideline)
+building_access_E <- GreenExp::greenspace_access(buildings, buffer_distance = 300, epsg_code= 28992, minimum_greenspace_size = 400)
 
-#let us run the Euclidan distance based accessibility
+#join the access calcuation result to building polygons for mapping
+#First reproject to match the projection with random building projection 
+building_access_E <-  sf::st_transform(building_access_E, sf::st_crs(buildings))
 
-building_access_E <- GreenExp::greenspace_access(randombuildings, buffer_distance = 300)
+#spatially join them
+building_access_Ej <- sf::st_join (buildings, building_access_E, join= st_intersects) %>% dplyr::select(closest_greenspace, UID, greenspace_in_300m_buffer)
 
+#map the result
+mapview::mapview(building_access_Ej, zcol = "closest_greenspace")
 
-#if buildings take a long time for your study area try the function using random points
-#generate random points within the bounding box
-#RandomPoints <- sf::st_sample(getcityboudingbox, size = 1000) %>% st_as_sf()
-#use these points to run the access function
+#aslo can check the summary statistics
+summary(building_access_Ej$closest_greenspace)
+#the result in this case:
+#  Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+#  0.0001  55.6769  95.7925 115.9649 154.5281 518.5266      251 
+  
+#for summary of how many building has greenspace within 300m of Euclidian distance
+summary(building_access_Ej$greenspace_in_300m_buffer)
+#the result in this case was
+#Mode   FALSE    TRUE    NA's 
+#logical    2756   22884     251  
+
+#out of 25891 building 22884 (about 90%) has access to greenspace (size 0.4 ha/ 400m2) within 300m! 
 
 ```
-<img src="man/figures/access_euc_cen.png" alt="Image" width="500" />
-
-
-
+The outcome map shows in the figure below. Clearly most buildings has greenspace nearly within 100m
+<img src="man/figures/3_Access_Eucld.png" alt="Image" width="1000" />
 
 --- 
-
 
 ---
 
 **Example 2: Network Distance to Pseudo Entrances**
 
-In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. The figure below presents an example in Amsterdam, where the parks are shown as green polygons. The blue lines indicate the euclidean distance from the address location to the nearest park centroid. The park centroids are depicted as black points, and the address location is represented by a red point. Additionally, you may observe multiple pseudo entrances within the parks, as roads passing through the parks can also serve as potential entrance points. 
+In this example, the accessibility function considers network distance to the pseudo entrances of the greenspaces. The pseudo entrances are created by buffering the greenspace polygons and intersecting them with the network nodes. The function calculates the network distance from the address location to the nearest pseudo entrance point. 
 
 ```r
-GreenExp::greenspace_access(df_point_access, buffer_distance=300,
-                            euclidean = F, pseudo_entrance = T)
 
-# Simple feature collection with 1 feature and 3 fields
-# Geometry type: POINT
-# Dimension:     XY
-# Bounding box:  xmin: 123603.6 ymin: 487073.4 xmax: 123603.6 ymax: 487073.4
-# Projected CRS: Amersfoort / RD New
-#   UID closest_greenspace greenspace_in_300m_buffer                  geometry
-# 1   1            230.747                      TRUE POINT (123603.6 487073.4)
+#let us run the Street network distance based accessibility for same building, keep in mind this will take more time to run
+# while running the function will show how much time will be needed to complate the calculation! 
+# The following line takes about 1 hr to complete On a Windows i7 laptop, with 32GB ram
+# to test the function, we recommend you use a small smaple locations (e.g., around 1000 buildings)
+
+#for road network distance 
+building_access_Net <- GreenExp::greenspace_access(buildings, buffer_distance = 300, euclidean = FALSE, pseudo_entrance = T, epsg_code= 28992, minimum_greenspace_size = 400)
+
+#join the access calcuation result to building polygons for mapping
+#First reproject to match the projection with random building projection 
+building_access_Net <-  sf::st_transform(building_access_Net, sf::st_crs(buildings))
+
+#spatially join them
+building_access_Netj <- sf::st_join (buildings, building_access_Net, join= st_intersects) %>% dplyr::select(closest_greenspace, UID, greenspace_in_300m_buffer)
+
+#map the results of both if you want to see together 
+mapview::mapview(building_access_Netj, zcol = "closest_greenspace") + mapview::mapview(building_access_Ej, zcol = "closest_greenspace")
+
+
+#the summary statistics for shortest network distance
+summary(building_access_Netj$closest_greenspace)
+
+#in this case the result was:
+#Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+#  0.00    48.17   139.81   183.46   250.11 27532.22     2454 
+
+#for summary of how many building has greenspace within 300m of Euclidian distance
+summary(building_access_Netj$greenspace_in_300m_buffer)
+
+#in this case the result was:
+#Mode   FALSE    TRUE    NA's 
+#logical    2203   23437     251 
+
 ```
 
-<img src="man/figures/access_net_pse.png" alt="Image" width="500" />
 
 
 
@@ -399,8 +434,6 @@ result of the `viewshed` function is a radial raster where 0 =
 no-visible and 1 = visible area.
 
 For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) package.
-
-
 
 
 ```r
@@ -608,14 +641,14 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 | [**tidyr**](https://cran.r-project.org/package=tidyr)    | Changing the shape and hierarchy of a dataset                        | 
 | [**Rcpp**](https://cran.r-project.org/package=Rcpp)     | R and C++ integration                                                 | 
 | [**progress**](https://cran.r-project.org/package=progress)  | Make a progress bar in loops                                          | 
-| [**GVI**](https://doi.org/10.1016/j.scitotenv.2020.143050)  | information about the calculation of the visiblity                                         | 
+| [**GVI**](https://doi.org/10.1016/j.scitotenv.2020.143050)  | information about the calculation of the visibility                                         | 
 
 
 
 
 ## Acknowledgements and contact
 
-Project made in collaboration with Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab.
+Project conducted user the supervision and in collaboration with Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab at Utrecht University.
 
 | Name        | Email                       |
 |-------------|-----------------------------|
