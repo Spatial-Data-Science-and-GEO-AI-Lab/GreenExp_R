@@ -15,18 +15,19 @@ This package is developed to facilitate robust and transparent analysis in green
 - [Installation](#installation)
 - [Functionalities](#functionalities)
   * [Availability](#availability)
-    + [Green Cover Streets](#green-cover-streets)
     + [Calc NDVI](#calc-ndvi)
     + [Land Cover](#land-cover)
     + [Canopy coverage](#canopy-coverage)
     + [Greenspace percentage](#greenspace-percentage)
+    + [Green Cover Streets](#green-cover-streets)
   * [Accessibility](#accessibility)
     + [Greenspace access](#greenspace-access)
   * [Visibility](#visibility)
     + [Viewshed](#viewshed)
     + [vgvi from sf](#vgvi-from-sf)
     + [vgvi from address](#vgvi-from-address)
-- [Extended Installation](#alternative-installation)
+- [Performance-errors-limitation-notes](#performance-errors-limitation-notes)
+- [Extended Installation](#extended-installation)
   * [GEE](#gee)
   * [Rcpp](#rcpp)
 - [Sources](#sources)
@@ -77,11 +78,11 @@ Please note that the examples based on this data serves as an illustration, and 
 
 Availability of greenness (reflecting the presence and amount of vegetation) will be assessed using four functions:
 
-1. [Green Cover Streets](#green_cover_streets)
-2. [Calc NDVI](#calc-ndvi)
-3. [Land Cover](#land-cover)
-4. [Canopy coverage](#canopy-coverage)
-5. [Park percentage](#park-percentage) 
+1. [Calc NDVI](#calc-ndvi)
+2. [Land Cover](#land-cover)
+3. [Canopy coverage](#canopy-coverage)
+4. [Park percentage](#park-percentage) 
+5. [Green Cover Streets](#green_cover_streets)
 
 Each function provide opportunity to measure greenness presence and amount in varying ways. 
 
@@ -90,37 +91,6 @@ The following subsections will briefly describe each availability function and e
 
 ---
 
-### Green Cover Streets
-**[Global Coverage]** <br />
-The `green_cover_streets` function measure available greenery along streets in any city. Here we can use OSM street network for any city and connecting with European Space Agency's Worldcover map at 10m spatial resolution (https://esa-worldcover.org/en), we can measure how much trees, grass or shrubs are present around each street segment. We are going to use a buffer distance or a buffer zone of analysis around each street segment to estimate the percentage of tree, grass and shrubs and sum the total of these vegetation type to obtain total green coverage around each street segment. For that we are going to use the green_cover_streets() function.
-Here is an example for Amsterdam. To find the name of the place you are interested in try to use OSM address finder at exact place name using this link: https://nominatim.openstreetmap.org/ui/search.html 
-
-```r
-
-#Measuring the green coverage around each street for the city, for a buffer distance of 30 m; 
-# can try small area for fast implementation, try "Harmelen, Utrecht"
-
-#for Cental Amsterdam
-GreenStcoverSt <- GreenExp::green_cover_streets ("Centrum, Amsterdam", buffer_distance = 30) 
-
-#map the result using the amazing mapview library for interactve mapping of the streets
-mapview::mapview(GreenStcoverSt, zcol = "greencover")
-
-#Save the street file
-#To save the file we have to provide a path, for now, let us save it in current working diractory path
-path <- getwd() #change the path if you want to save it in specific folder
-
-#save as in any GIS file format
-st_write(GreenStcoverSt, paste0(path,'/','GreenStcoverSt.gpkg'), delete_layer = TRUE) 
-#can also be saved as shapefile, use GreenStcoverSt.shp
-
-
-```
-In the Figure below, we can find the Output after running the green_cover_streets function and a plot corresponding to the results.Here 0 values indicates no greenery within the buffer around the street, 100 indicates 100% presence of greenery within the given buffer zone around the street segment. We can change the background map to explore why some streets has high green coverage where others do not. Also on the interactive map we can click of each line to see what land cover type (i.e., tree, grass, shrub) contributes to overall green coverage. It also shows the presence of other land cover such as Cropland, which has not been considered for overall green coverage calculation.
-
-<img src="man/figures/1_Green_streets.png" alt="Image" width="1000" />
-
----
 
 ### Calc NDVI 
 **[Global Coverage]** <br />
@@ -313,6 +283,41 @@ The following figure shows the greenspace percentage value within 300m at each r
 
 ---
 
+### Green Cover Streets
+**[Global Coverage]** <br />
+The `green_cover_streets` function measure available greenery along streets in any city. Here we can use OSM street network for any city and connecting with European Space Agency's Worldcover map at 10m spatial resolution (https://esa-worldcover.org/en), we can measure how much trees, grass or shrubs are present around each street segment. We are going to use a buffer distance or a buffer zone of analysis around each street segment to estimate the percentage of tree, grass and shrubs and sum the total of these vegetation type to obtain total green coverage around each street segment. For that we are going to use the green_cover_streets() function.
+Here is an example for Amsterdam. To find the name of the place you are interested in try to use OSM address finder at exact place name using this link: https://nominatim.openstreetmap.org/ui/search.html 
+
+```r
+
+#Measuring the green coverage around each street for the city, for a buffer distance of 30 m; 
+# can try small area for fast implementation, try "Harmelen, Utrecht"; "City of Melbourne", "Bogura, Bangladesh", 
+# Large cities will take substential amount of time and computational power! 
+
+#for Cental Amsterdam
+GreenStcoverSt <- GreenExp::green_cover_streets ("Centrum, Amsterdam", buffer_distance = 30) 
+
+#map the result using the amazing mapview library for interactve mapping of the streets
+mapview::mapview(GreenStcoverSt, zcol = "greencover")
+
+#Save the street file
+#To save the file we have to provide a path, for now, let us save it in current working diractory path
+path <- getwd() #change the path if you want to save it in specific folder
+
+#save as in any GIS file format
+st_write(GreenStcoverSt, paste0(path,'/','GreenStcoverSt.gpkg'), delete_layer = TRUE) 
+#can also be saved as shapefile, use GreenStcoverSt.shp
+
+
+```
+In the Figure below, we can find the Output after running the green_cover_streets function and a plot corresponding to the results.Here 0 values indicates no greenery within the buffer around the street, 100 indicates 100% presence of greenery within the given buffer zone around the street segment. We can change the background map to explore why some streets has high green coverage where others do not. Also on the interactive map we can click of each line to see what land cover type (i.e., tree, grass, shrub) contributes to overall green coverage. It also shows the presence of other land cover such as Cropland, which has not been considered for overall green coverage calculation.
+
+<img src="man/figures/1_Green_streets.png" alt="Image" width="1000" />
+
+---
+
+---
+
 ## Accessibility
 The accessibility function of GreenExp is based on the concept of spatial proximity, meaning measuring distance to nearest greenspace. 
 ### Greenspace access
@@ -416,75 +421,114 @@ summary(building_access_Netj$greenspace_in_300m_buffer)
 #logical    2203   23437     251 
 
 ```
-
-
+The results of these two accessibility approaches are considerably different. In particular, the network approach indicates longer median and mean distance compared to Euclidean distance. This is logical, considering the fact that street notwork distance are usually longer than crow-fly (Euclidean) distance. The functions provide different ways of measuring accessibility to ensure, access to greenspace has been estimated as with reasonable manner. 
 
 
 ## Visibility
 **[Local Coverage- Dependent on availability of input data]** <br />
+In GreenExp, we have functions to estimate visibility using Viewshed Greenness Visibility Index (VGVI) developed in [Labib et al., (2021)](https://doi.org/10.1016/j.scitotenv.2020.143050). The VGVI is a model that estimate potential greenness visibility using digital elevation data. Where presence of buildings or other obstacles can prevent the visible contact with greenery. The conceptual model of the VGVI index presented in figure below. The model details can be found at: [Labib et al., (2021)](https://doi.org/10.1016/j.scitotenv.2020.143050)
+<img src="man/figures/VGVI_model.jpg" alt="Image" width="1000" />
 
-The visibility functions are made by the [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
+Initially the VGVI was developed in python, later [Brinkmann & Labib, (2022)](https://github.com/STBrinkmann/GVI) created an R package [GVI](https://github.com/STBrinkmann/GVI) for fast calculation of the VGVI model. The visibility functions available in GreenExp package are from [GVI](https://github.com/STBrinkmann/GVI) package with some adaptations. 
 
----
+**Note:** VGVI model needs LiDAR driven Digital Surface data, along with digital terrain data, which are usually unavailable for most places around the world. So the the model is only applicable in places where all three input data are available. The examples provided here are based on Dutch AHN dataset, which is freely available at national scale.
+
+The fist function is simple viewshed analysis, which woks as a basis for VGVI modeling. 
 
 ### Viewshed
 
-The viewshed function computes a binary viewshed of a single point on a Digital Surface Model (DSM) raster. A radial buffer is applied on the observer position, and visibility is being calculated usig a C++ implementation of Bresenham’s line algorithm [Bresenham 1965](https://ieeexplore.ieee.org/document/5388473) & [Bresenham 1977](https://doi.org/10.1145/359423.359432) and simple geometry. The
+The viewshed function computes a binary viewshed of a single point on a Digital Surface Model (DSM) raster. A radial buffer is applied on the observer position, and visibility is being calculated using a C++ implementation of Bresenham’s line algorithm [Bresenham 1965](https://ieeexplore.ieee.org/document/5388473) & [Bresenham 1977](https://doi.org/10.1145/359423.359432) and simple geometry. The
 result of the `viewshed` function is a radial raster where 0 =
 no-visible and 1 = visible area.
+The code section below allow to use example data to run the viewshed and VGVI analysis
 
-For a better explanation, go to the [GVI](https://github.com/STBrinkmann/GVI) package.
+``` r
 
+#For this example, we first need to download the DSM, DTM and Green space layer from the following url (where we already uploaded the data)
 
-```r
-# Read in the digital eleveation model
-GS <- terra::rast('data/GS_AMS.tif')
-# Read the digital surfaca model
-DSM <- terra::rast('data/DSM_AMS.tif')
-# Read the greenspace 
-DTM<- terra::rast('data/DTM_AMS.tif')
+#create a temp diractory to get the zip file
+temp <- tempfile(fileext = "zip")
+download.file("https://a35b3ff7-2e06-4a4f-a669-8681322e59a7.usrfiles.com/archives/a35b3f_c9ec6cb349d043f4b3b055d6dc984ed3.zip", temp)
 
-GreenExp::viewshed(observer = df_points[1,], dsm_rast = DSM, dtm_rast = DTM,
-                         max_distance = 200, observer_height = 1.7, plot = TRUE)
+#extract the zip file
+out <- unzip(temp, exdir = tempdir())
+
+#load the DSM, DTM, and GreenSpace (GS)
+DSM <- terra::rast(out[1])
+DTM <- terra::rast(out[2])
+GS <-  terra::rast(out[3])
+
+#let us fix an obersver location 
+obersver_mp <- sf::st_sf(sfheaders::sf_point(c(4.882752, 52.358029)), crs = st_crs(4326))
+
+#make sure the oberver location has same projection as the DSM/DTM/GS file. They all need to be in same projection
+obersver_mp <- sf::st_transform(obersver_mp, sf::st_crs(DSM))
+
+singleview <- GreenExp::viewshed(observer = obersver_mp, dsm_rast = DSM, dtm_rast = DTM,
+                          max_distance = 200, observer_height = 1.7, plot = TRUE)
+
 
 ```
 
-<img src="man/figures/viewshed.png" alt="Image" width="500" />
+
+The result of viewshed model shows the visible and invisible cells from observer location.
+
+<img src="man/figures/4_viewshed.png" alt="Image" width="500" />
 
 The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visible area and gray is not visible. 
 
 ### vgvi from sf
-
-The Viewshed Greenness Visibility Index (VGVI) represents the proportion of visible greenness to the total visible area based on the `viewshed`. The estimated VGVI values range between 0 and 1, where = no green cells and 1= all of the visible cells are green.
-
-Based on a viewshed and a binary greenspace raster, all visible points are classified as visible green and visible no-green. All values are summarised using a decay function, to account for the reducing visual prominence of an object in space with increasing distance from the observer. Currently two options are supported, a logistic and an exponential function.
-
-For more information about the VGVI please go to the [GVI](https://github.com/STBrinkmann/GVI) package. For more information about the algorithms look at the paper by [Brinkmann, 2022](https://doi.org/10.5194/agile-giss-3-27-2022) and [Labib et al., 2021](https://doi.org/10.1016/j.scitotenv.2020.143050)
+Estimating visible greenery at point, line and polygon geometries using 'vgvi_from_sf' function. This function allows the user to provide multiple points, lines or polygons and then use those to create observer locations and estimate VGVI.
 
 **Example:**
 
-The figure below provides an overview of the data used for calculating the VGVI. In the figure, you will find various elements that contribute to the analysis.
+There are 3 main elements of VGVI modeling. These include:
 
 1. Observer Points: The dots depicted in the figure represent the observer points. These points correspond to the addresses used in the examples discussed thus far. Each observer point serves as a starting location for measuring the VGVI.
 
-2. Address ID Numbers: The numbers assigned to the addresses in the plot correspond to the ID numbers used in the code chunk below the figure. These ID numbers uniquely identify each address and allow for easy referencing and analysis in the code.
+3. Green Space: The green here represent the a binary layer of greenery (in this case we are using a tree raster, 0= no tree, 1 = possibly a tree present in that raster cell), which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or parks, and is a crucial factor in determining the VGVI.  
 
-3. Green Space: The green shades in the plot represent the tree raster, which represents the extent of green space. It indicates the areas covered by vegetation, such as trees or parks, and is a crucial factor in determining the VGVI.  
-
-4. DEM and DSM: The figure also includes the Digital Elevation Model (DEM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DEM and DSM helps in understanding the topography of the region.
+4. DEM and DSM: The Digital Elevation Model (DEM) and Digital Surface Model (DSM). These models provide information about the elevation of the terrain and structures present in the area. The combination of DEM and DSM helps in understanding the topography and viewing obstacles of the region.
 
 By utilizing this information and the corresponding code, the VGVI can be calculated, providing insights into the vegetation-ground view characteristics at each observer point.
 
-<img src="man/figures/vgvi_sf.png" alt="Image" width="500" />
+
 
 ```r
-VGVI <- GreenExp::vgvi_from_sf(observer = df_points,
-             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
+
+# We need the same DSM, DTM and GS
+#If you have not downloaded them yet or they are not in R-environment, please load them first before running the code below
+
+#for observer points, we can use street lines to generate sample points on streets. We can use OSM for that.
+# Here is an example for Central Amsterdam. 
+
+#get the bounding box
+boundbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox"))
+
+#get the lines
+lines <- osmextract::oe_get("Centrum, Amsterdam", stringsAsFactors=FALSE, boundary = boundbox,
+                            max_file_size = 5e+09, boundary_type = 'spat')
+
+#Get the lines projected to input raster file, as they all have to be in same projection
+lines_prj <- sf::st_transform(lines, sf::st_crs(DSM))
+
+
+#Model VGVI on streets sample points, where spacing = 50 indicating the sample points will be at each 50 m
+VGVI_lines <- GreenExp::vgvi_from_sf(observer = lines_prj,
+             dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS, spacing = 50,
              max_distance = 200, observer_height = 1.7,
-             m = 0.5, b = 8, mode = "logit")
+             m = 0.5, b = 8, mode = "logit") #m and b are the distance decay parameter
+     
+#mapped results
+mapview::mapview(VGVI_lines, zcol = "VGVI") 
+
+#VGVI points over lines
+mapview::mapview(VGVI_lines, zcol = "VGVI") + mapview::mapview(lines_prj)
+             
 ```
+The result of the above function shows below. Here 0 indicates no tree visibility, 1 indicates 100% tree visibility within 200m viewing distance from each over location. Note these these points can be also joined back to street again for obtaining aggregated tree visibility on each road segment. 
 
-
+<img src="man/figures/4_VGVI_lines.png" alt="Image" />
 
 --- 
 
@@ -495,18 +539,43 @@ GVI from address function: In contrast, the VGVI from address function employs a
 
 The VGVI from sf function analyzes the VGVI at a specific observer point, while the VGVI from address function expands the analysis by sampling multiple points around the address location. The latter approach captures the GVI within a defined buffer and provides a more averaged assessment of the VGVI.
 
+For an example for some random locations in Amsterdam we can estimate the VGVI based on samples around them
+
 
 ```r
-VGVI <- GreenExp::vgvi_from_address(address = df_points,
-             dsm_rast = DSM, dtm_rast = DEM, greenspace_rast = GS,
+
+#get the OSM city geocoded bounding box
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
+
+#generate random points within the bounding box
+RandomObservePoints <- sf::st_sample(getcityboudingbox, size = 1000) %>% st_as_sf()
+
+#project the observer points to match with the DSM/DTM/GS
+RandomObservePoints <- sf::st_transform(RandomObservePoints, sf::st_crs(DSM))
+
+
+VGVI_random_points <- GreenExp::vgvi_from_address(address = RandomObservePoints,
+             dsm_rast = DSM, dtm_rast = DTM, greenspace_rast = GS, buffer_distance = 50,
              max_distance = 200, observer_height = 1.7,
              m = 0.5, b = 8, mode = "logit")
 
-```
+#map the results             
+mapview::mapview(VGVI_random_points, zcol = "mean_VGVI")
 
-<img src="man/figures/vgvi_address.png" alt="Image" width="500" />
+
+```
+The results showing mean VGVI value for each points based on sample points generated around them.
+<img src="man/figures/4_VGVI_randompoints.png" alt="Image" />
+
 
 ---
+
+# Performance-errors-limitation-notes
+GreenExp is in still development phase, and have ongoing issues that we are progressing. So the package has some performance issues and limitations. Here are some common limitations and errors might happen when you are testing the package. You can help improving it in future! 
+- Running Speed: Some large areas extracted from OSM, might take a long time to run different metrics. Such as the street green cover function takes a long time for very large area. We suggest you can test it in small areas.
+- Missing 
+
+
 
 # Extended installation
 
