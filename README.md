@@ -1,7 +1,7 @@
 
 # Greenness Exposure Assessment in R <img src="man/figures/GreeExp_R_logo.png" align="right" height="139"/>
 
-
+[![DOI](https://zenodo.org/badge/634929610.svg)](https://zenodo.org/badge/latestdoi/634929610)
 
 
 # Aim and objectives
