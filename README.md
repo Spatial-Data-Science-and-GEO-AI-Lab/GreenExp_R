@@ -718,11 +718,8 @@ FLIBS = -L/opt/homebrew/Cellar/gcc/13.1.0/lib/gcc/13
 ## Acknowledgements and contact
 
 The package is developed by Martijn Koster &  Dr. SM Labib from the Department of Human Geography and Spatial Planning at Utrecht University. This is a project of the Spatial Data Science and Geo-AI Lab at Utrecht University.
-
-| Name        | Email                       |
-|-------------|-----------------------------|
-| [Martijn Koster](https://github.com/MartijnKoster1)  |  |
-| [S.M. Labib](https://www.smlabib.com/)  | s.m.labib@uu.nl             |
+Author: [Martijn Koster](https://github.com/MartijnKoster1)
+Author: [S.M. Labib](https://www.smlabib.com/); email:  s.m.labib@uu.nl  
 
 We also acknowledge the contribution of [Sebastian Brinkmann](https://github.com/STBrinkmann) for the VGVI functions.
 
