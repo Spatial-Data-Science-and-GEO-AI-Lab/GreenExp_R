@@ -473,7 +473,7 @@ singleview <- GreenExp::viewshed(observer = obersver_mp, dsm_rast = DSM, dtm_ras
 
 The result of viewshed model shows the visible and invisible cells from observer location.
 
-<img src="man/figures/4_viewshed.png" alt="Image" width="500" />
+<img src="man/figures/4_viewshed.PNG" alt="Image" width="500" />
 
 The left plot represents the Digital Elevation Model (DEM), whereas the right plot represents the viewshed, where green is the visible area and gray is not visible. 
 
@@ -528,7 +528,7 @@ mapview::mapview(VGVI_lines, zcol = "VGVI") + mapview::mapview(lines_prj)
 ```
 The result of the above function shows below. Here 0 indicates no tree visibility, 1 indicates 100% tree visibility within 200m viewing distance from each over location. Note these these points can be also joined back to street again for obtaining aggregated tree visibility on each road segment. 
 
-<img src="man/figures/4_VGVI_lines.png" alt="Image" />
+<img src="man/figures/4_VGVI_lines.PNG" alt="Image" />
 
 --- 
 
@@ -565,7 +565,7 @@ mapview::mapview(VGVI_random_points, zcol = "mean_VGVI")
 
 ```
 The results showing mean VGVI value for each points based on sample points generated around them.
-<img src="man/figures/4_VGVI_randompoints.png" alt="Image" />
+<img src="man/figures/4_VGVI_randompoints.PNG" alt="Image" />
 
 
 ---
