@@ -1,12 +1,13 @@
-citHeader("To cite GreenExp in publications use:")
-
-citEntry(
-  entry    = "Manual",
-  title    = "GreenExp: Greenness Exposure Assessment in R (v0.2)",
-  author   = c("Koster M.", "Labib S.M."),
-  year     = "2023",
-  url      = "https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R",
-  textVersion = paste(
-    "Koster M. and Labib, S.M. (2023). GreenExp: Greenness Exposure Assessment in R (v0.2). doi: 10.5281/zenodo.8283189"
-  )
-)
+cff-version: 0.0.2
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Koster"
+  given-names: "Martijn"
+- family-names: "Labib"
+  given-names: "SM"
+  orcid: "https://orcid.org/0000-0002-4127-2075"
+title: "GreenExp: Greenness Exposure Assessment in R"
+version: 0.0.2
+doi: 10.5281/zenodo.8283189
+date-released: 2023-08-25
+url: "https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/StreetView-NatureVisibility"
