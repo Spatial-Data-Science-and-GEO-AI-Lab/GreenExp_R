@@ -7,6 +7,6 @@ citEntry(
   year     = "2023",
   url      = "https://github.com/Spatial-Data-Science-and-GEO-AI-Lab/GreenExp_R",
   textVersion = paste(
-    "oster M. and Labib, S.M. (2023). GreenExp: Greenness Exposure Assessment in R (v0.2). doi: 10.5281/zenodo.8283189"
+    "Koster M. and Labib, S.M. (2023). GreenExp: Greenness Exposure Assessment in R (v0.2). doi: 10.5281/zenodo.8283189"
   )
 )
