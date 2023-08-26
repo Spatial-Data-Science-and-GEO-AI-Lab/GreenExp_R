@@ -10,7 +10,8 @@
 #' @importFrom leaflet setView
 #' @importFrom leaflet.extras addSearchOSM
 #' @importFrom leaflet.extras addDrawToolbar
-#' @importFrom sf st_polygon
+#' @importFrom leaflet leaflet
+#' @importFrom shiny shiny
 #' @importFrom sf st_sf
 #'
 #'

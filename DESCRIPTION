@@ -36,7 +36,8 @@ Imports:
     osmextract,
     FNN,
     lubridate,
-    tmaptools, 
+    tmaptools,
+    shiny,
     leaflet,
     leaflet.extras
 Depends:
