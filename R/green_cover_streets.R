@@ -29,7 +29,7 @@
 #' tmap::tm_shape(GreenStcover) + tmap::tm_lines (col = "tree_cover", palette = "viridis", basemaps = "Esri.WorldTopoMap")
 #'
 #'
-#' @return The percentage of each green cover and individual vegetation cover type within a given buffer each street.
+#' @return The percentage of each green cover and different vegetation cover type within a given buffer each street.
 #' @export
 #' @importFrom tmaptools geocode_OSM
 #' @importFrom sfnetworks as_sfnetwork
@@ -39,6 +39,7 @@
 #' @importFrom tidygraph filter
 #' @importFrom tidygraph edge_is_multiple
 #' @importFrom tidygraph edge_is_loop
+#' @importFrom sf st_sf
 #'
 #'
 #'

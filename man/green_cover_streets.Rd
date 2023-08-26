@@ -33,7 +33,7 @@ green_cover_streets(
 \item{plot_landcover}{Optional; to plot the land cover, default is \code{FALSE}}
 }
 \value{
-The percentage of each green cover and individual vegetation cover type within a given buffer each street.
+The percentage of each green cover and different vegetation cover type within a given buffer each street.
 }
 \description{
 Green Coverage Street
