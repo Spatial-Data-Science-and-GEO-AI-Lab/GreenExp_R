@@ -2,6 +2,7 @@
 #' Green Coverage Street
 #'
 #' @param city A city or place name as string to set the bounding are of the city to extract OSM streets
+#' @param areabox A bounding box to define your analysis area
 #' @param buffer_distance A distance in meters to create a buffer around each street segment to defined an area within which the green coverage will be assess. Usually smaller values preferred (e.g., 30, 50)
 #' @param folder_path_land_cover Folder path to where the retrieved land cover should be saved continuously. Must not include a filename extension.
 #' @param epsg_code Optional; a  epsg code to get a Projected CRS in the final output, If missing, the default is `3395`
@@ -44,7 +45,7 @@
 #'
 
 
-green_cover_streets <- function(city=NULL, buffer_distance=NULL,
+green_cover_streets <- function(city = NULL, areabox = NULL, buffer_distance=NULL,
                                 folder_path_land_cover = NULL, epsg_code=NULL,  UID=NULL,
                                 year='2021', plot_landcover=FALSE) {
 
@@ -55,10 +56,20 @@ green_cover_streets <- function(city=NULL, buffer_distance=NULL,
 
   projected_crs<-sf::st_crs(epsg_code)
 
-  boundbox <- tmaptools::geocode_OSM(city, as.sf = T,  geometry = c("bbox"))
+  if (missing(city)) {
 
-  lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary = boundbox,
-                              max_file_size = 5e+09, boundary_type = 'spat')
+    lines <- osmextract::oe_get(areabox, stringsAsFactors=FALSE, boundary=areabox,
+                                max_file_size = 5e+09, boundary_type = 'spat')
+
+
+  } else{
+    message('You given a city name, it might take long time to run the analysis')
+
+    bdbox <- tmaptools::geocode_OSM(city, as.sf = T,  geometry = c("bbox"))
+
+    lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary = bdbox,
+                                max_file_size = 5e+09, boundary_type = 'spat')
+  }
 
 
   #clean the lines before analysis using sfnetworks and tidygraph

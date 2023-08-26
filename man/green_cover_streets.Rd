@@ -6,6 +6,7 @@
 \usage{
 green_cover_streets(
   city = NULL,
+  areabox = NULL,
   buffer_distance = NULL,
   folder_path_land_cover = NULL,
   epsg_code = NULL,
@@ -16,6 +17,8 @@ green_cover_streets(
 }
 \arguments{
 \item{city}{A city or place name as string to set the bounding are of the city to extract OSM streets}
+
+\item{areabox}{A bounding box to define your analysis area}
 
 \item{buffer_distance}{A distance in meters to create a buffer around each street segment to defined an area within which the green coverage will be assess. Usually smaller values preferred (e.g., 30, 50)}
 
