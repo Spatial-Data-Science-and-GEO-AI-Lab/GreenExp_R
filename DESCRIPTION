@@ -37,7 +37,6 @@ Imports:
     FNN,
     lubridate,
     tmaptools,
-    shiny,
     leaflet,
     leaflet.extras
 Depends:
