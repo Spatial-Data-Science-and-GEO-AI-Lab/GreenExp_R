@@ -11,7 +11,6 @@
 #' @importFrom leaflet.extras addSearchOSM
 #' @importFrom leaflet.extras addDrawToolbar
 #' @importFrom leaflet leaflet
-#' @importFrom shiny shinyApp
 #' @importFrom sf st_sf
 #'
 #'
