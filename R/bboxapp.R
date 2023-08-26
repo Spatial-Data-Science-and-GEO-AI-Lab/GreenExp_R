@@ -6,12 +6,10 @@
 #'
 #' @examples
 #'
-#' @importFrom shiny shinyApp
 #' @importFrom leaflet leaflet
 #' @importFrom leaflet setView
 #' @importFrom leaflet.extras addSearchOSM
 #' @importFrom leaflet.extras addDrawToolbar
-#' @importFrom shiny shinyApp
 #' @importFrom sf st_polygon
 #' @importFrom sf st_sf
 #'
