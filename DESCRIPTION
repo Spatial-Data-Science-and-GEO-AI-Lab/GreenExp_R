@@ -37,9 +37,9 @@ Imports:
     FNN,
     lubridate,
     tmaptools, 
-    shiny,
     leaflet,
-    leaflet.extras
+    leaflet.extras,
+    shiny
 Depends:
     R (>= 3.3.0)
 LinkingTo:
