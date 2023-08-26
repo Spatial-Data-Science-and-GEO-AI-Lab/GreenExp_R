@@ -38,8 +38,7 @@ Imports:
     lubridate,
     tmaptools, 
     leaflet,
-    leaflet.extras,
-    shiny
+    leaflet.extras
 Depends:
     R (>= 3.3.0)
 LinkingTo:
