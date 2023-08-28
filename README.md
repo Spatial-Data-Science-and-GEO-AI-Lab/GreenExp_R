@@ -49,14 +49,14 @@ To use in MAC see the extended installation instruction.
 
 
 # Functionalities 
-The idea of GreenExp package is to provide with multiple approaches in measure greenness in diverse locations building mostly on Openly available global data set and software tools and platforms. It provides functions to measure how much greenery is available, accessible, and visible at varying locations, from residential address, to streets. From urban areas to rural regions. It was wider connections with OpenStreetMap, Microsoft Planetary Computer Database and you can also use your own files to define home address, neighborhoods or even streets using local files. The package provides three broad spatial measures of greenness exposure as illustrated in the figure below based on the definition from 
+The idea of GreenExp package is to provide with multiple approaches in measure greenness in diverse locations building mostly on Openly available global data set and software tools and platforms. It provides functions to measure how much greenery is available, accessible, and visible at varying locations, from residential address, to streets. From urban areas to rural regions. It has wider connections with OpenStreetMap, Microsoft Planetary Computer Database and you can also use your own files to define home address, neighborhoods or even streets using local files. The package provides three broad spatial measures of greenness exposure as illustrated in the figure below based on the definition from 
 [Labib et al., 2020](https://research.manchester.ac.uk/en/publications/spatial-dimensions-of-the-influence-of-urban-green-blue-spaces-on)
 
 <img src="man/figures/0_allfunctionbasis.png" alt="Image" width="1000" />
 
 ---
 
-The Functionalists, which will be treated in the next subsections, will be provided with examples.For reproducibility  and easier implementation we are providing example for a case city, Amsterdam. 
+The Functionalists, which will be treated in the next subsections, will be provided with examples. For reproducibility  and easier implementation we are providing example for a case city, Amsterdam. 
 
 First load the libraries
 
@@ -84,7 +84,7 @@ Availability of greenness (reflecting the presence and amount of vegetation) wil
 4. [Park percentage](#park-percentage) 
 5. [Green Cover Streets](#green_cover_streets)
 
-Each function provide opportunity to measure greenness presence and amount in varying ways. 
+Each function provides opportunity to measure greenness presence and amount in varying ways. 
 
 The user has the option to input, location name, point geometry or a (multi)polygon geometry to defined their area of analysis. 
 The following subsections will briefly describe each availability function and examples extracted from the neighborhood polygons and points in Amsterdam. 
@@ -106,16 +106,16 @@ Here is an example for a single in Amsterdam
 #Example Address point: Van Gogh Museum, Amsterdam 
 addresspoint <- sf::st_sf(sfheaders::sf_point(c(4.881076, 52.358416)), crs = st_crs(4326))
 
-#single address NDVI, no local NDVI file provided, Autometically extracted NDVI from Sentinel-2 Satellite images (with lowest cloud cover) found between given start and end date
+#single address NDVI, no local NDVI file provided, Automatically extracted NDVI from Sentinel-2 Satellite images (with lowest cloud cover) found between given start and end date
 
-#mean NDVI at single address point, here no NDVI file given so the start and end date inidicate the range within which satellite images will be search on Planetary Computer
+#mean NDVI at single address point, here no NDVI file given so the start and end date indicate the range within which satellite images will be searched on Planetary Computer
 address_ndvi <- GreenExp::calc_ndvi(addresspoint,  buffer_distance = 300, start_date = "2020-08-01", end_date = "2020-09-30")
 #print the result
 address_ndvi
 
 ```
 
-In the Figure below, shows the Output while running the calc_ndvi function and printing the results. While running, the function provides enough information about what type of buffer used, which image was selected, the date and time of image captured and also the cloud cover of that image on that day. The result return a sf data object which can be saved locally as illustrated earlier. It include the 'mean_NDVI' column to present the average NDVI value around that address within 300 m Euclidean buffer. Note: the user can also select street network buffer (see the function details for more)
+In the Figure below, shows the Output while running the calc_ndvi function and printing the results. While running, the function provides enough information about what type of buffer used, which image was selected, the date and time of image captured and also the cloud cover of that image on that day. The result return a sf data object which can be saved locally as illustrated earlier. It includes the 'mean_NDVI' column to present the average NDVI value around that address within 300 m Euclidean buffer. Note: the user can also select street network buffer (see the function details for more)
 
 <img src="man/figures/2_NDVISinglelocation.png" alt="Image" width="600" />
 
@@ -149,7 +149,7 @@ We can test this approach in most locations around the world, given the user has
 ?Ams_Neighborhoods #explore the data if needed
 AMS_NH <- Ams_Neighborhoods #load the file
 
-#Calculate mean NDVI for Neighborhood polygons, here we need to metion the given address file is Neighborhood zone, so no buffer distance will be needed. 
+#Calculate mean NDVI for Neighborhood polygons, here we need to mention the given address file is Neighborhood zone, so no buffer distance will be needed. 
 AMS_NH_ndvi <- GreenExp::calc_ndvi(AMS_NH,  address_location_neighborhood = TRUE, start_date = "2020-08-01", end_date = "2020-09-30")
 
 #map the result using mapview 
@@ -166,9 +166,9 @@ The following figure shows the mean NDVI values for all the Neighborhoods of Ams
 **[Global Coverage]** <br />
 While NDVI is a widely used metric for greenness assessment but it cannot differentiate between different vegetation types, such as tree vs grass. Here we added the `land_cover` function that percentage of different land cover types (vegetation and other types of land cover/land use) within a specified distance for given location(s). The input for the function is address_location, which should be an `sf dataframe` either point or polygon with projected Coordinate Reference System (CRS) information. If no CRS/projection information is provided, the function will automatically project the address location to WGS 84 / World Mercator.
 
-The user have the option to provide a raster file with land cover values. When this is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover.
+The user has the option to provide a raster file with land cover values. When this is not provided, the [esa-worldcover](https://planetarycomputer.microsoft.com/dataset/esa-worldcover) data set of Planetary Computer will be used to calculate the land cover.
 
-In the code chunk and figure below an example is given for the Amsterdam area, where we estimated different land cover types present around each buildings within the given search area. It illustrates an example of land cover within a Euclidean buffer of 300m. It showcases more than 25k buildings, and the land cover is determined based on the given buffer zone. 
+In the code chunk and figure below an example is given for the Amsterdam area, where we estimated different land cover types present around each building within the given search area. It illustrates an example of land cover within an Euclidean buffer of 300m. It showcases more than 25k buildings, and the land cover is determined based on the given buffer zone. 
 
 ``` r
 #We can use the OSM to extract building footprint data
@@ -184,7 +184,7 @@ buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox)) %>%
 buildings <- buildings$osm_polygons
 
 #estimate the land cover from ESA's land cover data
-# Note: for given polygon file, this funtion autometically convert polygon to centroid point
+# Note: for given polygon file, this function automatically converts polygon to centroid point
 build_land_cover <- GreenExp::land_cover (buildings,  buffer_distance = 300)
 
 #print the result
@@ -201,7 +201,7 @@ buildigs_landcover <- sf::st_join (buildings, build_land_cover, join= st_interse
 mapview::mapview(buildigs_landcover, zcol = "tree_cover")
 
 ```
-The above code produce the following result, where we can visualize how much tree cover is available within 300 m of each building. The values range between 0 to 1, where 0 equals no tree cover, 1 equals 100% tree cover. 
+The above code produces the following result, where we can visualize how much tree cover is available within 300 m of each building. The values range between 0 to 1, where 0 equals no tree cover, 1 equals 100% tree cover. 
 
 <img src="man/figures/2_landcover_buildings.png" alt="Image" width="1000" />
 
@@ -240,7 +240,7 @@ The above code present the following figure. It is noticeable that compared the 
 
 ### Greenspace percentage
 **[Global Coverage]** <br />
-The `greenspace_pct` function calculates the percentage of greenspace coverage within a specified buffer distance. This function is inspired to estimate overall green space land use within a given area. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use.We followed the OSM Green space access ITO map classification scheme to select the green spaces. Details of the class can be found at: https://wiki.openstreetmap.org/wiki/Green_space_access_ITO_map 
+The `greenspace_pct` function calculates the percentage of greenspace coverage within a specified buffer distance. This function is inspired to estimate overall green space land use within a given area. If you do not provide a `greenspace_layer`, the function will retrieve greenspace features from osmdata. The retrieved features are selected from categories such as leisure, nature, and land use. We followed the OSM Green space access ITO map classification scheme to select the green spaces. Details of the class can be found at: https://wiki.openstreetmap.org/wiki/Green_space_access_ITO_map 
 
 We generally considered the following criteria: 
 1. The feature represents an area.
@@ -255,7 +255,7 @@ From Land use class: allotments, recreation_ground, grass, forest, greenfield,vi
 From leisure class: garden,dog_park, grassland, heath, nature_reserve, park, playground.
 From natural class: 'wood', 'scrub', 'moor'
 <br/>
-In the example below, the percentage of greenspaces is calculated for each address point within a euclidean buffer of 300m. The greenspace is based on the retrieved data from OSM. 
+In the example below, the percentage of greenspaces is calculated for each address point within an euclidean buffer of 300m. The greenspace is based on the retrieved data from OSM. 
 
 ``` r
 #get the OSM city geocoded bounding box, can be other cities too
@@ -297,11 +297,11 @@ Here is an example for Amsterdam. To find the name of the place you are interest
 #for Cental Amsterdam
 GreenStcoverSt <- GreenExp::green_cover_streets ("Centrum, Amsterdam", buffer_distance = 30) 
 
-#map the result using the amazing mapview library for interactve mapping of the streets
+#map the result using the amazing mapview library for interactive mapping of the streets
 mapview::mapview(GreenStcoverSt, zcol = "greencover")
 
 #Save the street file
-#To save the file we have to provide a path, for now, let us save it in current working diractory path
+#To save the file we have to provide a path, for now, let us save it in current working directory path
 path <- getwd() #change the path if you want to save it in specific folder
 
 #save as in any GIS file format
@@ -310,7 +310,7 @@ st_write(GreenStcoverSt, paste0(path,'/','GreenStcoverSt.gpkg'), delete_layer = 
 
 
 ```
-In the Figure below, we can find the Output after running the green_cover_streets function and a plot corresponding to the results.Here 0 values indicates no greenery within the buffer around the street, 100 indicates 100% presence of greenery within the given buffer zone around the street segment. We can change the background map to explore why some streets has high green coverage where others do not. Also on the interactive map we can click of each line to see what land cover type (i.e., tree, grass, shrub) contributes to overall green coverage. It also shows the presence of other land cover such as Cropland, which has not been considered for overall green coverage calculation.
+In the Figure below, we can find the Output after running the green_cover_streets function and a plot corresponding to the results. Here 0 values indicates no greenery within the buffer around the street, 100 indicates 100% presence of greenery within the given buffer zone around the street segment. We can change the background map to explore why some streets has high green coverage where others do not. Also on the interactive map we can click of each line to see what land cover type (i.e., tree, grass, shrub) contributes to overall green coverage. It also shows the presence of other land cover such as Cropland, which has not been considered for overall green coverage calculation.
 
 <img src="man/figures/1_Green_streets.png" alt="Image" width="1000" />
 
@@ -322,7 +322,7 @@ In the Figure below, we can find the Output after running the green_cover_street
 The accessibility function of GreenExp is based on the concept of spatial proximity, meaning measuring distance to nearest greenspace. 
 ### Greenspace access
 **[Global Coverage]** <br />
-The greenspace_access function provide the ability to determine the nearest greenspaces to given address locations and assess their accessibility within a specified buffer distance. By default, the functions utilize a euclidean buffer around the address locations and calculate the shortest distance to the centroid of the greenspaces. This is achieved using the K-nearest neighbors (KNN) algorithm with the [FNN](https://rdrr.io/cran/FNN/man/knn.html) package, to calculate the euclidean distance between the address location and the greenspaces.
+The greenspace_access function provide the ability to determine the nearest greenspaces to given address locations and assess their accessibility within a specified buffer distance. By default, the functions utilize an euclidean buffer around the address locations and calculate the shortest distance to the centroid of the greenspaces. This is achieved using the K-nearest neighbors (KNN) algorithm with the [FNN](https://rdrr.io/cran/FNN/man/knn.html) package, to calculate the euclidean distance between the address location and the greenspaces.
 
 Furthermore, the functions allow for the option to utilize a network distance instead of the euclidean distance. In this case, the distance calculation is performed using the [sfnetworks](https://cran.r-project.org/web/packages/sfnetworks/index.html) package, which leverages road networks to calculate distances between points. It should be noted that, network distance calculation is very time consuming for large number of address locations. 
 
@@ -335,7 +335,7 @@ Let us try some examples for selected building in the Amsterdam area to explore 
 In this example, the accessibility function is applied using the default settings, which involves calculating the euclidean distance from the address location to the nearest greenspace centroid. The code chunk beneath the plot provides the necessary code to receive the shortest distance from the address location. 
 
 ``` r
-#Get the location bounding box to extrat data from OSM
+#Get the location bounding box to extract data from OSM
 getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox"))
 
 #download building data, it may take 1-2 min, as there are about 25k buildings in this area
@@ -349,7 +349,7 @@ buildings <- buildings$osm_polygons
 #let us run the Euclidan distance based accessibility, here we are only considering greenspace with size at least 400 m2 or 0.4 ha (based on WHO guideline)
 building_access_E <- GreenExp::greenspace_access(buildings, buffer_distance = 300, epsg_code= 28992, minimum_greenspace_size = 400)
 
-#join the access calcuation result to building polygons for mapping
+#join the access calculation result to building polygons for mapping
 #First reproject to match the projection with random building projection 
 building_access_E <-  sf::st_transform(building_access_E, sf::st_crs(buildings))
 
@@ -365,7 +365,7 @@ summary(building_access_Ej$closest_greenspace)
 #  Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
 #  0.0001  55.6769  95.7925 115.9649 154.5281 518.5266      251 
   
-#for summary of how many building has greenspace within 300m of Euclidian distance
+#for summary of how many building have greenspace within 300m of Euclidian distance
 summary(building_access_Ej$greenspace_in_300m_buffer)
 #the result in this case was
 #Mode   FALSE    TRUE    NA's 
@@ -390,12 +390,12 @@ In this example, the accessibility function considers network distance to the ps
 #let us run the Street network distance based accessibility for same building, keep in mind this will take more time to run
 # while running the function will show how much time will be needed to complate the calculation! 
 # The following line takes about 1 hr to complete On a Windows i7 laptop, with 32GB ram
-# to test the function, we recommend you use a small smaple locations (e.g., around 1000 buildings)
+# to test the function, we recommend you use a small sample locations (e.g., around 1000 buildings)
 
 #for road network distance 
 building_access_Net <- GreenExp::greenspace_access(buildings, buffer_distance = 300, euclidean = FALSE, pseudo_entrance = T, epsg_code= 28992, minimum_greenspace_size = 400)
 
-#join the access calcuation result to building polygons for mapping
+#join the access calculation result to building polygons for mapping
 #First reproject to match the projection with random building projection 
 building_access_Net <-  sf::st_transform(building_access_Net, sf::st_crs(buildings))
 
@@ -421,7 +421,7 @@ summary(building_access_Netj$greenspace_in_300m_buffer)
 #logical    2203   23437     251 
 
 ```
-The results of these two accessibility approaches are considerably different. In particular, the network approach indicates longer median and mean distance compared to Euclidean distance. This is logical, considering the fact that street notwork distance are usually longer than crow-fly (Euclidean) distance. The functions provide different ways of measuring accessibility to ensure, access to greenspace has been estimated as with reasonable manner. 
+The results of these two accessibility approaches are considerably different. In particular, the network approach indicates longer median and mean distance compared to Euclidean distance. This is logical, considering the fact that street network distance are usually longer than crow-fly (Euclidean) distance. The functions provide different ways of measuring accessibility to ensure, access to greenspace has been estimated as with reasonable manner. 
 
 
 ## Visibility
@@ -446,7 +446,7 @@ The code section below allow to use example data to run the viewshed and VGVI an
 
 #For this example, we first need to download the DSM, DTM and Green space layer from the following url (where we already uploaded the data)
 
-#create a temp diractory to get the zip file
+#create a temp directory to get the zip file
 temp <- tempfile(fileext = "zip")
 download.file("https://a35b3ff7-2e06-4a4f-a669-8681322e59a7.usrfiles.com/archives/a35b3f_c9ec6cb349d043f4b3b055d6dc984ed3.zip", temp)
 
