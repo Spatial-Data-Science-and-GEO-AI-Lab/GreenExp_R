@@ -52,7 +52,7 @@ To use in MAC see the extended installation instruction.
 The idea of GreenExp package is to provide with multiple approaches in measure greenness in diverse locations building mostly on Openly available global data set and software tools and platforms. It provides functions to measure how much greenery is available, accessible, and visible at varying locations, from residential address, to streets. From urban areas to rural regions. It was wider connections with OpenStreetMap, Microsoft Planetary Computer Database and you can also use your own files to define home address, neighborhoods or even streets using local files. The package provides three broad spatial measures of greenness exposure as illustrated in the figure below based on the definition from 
 [Labib et al., 2020](https://research.manchester.ac.uk/en/publications/spatial-dimensions-of-the-influence-of-urban-green-blue-spaces-on)
 
-<img src="man/figures/0_allfunctionbasis.png" alt="Image" width="1000" />
+<img src="man/figures/0_allfunctionbasisUp.png" alt="Image" width="1000" />
 
 ---
 
