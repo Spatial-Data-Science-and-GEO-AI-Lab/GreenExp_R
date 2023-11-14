@@ -282,9 +282,9 @@ greenspace_pct <- function(address_location, greenspace_layer=NULL, buffer_dista
     resq2 <- q2
     resq3 <- q3
 
-    greenlayer1 <- resq1$osm_polygons %>% dplyr::select (osm_id, name) #only select two columns to join
-    greenlayer2 <- resq2$osm_polygons %>% dplyr::select (osm_id, name) #only select two columns to join
-    greenlayer3 <- resq3$osm_polygons %>% dplyr::select (osm_id, name) #only select two columns to join
+    greenlayer1 <- resq1$osm_polygons %>% dplyr::select (osm_id) #only keep OSMID to join
+    greenlayer2 <- resq2$osm_polygons %>% dplyr::select (osm_id) #only keep OSMID to join
+    greenlayer3 <- resq3$osm_polygons %>% dplyr::select (osm_id) #only keep OSMID to join
 
     # greenspace_layer cleaning
     greenspace_layer <- rbind(greenlayer1, greenlayer2, greenlayer3) #join all greenspace types
