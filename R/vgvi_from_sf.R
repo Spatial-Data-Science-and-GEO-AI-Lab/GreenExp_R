@@ -115,7 +115,7 @@ vgvi_from_sf <- function(observer, dsm_rast, dtm_rast, greenspace_rast,
     epsg_dsm_rast <- sf::st_crs(observer)$epsg
     dsm_rast <- terra::project(dsm_rast, paste0('EPSG:',epsg_dsm_rast))
 
-  } else if(dsm_rast@ptr$res[1] != dsm_rast@ptr$res[2]) {
+  } else if(dsm_rast@pntr$res[1] != dsm_rast@pntr$res[2]) {
     stop("dsm_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }
 
@@ -139,7 +139,7 @@ vgvi_from_sf <- function(observer, dsm_rast, dtm_rast, greenspace_rast,
     epsg_greenspace_rast <- sf::st_crs(observer)$epsg
     greenspace_rast <- terra::project(greenspace_rast, paste0('EPSG:',epsg_greenspace_rast))
 
-  } else if(dsm_rast@ptr$res[1] != dsm_rast@ptr$res[2]) {
+  } else if(dsm_rast@pntr$res[1] != dsm_rast@pntr$res[2]) {
     stop("greenspace_rast: x and y resolution must be equal.\nSee https://github.com/STBrinkmann/GVI/issues/1")
   }
 
