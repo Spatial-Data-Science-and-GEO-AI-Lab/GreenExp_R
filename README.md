@@ -128,10 +128,10 @@ While the previous example indicated NDVI results for a single address point. We
 #create random points within in a city to test
 # can try: "Centrum, Amsterdam" or "Washington, DC" or "Kampala, Uganda" or "Bogura, Bangladesh" and more...!
 #first get the OSM city geocoded bounding box
-getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T) 
 
 #generate random points within the bounding box
-RandomPoints <- sf::st_sample(getcityboudingbox, size = 1000) %>% st_as_sf()
+RandomPoints <- sf::st_sample(getcityboudingbox$bbox, size = 1000) %>% st_as_sf()
 
 #Calculate mean NDVI at many address points
 Randomaddresses_ndvi <- GreenExp::calc_ndvi(RandomPoints,  buffer_distance = 300, start_date = "2020-08-01", end_date = "2020-09-30")
@@ -173,10 +173,10 @@ In the code chunk and figure below an example is given for the Amsterdam area, w
 ``` r
 #We can use the OSM to extract building footprint data
 #fist determind the bounding box to get OSM buildings within Central Amsterdam
-getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T) 
 
-#download building data
-buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox)) %>%
+#download building data, get buildings within Bounding Box
+buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox$bbox)) %>%
   osmdata::add_osm_feature(key = "building") %>%
   osmdata::osmdata_sf()
 
@@ -195,10 +195,10 @@ build_land_cover
 build_land_cover <-  sf::st_transform(build_land_cover, sf::st_crs(buildings))
 
 #spatially join them
-buildigs_landcover <- sf::st_join (buildings, build_land_cover, join= st_intersects)
+buildings_landcover <- sf::st_join (buildings, build_land_cover, join= st_intersects)
 
 #Now mapping the tree cover only, while we can explore different land cover types by clicking on each building! 
-mapview::mapview(buildigs_landcover, zcol = "tree_cover")
+mapview::mapview(buildings_landcover, zcol = "tree_cover")
 
 ```
 The above code produce the following result, where we can visualize how much tree cover is available within 300 m of each building. The values range between 0 to 1, where 0 equals no tree cover, 1 equals 100% tree cover. 
@@ -259,10 +259,10 @@ In the example below, the percentage of greenspaces is calculated for each addre
 
 ``` r
 #get the OSM city geocoded bounding box, can be other cities too
-getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox")) 
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T) 
 
 #generate random points within the bounding box
-RandomPoints <- sf::st_sample(getcityboudingbox, size = 1000) %>% st_as_sf()
+RandomPoints <- sf::st_sample(getcityboudingbox$bbox, size = 1000) %>% st_as_sf()
 
 #calucate address points greenspace percentage within 300 m buffer and save the OSM file to local working directory 
 #path to save the OSM file

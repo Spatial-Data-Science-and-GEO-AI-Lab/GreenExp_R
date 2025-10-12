@@ -66,7 +66,9 @@ green_cover_streets <- function(city = NULL, areabox = NULL, buffer_distance=NUL
   } else{
     message('You given a city name, it might take long time to run the analysis')
 
-    bdbox <- tmaptools::geocode_OSM(city, as.sf = T,  geometry = c("bbox"))
+    bdbox <- tmaptools::geocode_OSM(city, as.sf = T)
+
+    bdbox <- bdbox$bbox
 
     lines <- osmextract::oe_get(city, stringsAsFactors=FALSE, boundary = bdbox,
                                 max_file_size = 5e+09, boundary_type = 'spat')
