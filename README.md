@@ -336,10 +336,10 @@ In this example, the accessibility function is applied using the default setting
 
 ``` r
 #Get the location bounding box to extrat data from OSM
-getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T,  geometry = c("bbox"))
+getcityboudingbox <- tmaptools::geocode_OSM("Centrum, Amsterdam", as.sf = T)
 
 #download building data, it may take 1-2 min, as there are about 25k buildings in this area
-buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox)) %>%
+buildings <- osmdata::opq(sf::st_bbox(getcityboudingbox$bbox)) %>%
   osmdata::add_osm_feature(key = "building") %>%
   osmdata::osmdata_sf()
 
